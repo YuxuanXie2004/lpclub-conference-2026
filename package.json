@@ -1,0 +1,19 @@
+{
+  "name": "lpclub-conference",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The 3rd International Private Equity Conference 2026 — site + registration API",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.14"
+  },
+  "scripts": {
+    "api": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "node --test test/*.test.js",
+    "start": "node server/index.js",
+    "feishu:init": "node server/init-feishu.js"
+  }
+}
