@@ -148,7 +148,7 @@ if (!html.includes('<option>LP CLUB Member</option>')) {
 }
 
 // Agenda: Panel Discussion II description — exact requested wording.
-const agendaNew = 'Investors explore frontier technology, new energy &amp; power, Al computing and digital infrastructure opportunities across Asia.';
+const agendaNew = 'Investors explore frontier technology, new energy &amp; power, AI computing and digital infrastructure opportunities across Asia.';
 html = html.replace(
   /Investors explore AI, healthcare and other high-growth emerging sector opportunities across Asia\./g,
   agendaNew
