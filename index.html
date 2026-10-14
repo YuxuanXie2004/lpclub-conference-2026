@@ -681,14 +681,14 @@
 
   .reg-choice-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
   .reg-choice-head .reg-section-lead{margin-bottom:8px}
-  .reg-vip{width:350px;max-width:100%;flex-shrink:0;padding:13px 15px;background:var(--green-100);border:1px solid var(--line);border-radius:12px}
-  .reg-vip label{display:block;font-size:12px;font-weight:700;color:var(--green-900);margin-bottom:7px}
-  .reg-vip-row{display:flex;gap:8px}
-  .reg-vip input{width:100%;min-width:0;border:1px solid var(--green-300);border-radius:8px;padding:9px 10px;background:#fff;font:inherit;font-size:13px}
+  .reg-vip{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 10px;width:350px;max-width:100%;flex-shrink:0}
+  .reg-vip label{font-size:12px;font-weight:700;color:var(--green-900)}
+  .reg-vip-row{display:flex;gap:8px;min-width:0}
+  .reg-vip input{width:100%;min-width:0;height:38px;border:1px solid var(--green-300);border-radius:8px;padding:8px 10px;background:#fff;font:inherit;font-size:13px}
   .reg-vip input:focus-visible{outline:2px solid var(--green-500);outline-offset:2px}
-  .reg-vip .btn{padding:9px 14px;white-space:nowrap;font-size:12px}
+  .reg-vip .btn{height:38px;border-radius:8px;padding:8px 14px;white-space:nowrap;font-size:12px}
   .reg-vip .btn:disabled{opacity:.5;cursor:not-allowed}
-  .reg-vip-message{margin-top:7px;font-size:12px;line-height:1.5;color:var(--green-800)}
+  .reg-vip-message{grid-column:2;margin:0;font-size:11.5px;line-height:1.5;color:var(--ink-soft);overflow-wrap:anywhere}
   .reg-vip-message.error{color:#8f352c}
   @media(max-width:720px){.reg-choice-head{flex-direction:column;gap:12px}.reg-vip{width:100%}}
 
