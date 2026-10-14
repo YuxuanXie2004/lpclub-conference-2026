@@ -663,6 +663,19 @@
   .reg-identity.selected,.reg-identity:focus-visible,.reg-package:focus-within{outline:2px solid var(--green-500);outline-offset:2px}
   @media(max-width:720px){.reg-identity-grid{grid-template-columns:1fr}}
 
+  .reg-choice-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+  .reg-choice-head .reg-section-lead{margin-bottom:8px}
+  .reg-vip{width:350px;max-width:100%;flex-shrink:0;padding:13px 15px;background:var(--green-100);border:1px solid var(--line);border-radius:12px}
+  .reg-vip label{display:block;font-size:12px;font-weight:700;color:var(--green-900);margin-bottom:7px}
+  .reg-vip-row{display:flex;gap:8px}
+  .reg-vip input{width:100%;min-width:0;border:1px solid var(--green-300);border-radius:8px;padding:9px 10px;background:#fff;font:inherit;font-size:13px}
+  .reg-vip input:focus-visible{outline:2px solid var(--green-500);outline-offset:2px}
+  .reg-vip .btn{padding:9px 14px;white-space:nowrap;font-size:12px}
+  .reg-vip .btn:disabled{opacity:.5;cursor:not-allowed}
+  .reg-vip-message{margin-top:7px;font-size:12px;line-height:1.5;color:var(--green-800)}
+  .reg-vip-message.error{color:#8f352c}
+  @media(max-width:720px){.reg-choice-head{flex-direction:column;gap:12px}.reg-vip{width:100%}}
+
 </style>
 </head>
 <body>
@@ -1121,8 +1134,14 @@
     <div class="reg-body">
       <div class="reg-alert" id="regAlert" role="alert" aria-live="polite"></div>
       <section class="reg-screen" data-reg-step="1">
-        <h4 class="reg-section-title">1. Choose your identity</h4>
-        <p class="reg-section-lead">Select the category that best represents you.</p>
+        <div class="reg-choice-head">
+          <div><h4 class="reg-section-title">1. Choose your identity</h4><p class="reg-section-lead">Select the category that best represents you.</p></div>
+          <div class="reg-vip">
+            <label for="vipCode">VIP Code</label>
+            <div class="reg-vip-row"><input id="vipCode" type="text" maxlength="128" placeholder="Enter VIP Code" autocomplete="off" aria-describedby="vipMessage"><button id="vipApply" type="button" class="btn btn-primary" disabled>Apply</button></div>
+            <p id="vipMessage" class="reg-vip-message" role="status" aria-live="polite">Redeem one complimentary Delegate Pass.</p>
+          </div>
+        </div>
         <div class="reg-identity-grid" id="regIdentities"><div class="reg-note">Loading registration categories…</div></div>
         <div id="regParticipationWrap" hidden>
           <h4 class="reg-section-title" style="margin-top:26px">2. Choose one participation option</h4>
@@ -1193,6 +1212,8 @@
   var regIdentitiesEl = document.getElementById('regIdentities');
   var regParticipationWrap = document.getElementById('regParticipationWrap');
   var regStep = 1, selectedIdentity = null, selectedPackage = null, packageList = [], packageLoadError = '';
+  var vipCode=document.getElementById('vipCode'), vipApply=document.getElementById('vipApply'), vipMessage=document.getElementById('vipMessage');
+  var appliedVipCode='', vipPackage=null, vipPending=false, vipRequestId=0;
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
     focus:['Private Equity','Private Credit','Secondaries','Co-Investment','AI & Technology','Healthcare','Cross-Border Investment','Real Assets','Other'],
@@ -1204,6 +1225,27 @@
   function showAlert(msg){regAlert.textContent=msg;regAlert.classList.toggle('show',Boolean(msg))}
   function businessEmail(value){var s=String(value||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return false;return PERSONAL_DOMAINS.indexOf(s.split('@').pop())===-1}
   function renderMulti(){Object.keys(MULTI).forEach(function(key){var box=document.querySelector('[data-multi="'+key+'"]');if(!box)return;box.innerHTML=MULTI[key].map(function(v){return '<label class="reg-chip"><input type="checkbox" value="'+escHtml(v)+'"><span>'+escHtml(v)+'</span></label>'}).join('')})}
+  function effectivePackage(p){return vipPackage&&p&&vipPackage.id===p.id?vipPackage:p}
+  function updateVipControls(){vipApply.disabled=vipPending||!selectedPackage||selectedPackage.optionId!=='ticket'||!vipCode.value.trim();vipApply.textContent=vipPending?'Checking…':'Apply'}
+  function resetVip(){
+    appliedVipCode='';vipPackage=null;vipPending=false;vipRequestId++;
+    vipMessage.textContent='Redeem one complimentary Delegate Pass.';vipMessage.classList.remove('error');updateVipControls();
+  }
+  async function applyVipCode(){
+    if(vipApply.disabled)return;
+    var code=vipCode.value.trim(), id=selectedPackage.id, requestId=++vipRequestId;
+    appliedVipCode='';vipPackage=null;vipPending=true;updateVipControls();regNext.disabled=true;renderPackages();
+    vipMessage.textContent='Checking VIP Code…';vipMessage.classList.remove('error');
+    try{
+      var response=await fetch('/api/vip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({packageId:id,vipCode:code})});
+      var data=await response.json();
+      if(requestId!==vipRequestId)return;
+      if(!response.ok||!data.ok)throw new Error(data.error||'VIP Code could not be checked. Please try again.');
+      if(!data.package||data.package.id!==id||data.package.price!==0||data.package.vipApplied!==true)throw new Error('VIP Code could not be checked. Please try again.');
+      appliedVipCode=code;vipPackage=data.package;vipMessage.textContent='VIP Code applied — one complimentary Delegate Pass.';renderPackages();
+    }catch(err){if(requestId===vipRequestId){vipMessage.textContent=err.message||'VIP Code could not be checked. Please try again.';vipMessage.classList.add('error')}}
+    finally{if(requestId===vipRequestId){vipPending=false;updateVipControls();regNext.disabled=!selectedPackage}}
+  }
   function validPackages(data){
     if(!data || data.ok!==true || !Array.isArray(data.packages) || data.packages.length!==20)return false;
     var identities=['lp','lpclub_member','gp','investment_company','standard'];
@@ -1219,16 +1261,16 @@
     var identities=packageList.filter(function(p){return p.optionId==='ticket'});
     regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity" data-identity="'+escHtml(p.identityId)+'" aria-pressed="false"><b>'+escHtml(p.identityName)+'</b><small>'+escHtml(p.note||'')+'</small></button>'}).join('');
     regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(btn){btn.addEventListener('click',function(){
-      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;
+      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;resetVip();
       regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(x){x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',String(x===btn))});
       renderPackages();regParticipationWrap.hidden=false;regNext.disabled=true;showAlert('');
     })});
   }
   function renderPackages(){
     var list=packageList.filter(function(p){return p.identityId===selectedIdentity});
-    regPackagesEl.innerHTML=list.map(function(p){return '<label class="reg-package" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'"><span class="reg-radio"></span><span><b>'+escHtml(p.ticketName)+'</b><small>'+escHtml(p.note||'')+'</small></span><span class="reg-price">'+escHtml(money(p))+'</span></label>'}).join('');
+    regPackagesEl.innerHTML=list.map(function(p){var checked=selectedPackage&&selectedPackage.id===p.id;return '<label class="reg-package'+(checked?' selected':'')+'" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'" '+(checked?'checked':'')+'><span class="reg-radio"></span><span><b>'+escHtml(p.ticketName)+'</b><small>'+escHtml(p.note||'')+'</small></span><span class="reg-price">'+escHtml(money(effectivePackage(p)))+'</span></label>'}).join('');
     regPackagesEl.querySelectorAll('input').forEach(function(input){input.addEventListener('change',function(){
-      selectedPackage=list.find(function(p){return p.id===input.value})||null;
+      selectedPackage=list.find(function(p){return p.id===input.value})||null;resetVip();renderPackages();
       regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.classList.toggle('selected',row.getAttribute('data-package')===input.value)});
       regNext.disabled=!selectedPackage;showAlert('');
     })});
@@ -1246,26 +1288,29 @@
     }
   }
   function openReg(){
-    if(regStep===3){regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';renderIdentities()}
+    if(regStep===3){regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
     regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
   }
   function closeReg(){regModal.classList.remove('open');regModal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
   function showStep(n){
     regStep=n;document.querySelectorAll('[data-reg-step]').forEach(function(s){s.hidden=Number(s.getAttribute('data-reg-step'))!==n});
     document.querySelectorAll('[data-step-indicator]').forEach(function(el){el.classList.toggle('active',Number(el.getAttribute('data-step-indicator'))<=n)});
-    regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=n===1?!selectedPackage:false;
+    regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=vipPending||(n===1?!selectedPackage:false);
     showAlert(n===1?packageLoadError:'');
     if(n===2&&selectedPackage){
       document.getElementById('regSummaryName').textContent=selectedPackage.identityName+' — '+selectedPackage.ticketName;
-      document.getElementById('regSummaryPrice').textContent=money(selectedPackage);
+      document.getElementById('regSummaryPrice').textContent=money(effectivePackage(selectedPackage));
       regForm.elements.companyType.value=selectedPackage.organisationType;
     }
   }
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
-  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
+  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,vipCode:appliedVipCode||undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
   function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){hint.textContent='Please use your business email address. Personal email addresses are not accepted.';hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
   async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formPayload())});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(data.package.identityName+' — '+data.package.ticketName)+'</b><br>'+escHtml(money(data.package))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=false;regNext.textContent='Submit Registration'}}}
 
+  vipApply.addEventListener('click',applyVipCode);
+  vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=!selectedPackage});
+  vipCode.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();applyVipCode()}});
   document.querySelectorAll('[data-open-form]').forEach(function(btn){btn.addEventListener('click',openReg)});
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
   regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage)showStep(2);else if(regStep===2)submitRegistration()});

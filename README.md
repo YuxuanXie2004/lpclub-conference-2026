@@ -156,6 +156,24 @@ server/packages.js
 
 Do not trust a price sent from the browser. The backend always selects the package and amount from this server file.
 
+## VIP Codes
+
+Set a comma-separated list of invitation codes in `server/.env` and restart the server:
+
+```env
+VIP_CODES=YOUR_INVITATION_CODE,ANOTHER_INVITATION_CODE
+```
+
+An empty or missing `VIP_CODES` disables redemption. Codes are trimmed and compared without regard to case. Keep the real codes out of Git and the public page.
+
+In the first registration step, select an identity and a **Delegate Pass**, enter the code in the upper-right VIP Code box, and click **Apply**. Mobile displays the box above the identity cards. A valid code changes that one pass to complimentary. Speaking, Panel / Roundtable and Matchmaking packages remain at their normal rates.
+
+`POST /api/vip` accepts `{ "packageId": "gp_ticket", "vipCode": "..." }` and previews the discounted package. `POST /api/order` accepts the same optional `vipCode` alongside the existing registration payload and checks it again before saving. Previewing does not create a registration or send email. Editing the code or changing identity/package clears the applied discount.
+
+Each code can serve multiple attendees; the existing active-registration check still limits each business email. Feishu and confirmation emails show the complimentary VIP pricing basis without storing or sending the full code. No new Feishu fields or schema migration are required.
+
+For isolated browser verification, run a local server with `VIP_CODES=TEST-VIP` and `RATE_LIMIT_MAX=100`, then run `test/browser-vip.cjs` with Playwright available and `REGISTRATION_TEST_URL` set to that local server. The test uses the real VIP preview endpoint and mocks registration submission, so it does not save records or send emails.
+
 ## Tests
 
 ```bash

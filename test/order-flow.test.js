@@ -7,7 +7,7 @@ const { createRequire } = require('node:module');
 
 // Execute the real backend with only external persistence/mail replaced.
 // Local credentials are never loaded in this test context.
-function loadBackend({ duplicate = null, saveError = false, mailError = false } = {}) {
+function loadBackend({ duplicate = null, saveError = false, mailError = false, vipCodes = '' } = {}) {
   const file = path.resolve(__dirname, '../server/index.js');
   const realRequire = createRequire(file);
   const saved = [], messages = [], updates = [];
@@ -23,7 +23,7 @@ function loadBackend({ duplicate = null, saveError = false, mailError = false } 
   };
   const module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
-    module, __dirname: path.dirname(file), process: { env: { SMTP_PASS: 'test-only' } },
+    module, __dirname: path.dirname(file), process: { env: { SMTP_PASS: 'test-only', VIP_CODES: vipCodes } },
     console, Buffer, URL, setTimeout, clearTimeout,
     require(name) {
       if (name === 'fs') return { ...fs, existsSync: () => false };
@@ -85,4 +85,29 @@ test('mail failure preserves the registration and records failed email status', 
   assert.equal(saved.length, 1);
   assert.equal(result.email.error, 'SMTP unavailable');
   assert.equal(updates[0].fields['Email Status / 邮件状态'], 'Failed');
+});
+
+
+test('VIP registration stores zero amount and its pricing basis in Feishu and mail', async () => {
+  const { backend, saved, messages } = loadBackend({ vipCodes: 'TEST-VIP' });
+  const registration = input();
+  registration.packageId = 'gp_ticket';
+  registration.vipCode = 'TEST-VIP';
+  const result = await backend.processOrder(registration);
+  assert.equal(result.package.price, 0);
+  assert.equal(saved[0]['Amount / 金额'], 0);
+  assert.match(saved[0]['Pricing Basis / 计价说明'], /VIP Code/);
+  assert.match(messages[0].text, /VIP Code complimentary delegate pass/);
+  assert.match(messages[0].text, /Registration fee: Complimentary \/ VIP Code/);
+  assert.ok(!JSON.stringify(saved).includes('TEST-VIP'));
+  assert.ok(!JSON.stringify(messages).includes('TEST-VIP'));
+});
+
+test('VIP registrations still reject duplicate email before saving', async () => {
+  const { backend, saved } = loadBackend({ vipCodes: 'TEST-VIP', duplicate: { record_id: 'existing', fields: { 'Status / 状态': 'Received' } } });
+  const registration = input();
+  registration.packageId = 'gp_ticket';
+  registration.vipCode = 'TEST-VIP';
+  await assert.rejects(backend.processOrder(registration), e => e.code === 'DUPLICATE_REGISTRATION');
+  assert.equal(saved.length, 0);
 });
