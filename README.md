@@ -156,23 +156,46 @@ server/packages.js
 
 Do not trust a price sent from the browser. The backend always selects the package and amount from this server file.
 
-## VIP Codes
+## One-time VIP Codes
 
-Set a comma-separated list of invitation codes in `server/.env` and restart the server:
+Use Node.js **22 or newer** and run `npm install`. VIP codes live in an independent SQLite file; registration records remain in Feishu. This requires one persistent conference server. Do not deploy the VIP feature to independent serverless instances or multiple hosts.
+
+For local development, run `npm run vip:init` once, then restart the server. It creates the missing encryption key and database path in the ignored `server/.env`, preserves existing credentials, and reuses the same key on subsequent runs. It never replaces an existing key or generates a new key for an existing database whose key is missing.
+
+For a manually configured deployment, set `server/.env` (do not commit it):
 
 ```env
-VIP_CODES=YOUR_INVITATION_CODE,ANOTHER_INVITATION_CODE
+VIP_CODE_ENCRYPTION_KEY=<base64-encoded 32-byte key>
+VIP_DB_PATH=/absolute/persistent/path/vip-codes.sqlite
 ```
 
-An empty or missing `VIP_CODES` disables redemption. Codes are trimmed and compared without regard to case. Keep the real codes out of Git and the public page.
+Generate the key with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"`. Keep it unchanged across restarts and store a protected copy separately from database backups. For local development, the database defaults to `data/vip-codes.sqlite` when `VIP_DB_PATH` is omitted. For production, use `/opt/lpclub/data/vip-codes.sqlite`. Missing or incorrect configuration disables VIP redemption; `/health` reports `vipReady: false`. Normal-price registrations remain available. The old reusable `VIP_CODES` whitelist is no longer accepted and is not imported.
 
-In the first registration step, select an identity and a **Delegate Pass**, enter the code in the upper-right VIP Code box, and click **Apply**. Mobile displays the box above the identity cards. A valid code changes that one pass to complimentary. Speaking, Panel / Roundtable and Matchmaking packages remain at their normal rates.
+Restart with `npm run dev`. Open `/table?token=YOUR_ADMIN_TOKEN`, then choose the **VIP Codes** tab next to Active Registrations and Deleted, or open `/vip-codes?token=YOUR_ADMIN_TOKEN` directly. The page and all management APIs require the existing administrator token.
 
-`POST /api/vip` accepts `{ "packageId": "gp_ticket", "vipCode": "..." }` and previews the discounted package. `POST /api/order` accepts the same optional `vipCode` alongside the existing registration payload and checks it again before saving. Previewing does not create a registration or send email. Editing the code or changing identity/package clears the applied discount.
+1. Generate 1–200 codes by entering only the quantity.
+2. Select codes and copy or export CSV to share manually. No recipient registration is required; CSV contains only the eligible full codes.
+3. After a successful VIP registration, the code changes to Used and the list automatically shows the attendee name and business email. Search by code, attendee name or email.
+4. Revoke unused codes when withdrawing invitations. Revocation makes the code unusable. Internal records are retained for safe recovery; they are not shown as an activity log.
+5. A code in Review still offers Reconcile Registration or permanent revocation after investigation. Details show its registration reference and actual attendee, without editable distribution fields.
 
-Each code can serve multiple attendees; the existing active-registration check still limits each business email. Feishu and confirmation emails show the complimentary VIP pricing basis without storing or sending the full code. No new Feishu fields or schema migration are required.
+Attendees select an identity and **Delegate Pass**, enter their code in the upper-right box and click **Apply** (above the cards on mobile). Applying previews a complimentary pass; it does not reserve the code. Final registration redeems it once. All five identities are eligible; speaking, panel and matchmaking packages retain their normal rates. Each business email still passes the registration duplicate check. Editing the code or changing identity/package clears the preview. If a code is entered but not applied, the page requires Apply or explicitly clearing it before continuing. Selecting a speaking, panel or matchmaking package shows that VIP redemption is unavailable for that package. The applied ticket price is shown as USD 0.
 
-For isolated browser verification, run a local server with `VIP_CODES=TEST-VIP` and `RATE_LIMIT_MAX=100`, then run `test/browser-vip.cjs` with Playwright available and `REGISTRATION_TEST_URL` set to that local server. The test uses the real VIP preview endpoint and mocks registration submission, so it does not save records or send emails.
+`POST /api/vip` accepts `{ "packageId": "gp_ticket", "vipCode": "..." }`. VIP submissions to `POST /api/order` additionally require an `idempotencyKey` generated by the registration page. Unchanged retries return the original saved result without creating a second record or sending a second email. The backend calculates the amount and ignores browser price overrides.
+
+The code is atomically held before writing Feishu and marked used before sending mail. A confirmed rejection releases it; network timeouts, internal errors, missing record IDs or failed finalization keep it unavailable in **review**. [Feishu's create-record error documentation](https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/create) distinguishes validation failures from internal errors and timeouts. A service restart moves unfinished redemptions to review. Use **Reconcile Registration** to compare the registration reference, email, identity/package, zero amount and internal VIP association, including records in the recycle bin. A match marks the code used. A missing/mismatched record never makes the code reusable; after manual investigation, record a reason and revoke it permanently if necessary. Cancelling or deleting a registration does not release its code.
+
+Feishu and confirmation emails contain the complimentary pricing basis and internal code ID, not the full VIP code. No Feishu schema migration is needed. SQLite stores code hashes for lookup and AES-256-GCM encrypted codes for authorized copying/exporting. Exported CSVs contain full codes and should be shared only with intended recipients.
+
+Back up the live database with SQLite's backup API:
+
+```bash
+npm run vip:backup -- /secure/backup/vip-codes-20261014.sqlite
+```
+
+Do not copy just a live `.sqlite` file while its WAL is active. To restore, stop the service, preserve the current database and journals separately, restore the snapshot to `VIP_DB_PATH`, verify the same encryption key and file permissions, then start the service. Unfinished attempts will require review. Keep the persistent directory out of uploads and source control.
+
+Browser verification uses a temporary SQLite database and simulated Feishu/mail. With Playwright and Chrome available, run `node test/browser-vip.cjs` and `node test/browser-vip-admin.cjs`; neither test writes real registrations or sends mail.
 
 ## Tests
 

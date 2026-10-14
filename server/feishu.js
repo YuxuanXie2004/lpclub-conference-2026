@@ -29,6 +29,7 @@ async function tenantToken() {
   if (tokenCache.value && Date.now() < tokenCache.expiresAt) return tokenCache.value;
   const res = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/', {
     method: 'POST',
+    signal: AbortSignal.timeout(30000),
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify({ app_id: c.appId, app_secret: c.appSecret })
   });
@@ -42,9 +43,11 @@ async function tenantToken() {
 }
 
 async function api(path, options = {}) {
-  const token = await tenantToken();
+  let token;
+  try { token = await tenantToken(); } catch(e) { e.definitelyNotSaved = true; throw e; }
   const res = await fetch('https://open.feishu.cn/open-apis' + path, {
     ...options,
+    signal: options.signal || AbortSignal.timeout(30000),
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       Authorization: `Bearer ${token}`,
@@ -55,6 +58,8 @@ async function api(path, options = {}) {
   if (data.code !== 0) {
     const e = new Error(`Feishu API error ${data.code}: ${data.msg || 'unknown'}`);
     e.feishuCode = data.code;
+    // Only explicit application rejection confirms no record was created.
+    e.definitelyNotSaved = [1254000,1254001,1254003,1254004,1254005,1254006,1254007,1254009,1254010,1254015,1254027,1254037,1254106,1254130,1254301,1254302,1254303,1254304,1254306].includes(data.code);
     throw e;
   }
   return data.data || {};

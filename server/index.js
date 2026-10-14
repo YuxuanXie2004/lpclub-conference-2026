@@ -11,7 +11,9 @@ const crypto = require('crypto');
 const sheet = require('./sheet');
 const feishu = require('./feishu');
 const { PACKAGES, IDENTITIES } = require('./packages');
-const { applyVip } = require('./vip');
+const { VipService } = require('./vip');
+const { getStore } = require('./vip-store');
+const { renderVipPage } = require('./vip-admin');
 
 (function loadDotEnv() {
   const file = path.join(__dirname, '.env');
@@ -238,15 +240,16 @@ function registrationPackage(input) {
   return p;
 }
 
+function vipService() { return new VipService({store:getStore(process.env),feishu,packages:PACKAGES}); }
 function validateVip(input) {
-  return { package: applyVip(registrationPackage(input), input && input.vipCode, process.env.VIP_CODES) };
+  return { package: vipService().preview(registrationPackage(input), input && input.vipCode) };
 }
+function vipReady() { try { getStore(process.env); return true; } catch (_) { return false; } }
 
 function normaliseOrder(input) {
   const a = input && input.attendee ? input.attendee : {};
   const basePackage = registrationPackage(input);
-  const hasVip = input && input.vipCode != null && input.vipCode !== '';
-  const p = hasVip ? applyVip(basePackage, input.vipCode, process.env.VIP_CODES) : { ...basePackage, vipApplied: false };
+  const p = { ...basePackage, vipApplied: false };
   const missing = requiredFields(a);
   if (missing.length) throw Object.assign(new Error('Please complete all required fields: ' + missing.join(', ')), { statusCode: 400 });
   if (!isBusinessEmail(a.email)) throw Object.assign(new Error('Please use your business email address. Personal email addresses are not accepted.'), { statusCode: 400, code: 'BUSINESS_EMAIL_REQUIRED' });
@@ -264,7 +267,7 @@ function normaliseOrder(input) {
     items: [{ name: p.ticketName, qty: 1, lineTotal: p.price }],
     subtotal: p.price,
     total: p.price,
-    pricingBasis: p.vipApplied ? p.name + ' — VIP Code complimentary delegate pass (standard USD ' + p.originalPrice.toLocaleString('en-US') + ')' : p.name,
+    pricingBasis: p.name,
     attendee: {
       salutation: cleanString(a.salutation, 20), fullName: cleanString(a.fullName, 120), company: cleanString(a.company, 180),
       companyType: cleanString(a.companyType, 120), department: cleanString(a.department, 120), jobTitle: cleanString(a.jobTitle, 120),
@@ -278,35 +281,35 @@ function normaliseOrder(input) {
   };
 }
 
-async function processOrder(input) {
-  feishu.assertConfigured();
-  const order = normaliseOrder(input);
-  const duplicate = await feishu.findActiveRecordByEmail(order.attendee.email);
+async function persistOrder(order) {
+  let duplicate;
+  try { duplicate = await feishu.findActiveRecordByEmail(order.attendee.email); }
+  catch(e) { throw Object.assign(new Error('Registration database is unavailable. Please try again shortly.'), {statusCode:503,code:'DATABASE_UNAVAILABLE',definitelyNotSaved:true}); }
   if (duplicate) {
     const fields = duplicate.fields || {};
     const status = fields['Status / 状态'] || 'Received';
     if (status !== 'Rejected' && status !== 'Cancelled') {
       const ref = fields['Registration Reference / 报名编号'] || '';
-      const err = new Error(`A registration already exists for this business email${ref ? ` (${ref})` : ''}. Please contact LP CLUB if you need to update it.`);
-      throw Object.assign(err, { statusCode: 409, code: 'DUPLICATE_REGISTRATION', ref });
+      throw Object.assign(new Error(`A registration already exists for this business email${ref ? ` (${ref})` : ''}. Please contact LP CLUB if you need to update it.`), {statusCode:409,code:'DUPLICATE_REGISTRATION',ref,definitelyNotSaved:true});
     }
   }
-
-  let record;
-  try {
-    record = await feishu.createRecord(toFields(order));
-  } catch (e) {
-    const err = new Error('Registration could not be saved to the registration database. Please try again shortly.');
-    throw Object.assign(err, { statusCode: 503, code: 'DATABASE_UNAVAILABLE', cause: e.message });
+  try { return await feishu.createRecord(toFields(order)); }
+  catch(e) { throw Object.assign(new Error('Registration could not be saved to the registration database. Please try again shortly.'), {statusCode:503,code:'DATABASE_UNAVAILABLE',definitelyNotSaved:e.definitelyNotSaved===true}); }
+}
+async function processOrder(input) {
+  feishu.assertConfigured();
+  let order = normaliseOrder(input), record, result, redemption;
+  if(input && input.vipCode != null && input.vipCode !== '') {
+    redemption=await vipService().redeem(order,input,persistOrder);
+    if(redemption.replayed)return redemption.result;
+    order=redemption.order;record=redemption.record;result=redemption.result;
+  } else {
+    // Pending VIP registrations also protect their email from full-price resubmission.
+    if (vipReady() && getStore(process.env).emailPending(order.attendee.email)) throw Object.assign(new Error('A VIP registration for this email is being processed. Please contact LP CLUB.'), {statusCode:409,code:'VIP_EMAIL_PROCESSING'});
+    record=await persistOrder(order);
+    if(!record || !record.record_id)throw Object.assign(new Error('Registration database did not confirm the saved record.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'});
+    result={ref:order.ref,package:order.package,saved:true,feishu:{recordId:record.record_id},email:{skipped:true,reason:'SMTP not configured'}};
   }
-
-  const result = {
-    ref: order.ref,
-    package: order.package,
-    saved: true,
-    feishu: { recordId: record && record.record_id || '' },
-    email: { skipped: true, reason: 'SMTP not configured' }
-  };
 
   if (nodemailer && SMTP.pass) {
     try {
@@ -324,6 +327,7 @@ async function processOrder(input) {
       }
     }
   }
+  if(redemption) {try {getStore(process.env).saveResult(redemption.attemptId,result);}catch(_) { /* The code is already used; mail must not be repeated. */ }}
   return result;
 }
 
@@ -344,7 +348,7 @@ function setSecurityHeaders(res) {
   res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 }
 function json(res, code, payload) {
-  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token', 'Access-Control-Allow-Methods': 'POST,GET,OPTIONS' };
+  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token', 'Access-Control-Allow-Methods': 'POST,GET,PATCH,OPTIONS' };
   if (ALLOW_ORIGIN) headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN;
   if (typeof res.setHeader === 'function') { Object.entries(headers).forEach(([k,v]) => res.setHeader(k,v)); setSecurityHeaders(res); }
   if (typeof res.status === 'function' && typeof res.json === 'function') return res.status(code).json(payload);
@@ -378,15 +382,46 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/health') {
     let feishuOk = false;
     try { feishu.assertConfigured(); feishuOk = true; } catch (_) {}
-    return json(res, 200, { ok: true, service: 'lpclub-conference', database: feishuOk ? 'feishu' : 'not-configured', feishu: feishuOk, email: Boolean(nodemailer && SMTP.pass), admin: Boolean(ADMIN_TOKEN), packagesReady: !Object.values(PACKAGES).some(p => p.needsVerification) });
+    return json(res, 200, { ok: true, service: 'lpclub-conference', database: feishuOk ? 'feishu' : 'not-configured', feishu: feishuOk, email: Boolean(nodemailer && SMTP.pass), admin: Boolean(ADMIN_TOKEN), vipReady: vipReady(), packagesReady: !Object.values(PACKAGES).some(p => p.needsVerification) });
   }
   if (req.method === 'GET' && pathname === '/api/packages') return json(res, 200, { ok: true, packages: Object.values(PACKAGES) });
+
+  if (pathname === '/vip-codes' || pathname.startsWith('/api/admin/vip-codes')) {
+    if (!allowed()) return json(res,401,{ok:false,error:'unauthorised'});
+    if (req.method === 'GET' && pathname === '/vip-codes') {
+      setSecurityHeaders(res);
+      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
+      return res.end(renderVipPage(ADMIN_TOKEN));
+    }
+    try {
+      const store=getStore(process.env), base='/api/admin/vip-codes';
+      if(pathname===base && req.method==='GET')return json(res,200,{ok:true,...store.list(Object.fromEntries(url.searchParams))});
+      if(pathname===base && req.method==='POST')return json(res,201,{ok:true,items:store.generate(await readBody(req))});
+      if(pathname===base+'/revoke' && req.method==='POST')return json(res,200,{ok:true,...store.revoke(await readBody(req))});
+      if(pathname===base+'/export' && req.method==='GET') {
+        const items=store.export((url.searchParams.get('ids')||'').split(',').filter(Boolean));
+        const cell=v=>{let s=String(v==null?'':v);if(/^[\s]*[=+@-]|^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+        const rows=[['VIP Code'],...items.map(v=>[v.code])];
+        setSecurityHeaders(res);res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Cache-Control':'no-store','Content-Disposition':'attachment; filename="vip-codes.csv"'});
+        return res.end('\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n'));
+      }
+      const match=pathname.match(/^\/api\/admin\/vip-codes\/([a-zA-Z0-9-]+)(?:\/(reconcile|resolve))?$/);
+      if(match) {
+        const id=match[1],action=match[2];
+        if(!action && req.method==='GET') {store.row(id);store.event(id,'revealed','管理员查看完整兑换码');return json(res,200,{ok:true,...store.detail(id)});}
+        if(!action && req.method==='PATCH')return json(res,200,{ok:true,item:store.update(id,await readBody(req))});
+        if(action==='reconcile' && req.method==='POST')return json(res,200,{ok:true,...await vipService().reconcile(id)});
+        if(action==='resolve' && req.method==='POST')return json(res,200,{ok:true,item:store.resolve(id,(await readBody(req)).reason)});
+      }
+      return json(res,404,{ok:false,error:'not found'});
+    } catch(e) {return json(res,e.statusCode||503,{ok:false,code:e.code||'VIP_STORAGE_UNAVAILABLE',error:e.statusCode?e.message:'VIP storage is unavailable.'});}
+  }
 
   if (req.method === 'GET' && pathname === '/table') {
     if (!allowed()) return json(res, 401, { ok: false, error: 'unauthorised' });
     setSecurityHeaders(res);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    return res.end(sheet.renderTablePage(ADMIN_TOKEN));
+    return res.end(sheet.renderTablePage(ADMIN_TOKEN, url.searchParams.get('mode')));
   }
 
   if (req.method === 'GET' && pathname === '/api/registrations') {
@@ -479,7 +514,7 @@ const server = http.createServer(async (req, res) => {
       const result = await processOrder(order);
       return json(res, 200, { ok: true, ...result });
     } catch (e) {
-      return json(res, e.statusCode || 500, { ok: false, code: e.code || 'REGISTRATION_ERROR', error: e.message || 'Registration failed', ref: e.ref || undefined });
+      return json(res, e.statusCode || 500, { ok: false, code: e.code || 'REGISTRATION_ERROR', error: e.message || 'Registration failed', ref: e.ref || undefined, retryable: e.retryable || undefined });
     }
   }
 
@@ -489,6 +524,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 if (require.main === module) {
+  vipReady();
   server.listen(PORT, () => {
     console.log(`LP CLUB conference → http://localhost:${PORT}`);
     console.log(`health             → http://localhost:${PORT}/health`);
@@ -498,4 +534,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { toFields, fromFeishuRecord, processOrder, json, sheet, feishu, isBusinessEmail, normaliseOrder, validateVip, PACKAGES, validPhone, rateAllowed };
+module.exports = { toFields, fromFeishuRecord, processOrder, json, sheet, feishu, isBusinessEmail, normaliseOrder, validateVip, PACKAGES, validPhone, rateAllowed, server };

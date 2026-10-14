@@ -4,3 +4,10 @@ data/*.ndjson
 *.log
 .DS_Store
 .env
+
+# VIP codes, SQLite journals and backups
+data/*.sqlite*
+data/*.db*
+
+# Atomic environment updates can contain private keys
+server/.env.*.tmp

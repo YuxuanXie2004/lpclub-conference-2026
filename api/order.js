@@ -14,6 +14,6 @@ module.exports = async function handler(req, res) {
     const result = await processOrder(order || {});
     return json(res, 200, { ok: true, ...result });
   } catch (e) {
-    return json(res, e.statusCode || 500, { ok: false, code: e.code || 'REGISTRATION_ERROR', error: e.message || 'Registration failed' });
+    return json(res, e.statusCode || 500, { ok: false, code: e.code || 'REGISTRATION_ERROR', error: e.message || 'Registration failed', ref: e.ref || undefined, retryable: e.retryable || undefined });
   }
 };

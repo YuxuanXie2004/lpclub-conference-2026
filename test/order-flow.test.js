@@ -3,14 +3,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const crypto = require('node:crypto');
+const { VipStore } = require('../server/vip-store');
 const { createRequire } = require('node:module');
 
 // Execute the real backend with only external persistence/mail replaced.
 // Local credentials are never loaded in this test context.
-function loadBackend({ duplicate = null, saveError = false, mailError = false, vipCodes = '' } = {}) {
+function loadBackend({ duplicate = null, saveError = false, mailError = false, vip = false, store = null, adminToken = '' } = {}) {
   const file = path.resolve(__dirname, '../server/index.js');
   const realRequire = createRequire(file);
   const saved = [], messages = [], updates = [];
+  if(vip && !store)throw new Error('VIP fixture requires an isolated store');
   const feishu = {
     assertConfigured() {},
     async findActiveRecordByEmail() { return duplicate; },
@@ -23,11 +26,12 @@ function loadBackend({ duplicate = null, saveError = false, mailError = false, v
   };
   const module = { exports: {} };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), {
-    module, __dirname: path.dirname(file), process: { env: { SMTP_PASS: 'test-only', VIP_CODES: vipCodes } },
+    module, __dirname: path.dirname(file), process: { env: { SMTP_PASS: 'test-only', ADMIN_TOKEN: adminToken } },
     console, Buffer, URL, setTimeout, clearTimeout,
     require(name) {
       if (name === 'fs') return { ...fs, existsSync: () => false };
       if (name === './feishu') return feishu;
+      if (name === './vip-store')return {getStore:()=>{if(!store)throw Object.assign(new Error('VIP storage is not configured'),{code:'VIP_STORAGE_UNAVAILABLE',statusCode:503});return store;}};
       if (name === 'nodemailer') return { createTransport: () => ({ async sendMail(message) {
         if (mailError) throw new Error('SMTP unavailable');
         messages.push(message);
@@ -88,26 +92,77 @@ test('mail failure preserves the registration and records failed email status', 
 });
 
 
-test('VIP registration stores zero amount and its pricing basis in Feishu and mail', async () => {
-  const { backend, saved, messages } = loadBackend({ vipCodes: 'TEST-VIP' });
+test('VIP registration stores zero amount and its pricing basis in Feishu and mail', async t => {
+  const store = new VipStore({filename:':memory:',key:crypto.randomBytes(32).toString('base64')});t.after(()=>store.close());
+  const item=store.generate({count:1})[0],code=store.detail(item.id).item.code;
+  const { backend, saved, messages } = loadBackend({ vip:true,store });
   const registration = input();
   registration.packageId = 'gp_ticket';
-  registration.vipCode = 'TEST-VIP';
+  registration.vipCode = code;
+  registration.idempotencyKey = crypto.randomUUID();
   const result = await backend.processOrder(registration);
   assert.equal(result.package.price, 0);
+  assert.equal(store.row(item.id).status,'used');
+  assert.equal(store.detail(item.id).item.usedName,registration.attendee.fullName);
+  assert.equal(store.detail(item.id).item.usedEmail,registration.attendee.email);
+  assert.equal(store.list({q:registration.attendee.fullName}).total,1);
+  const retry=await backend.processOrder(registration);
+  assert.equal(retry.ref,result.ref);assert.equal(saved.length,1);assert.equal(messages.length,1);
   assert.equal(saved[0]['Amount / 金额'], 0);
   assert.match(saved[0]['Pricing Basis / 计价说明'], /VIP Code/);
   assert.match(messages[0].text, /VIP Code complimentary delegate pass/);
   assert.match(messages[0].text, /Registration fee: Complimentary \/ VIP Code/);
-  assert.ok(!JSON.stringify(saved).includes('TEST-VIP'));
-  assert.ok(!JSON.stringify(messages).includes('TEST-VIP'));
+  assert.ok(!JSON.stringify(saved).includes(code));
+  assert.ok(!JSON.stringify(messages).includes(code));
 });
 
-test('VIP registrations still reject duplicate email before saving', async () => {
-  const { backend, saved } = loadBackend({ vipCodes: 'TEST-VIP', duplicate: { record_id: 'existing', fields: { 'Status / 状态': 'Received' } } });
+test('VIP registrations still reject duplicate email before saving', async t => {
+  const store = new VipStore({filename:':memory:',key:crypto.randomBytes(32).toString('base64')});t.after(()=>store.close());
+  const item=store.generate({count:1})[0],code=store.detail(item.id).item.code;
+  const { backend, saved } = loadBackend({ vip:true,store, duplicate: { record_id: 'existing', fields: { 'Status / 状态': 'Received' } } });
   const registration = input();
   registration.packageId = 'gp_ticket';
-  registration.vipCode = 'TEST-VIP';
+  registration.vipCode = code;
+  registration.idempotencyKey = crypto.randomUUID();
   await assert.rejects(backend.processOrder(registration), e => e.code === 'DUPLICATE_REGISTRATION');
   assert.equal(saved.length, 0);
+});
+
+test('VIP mail failure leaves the code used and retries never send mail twice', async t => {
+  const store=new VipStore({filename:':memory:',key:crypto.randomBytes(32).toString('base64')});t.after(()=>store.close());
+  const item=store.generate({count:1})[0],code=store.detail(item.id).item.code;
+  const {backend,saved,updates}=loadBackend({vip:true,store,mailError:true});
+  const registration=input();registration.packageId='gp_ticket';registration.vipCode=code;registration.idempotencyKey=crypto.randomUUID();
+  const result=await backend.processOrder(registration);assert.equal(result.saved,true);assert.equal(store.row(item.id).status,'used');
+  await backend.processOrder(registration);assert.equal(saved.length,1);assert.equal(updates.length,1);
+});
+
+test('management HTTP routes enforce auth and support generate/distribute/export/revoke',async t=>{
+  const store=new VipStore({filename:':memory:',key:crypto.randomBytes(32).toString('base64')});t.after(()=>store.close());
+  const {backend}=loadBackend({store,adminToken:'local-test-admin'});
+  const server=backend.server;await new Promise(r=>server.listen(0,'127.0.0.1',r));t.after(()=>new Promise(r=>server.close(r)));
+  const base='http://127.0.0.1:'+server.address().port;
+  async function request(route,method='GET',body,auth=true){return fetch(base+route,{method,headers:{...(auth?{'X-Admin-Token':'local-test-admin'}:{}),'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});}
+  assert.equal((await request('/vip-codes','GET',null,false)).status,401);
+  assert.equal((await request('/api/admin/vip-codes','POST',{count:1},false)).status,401);
+  const generated=await (await request('/api/admin/vip-codes','POST',{count:2,batchName:'=Danger'})).json();assert.equal(generated.items.length,2);
+  const id=generated.items[0].id,otherId=generated.items[1].id;
+  await request('/api/admin/vip-codes/'+id,'PATCH',{recipientName:'Jane',recipientEmail:'jane@example-capital.com',note:'@formula',distributedAt:new Date().toISOString()});
+  const detail=await (await request('/api/admin/vip-codes/'+id)).json();assert.equal(detail.item.recipientName,'Jane');assert.ok(detail.events.some(e=>e.action==='revealed'));
+  const preview=await (await request('/api/vip','POST',{packageId:'gp_ticket',vipCode:detail.item.code},false)).json();assert.equal(preview.package.price,0);assert.equal(store.row(id).status,'available');
+  assert.equal((await request('/api/admin/vip-codes/'+id+'?token=wrong')).status,401);
+  assert.equal((await request('/api/admin/vip-codes/'+crypto.randomUUID())).status,404);
+  const csv=await request('/api/admin/vip-codes/export?ids='+id);assert.match(csv.headers.get('Content-Type'),/text\/csv/);const contents=await csv.text();assert.ok(contents.includes(detail.item.code));assert.ok(!contents.includes('Danger'));assert.ok(!contents.includes('@formula'));assert.equal(contents.trim().split('\r\n')[0].replace(/^\uFEFF/,''),'"VIP Code"');
+  await request('/api/admin/vip-codes/revoke','POST',{ids:[otherId],reason:'withdrawn'});
+  const mixed=await (await request('/api/admin/vip-codes/export?ids='+id+','+otherId)).text();assert.ok(mixed.includes(detail.item.code));
+  const used=await (await request('/api/admin/vip-codes/'+otherId)).json();assert.equal(used.item.status,'revoked');
+  const rejected=await (await request('/api/vip','POST',{packageId:'gp_ticket',vipCode:used.item.code},false)).json();assert.equal(rejected.code,'VIP_REVOKED');
+  const list=await (await request('/api/admin/vip-codes?status=revoked')).json();assert.equal(list.total,1);
+  const health=await (await request('/health')).json();assert.equal(health.vipReady,true);
+});
+
+test('VIP storage unavailable rejects redemption while ordinary registration still works',async()=>{
+  const {backend,saved}=loadBackend();const registration=input();registration.packageId='gp_ticket';registration.vipCode='OLD-SHARED-CODE';registration.idempotencyKey=crypto.randomUUID();
+  await assert.rejects(backend.processOrder(registration),e=>e.code==='VIP_STORAGE_UNAVAILABLE');assert.equal(saved.length,0);
+  delete registration.vipCode;const result=await backend.processOrder(registration);assert.equal(result.package.price,2000);assert.equal(saved.length,1);
 });

@@ -15,6 +15,10 @@ if ! command -v node >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y nodejs
 fi
+if [ "$(node -p "process.versions.node.split('.')[0]")" -lt 22 ]; then
+  echo "ERROR: Node.js 22 or newer is required. Upgrade Node before continuing."
+  exit 1
+fi
 cd "$APP_DIR"
 npm install --omit=dev --no-audit --no-fund
 mkdir -p "$APP_DIR/data"
@@ -58,7 +62,7 @@ server {
   root $SITE_DIR;
   index index.html;
 
-  location ~ ^/(api/|table$|export\.csv$|health$) {
+  location ~ ^/(api/|table$|vip-codes$|export\.csv$|health$) {
     proxy_pass http://127.0.0.1:8787;
     proxy_http_version 1.1;
     proxy_set_header Host \$host;
