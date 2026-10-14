@@ -147,20 +147,21 @@ if (!html.includes('<option>LP CLUB Member</option>')) {
   );
 }
 
-// Agenda: Panel Discussion II description.
-const agendaNew = 'Investors explore frontier technology, new energy &amp; power, AI computing and digital infrastructure opportunities across Asia.';
+// Agenda: Panel Discussion II description — exact requested wording.
+const agendaNew = 'Investors explore frontier technology, new energy &amp; power, Al computing and digital infrastructure opportunities across Asia.';
 html = html.replace(
   /Investors explore AI, healthcare and other high-growth emerging sector opportunities across Asia\./g,
   agendaNew
 );
 html = html.replace(
-  /Investors explore frontier technology, new energy & power, Al computing and digital infrastructure opportunities across Asia\./g,
+  /Investors explore frontier technology, new energy (?:&|&amp;) power, (?:AI|Al) computing and digital infrastructure opportunities across Asia\./g,
   agendaNew
 );
 
-// Section 06 theme title.
-html = html.replace(/AI\s*&amp;\s*Healthcare/g, 'AI &amp; Frontier Tech &amp; New Energy');
-html = html.replace(/AI\s*&\s*Healthcare/g, 'AI &amp; Frontier Tech &amp; New Energy');
+// Section 06 theme title — exact requested wording.
+html = html.replace(/AI\s*&amp;\s*Healthcare/g, 'AI&amp;Frontier Tech&amp;New Energy');
+html = html.replace(/AI\s*&\s*Healthcare/g, 'AI&amp;Frontier Tech&amp;New Energy');
+html = html.replace(/AI\s*&amp;\s*Frontier Tech\s*&amp;\s*New Energy/g, 'AI&amp;Frontier Tech&amp;New Energy');
 
 fs.writeFileSync(indexFile, html);
 
@@ -171,5 +172,5 @@ console.log('- LP CLUB Member rates match LP: 0 / 4000 / 3000 / 5000');
 console.log('- GP: 2000 / 4000 / 3000 / 5000');
 console.log('- Investor: 2800 / 5600 / 4200 / 7000');
 console.log('- Standard: 3500 / 7000 / 5250 / 8750');
-console.log('- Panel Discussion II copy updated');
-console.log('- AI & Healthcare renamed to AI & Frontier Tech & New Energy');
+console.log('- Panel Discussion II copy updated exactly as requested');
+console.log('- AI&Healthcare renamed to AI&Frontier Tech&New Energy');
