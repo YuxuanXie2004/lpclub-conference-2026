@@ -56,6 +56,7 @@ const SALUTATION = {
 };
 const ORG_TYPE = {
   'Limited Partner (LP)': 'Limited Partner (LP) / 有限合伙人（LP）',
+  'LP CLUB Member': 'LP CLUB Member / LP CLUB会员',
   'General Partner (GP)': 'General Partner (GP) / 普通合伙人（GP）',
   'Family Office': 'Family Office / 家族办公室',
   'Government Authority': 'Government Authority / 政府机构',
@@ -231,7 +232,7 @@ function requiredFields(a) {
 function normaliseOrder(input) {
   const a = input && input.attendee ? input.attendee : {};
   const packageId = cleanString(input && input.packageId, 50);
-  const p = PACKAGES[packageId];
+  const p = Object.prototype.hasOwnProperty.call(PACKAGES, packageId) ? PACKAGES[packageId] : null;
   if (!p) throw Object.assign(new Error('Please select a valid registration category.'), { statusCode: 400 });
   const missing = requiredFields(a);
   if (missing.length) throw Object.assign(new Error('Please complete all required fields: ' + missing.join(', ')), { statusCode: 400 });

@@ -12,18 +12,17 @@ const PACKAGES = {
     note: 'For qualified institutional allocators, family offices and other LPs. Subject to organiser review.',
     needsVerification: true
   },
+  lpclub_member: {
+    id: 'lpclub_member', name: 'LP CLUB Member', ticketName: 'LP CLUB Member Delegate Pass',
+    price: 0, displayPrice: 'Complimentary / By invitation',
+    note: 'Complimentary delegate pass for LP CLUB members.', needsVerification: false
+  },
   gp: {
     id: 'gp', name: 'General Partner (GP)', ticketName: 'GP Delegate Pass',
     price: 1800, displayPrice: 'USD 1,800', note: 'For fund managers and investment firms.', needsVerification: false
   },
-  gp_early: {
-    id: 'gp_early', name: 'GP Early', ticketName: 'GP Early Delegate Pass',
-    price: 1800, displayPrice: 'USD 1,800',
-    note: 'Early registration category for qualifying GP delegates. Final rate must be verified before public launch.',
-    needsVerification: true
-  },
   investment_company: {
-    id: 'investment_company', name: 'Other Investment Company', ticketName: 'Investment Company Delegate Pass',
+    id: 'investment_company', name: 'Investor', ticketName: 'Investment Company Delegate Pass',
     price: 3150, displayPrice: 'USD 3,150',
     note: 'For investment-related organisations outside the LP/GP categories. Final rate must be verified before public launch.',
     needsVerification: true

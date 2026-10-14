@@ -21,6 +21,36 @@ test('server owns GP price', () => {
   assert.equal(order.total, 1800);
 });
 
+test('registration offers the five approved identities', () => {
+  assert.deepEqual(Object.keys(backend.PACKAGES), ['lp', 'lpclub_member', 'gp', 'investment_company', 'standard']);
+  assert.equal(backend.PACKAGES.investment_company.name, 'Investor');
+});
+
+test('LP CLUB members receive a complimentary pass and retain their organisation type', () => {
+  const input = sample('member@capital-example.com', 'lpclub_member');
+  input.attendee.companyType = 'LP CLUB Member';
+  const order = backend.normaliseOrder(input);
+  assert.equal(order.total, 0);
+  assert.equal(backend.toFields(order)['Organization Type / 机构类型'], 'LP CLUB Member / LP CLUB会员');
+});
+
+test('GP Early cannot be used for new registrations', () => {
+  assert.throws(() => backend.normaliseOrder(sample('jane@capital-example.com', 'gp_early')), /valid registration category/i);
+});
+
+test('historical registrations retain their original category, package and amount', () => {
+  const row = backend.fromFeishuRecord({ record_id: 'legacy', fields: {
+    'Package ID / 套餐ID': 'gp_early',
+    'Ticket / 票种': 'GP Early Delegate Pass',
+    'Amount / 金额': 1800,
+    'Pricing Basis / 计价说明': 'GP Early'
+  }});
+  assert.equal(row.packageId, 'gp_early');
+  assert.equal(row.items, 'GP Early Delegate Pass');
+  assert.equal(row.total, 1800);
+  assert.equal(row.pricingBasis, 'GP Early');
+});
+
 test('new registrations are explicitly not deleted', () => {
   const order = backend.normaliseOrder(sample());
   const fields = backend.toFields(order);
