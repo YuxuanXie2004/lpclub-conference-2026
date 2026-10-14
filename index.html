@@ -96,31 +96,26 @@
   .about-points .card-body b { display: block; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--green-700); margin-bottom: 8px; }
   .about-points .card-body p { font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); margin: 0; }
 
-  .hl-strip { margin-top: 46px; background: linear-gradient(180deg, #ffffff 0%, var(--green-50) 100%); border: 1px solid var(--line); border-radius: 20px; padding: 30px 36px 28px; box-shadow: 0 12px 34px rgba(34,48,42,.05); }
-  .hl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .hl-strip { position: relative; margin-top: 46px; background: radial-gradient(ellipse at top right, rgba(183,204,187,.42), transparent 65%), linear-gradient(135deg, #fbfcf8 0%, #eef3ea 48%, #e3ede2 100%); border: 1px solid var(--green-200); border-radius: 24px; padding: 36px; box-shadow: 0 16px 42px rgba(34,48,42,.06); }
+  .hl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 28px; border-bottom: 1px solid rgba(63,99,80,.18); }
   .hl-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--green-700); }
-  .hl-eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--green-400); }
-  .hl-title { font-family: var(--sans); font-size: 20px; font-weight: 700; color: var(--green-900); letter-spacing: -.02em; line-height: 1.3; margin-top: 10px; }
-  .hl-meta { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--green-500); white-space: nowrap; padding-bottom: 5px; }
-  .hl-row { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; }
-  .hl-row li { padding: 22px 26px 4px 26px; border-left: 1px solid var(--line); }
-  .hl-row li:first-child { padding-left: 0; border-left: none; }
-  .hl-row li:last-child { padding-right: 0; }
-  .hl-num { font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .12em; color: var(--green-400); display: block; margin-bottom: 10px; }
-  .hl-row p { font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
-  @media (max-width: 900px) {
-    .about-points { grid-template-columns: 1fr; gap: 18px; }
-    .hl-row { grid-template-columns: repeat(2, 1fr); }
-    .hl-row li { padding: 20px 0 6px; border-left: none; border-top: 1px solid var(--line); }
-    .hl-row li:nth-child(even) { padding-left: 24px; border-left: 1px solid var(--line); }
-    .hl-row li:nth-child(odd) { padding-right: 24px; }
-    .hl-row li:nth-child(-n+2) { border-top: none; }
-  }
+  .hl-eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--green-700); }
+  .hl-title { max-width: 580px; font-family: var(--sans); font-size: clamp(22px, 2.4vw, 28px); font-weight: 700; color: var(--green-900); letter-spacing: -.025em; line-height: 1.3; margin-top: 12px; }
+  .hl-meta { font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--green-700); white-space: nowrap; padding-bottom: 5px; }
+  .hl-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 30px; list-style: none; margin-top: 18px; }
+  .hl-row li { display: flex; align-items: flex-start; gap: 18px; padding: 22px 14px 22px 0; border-radius: 12px; transition: background .2s ease; }
+  .hl-row li:hover { background: rgba(255,255,255,.48); }
+  .hl-num { flex: 0 0 44px; height: 44px; border-radius: 12px; background: linear-gradient(145deg, var(--green-800), var(--green-700)); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .08em; display: grid; place-items: center; box-shadow: 0 5px 12px rgba(44,74,58,.12); }
+  .hl-row h4 { font-size: 17px; font-weight: 700; line-height: 1.4; color: var(--green-900); margin-bottom: 7px; }
+  .hl-row p { font-size: 14px; line-height: 1.65; color: var(--ink-soft); }
+  @media (max-width: 900px) { .about-points { grid-template-columns: 1fr; gap: 18px; } }
   @media (max-width: 560px) {
-    .hl-strip { padding: 24px 22px 20px; }
-    .hl-row { grid-template-columns: 1fr; }
-    .hl-row li, .hl-row li:nth-child(odd), .hl-row li:nth-child(even) { padding: 18px 0 4px; border-left: none; border-top: 1px solid var(--line); }
-    .hl-row li:first-child { border-top: none; }
+    .hl-strip { padding: 26px 22px; border-radius: 18px; }
+    .hl-head { gap: 16px; padding-bottom: 22px; }
+    .hl-meta { white-space: normal; }
+    .hl-row { grid-template-columns: 1fr; gap: 0; margin-top: 8px; }
+    .hl-row li { gap: 14px; padding: 20px 0; border-bottom: 1px solid rgba(63,99,80,.14); }
+    .hl-row li:last-child { padding-bottom: 0; border-bottom: 0; }
   }
   @media (max-width: 1024px) { .rk-timeline { grid-template-columns: repeat(3, 1fr); row-gap: 30px; } .rk-timeline::before { display: none; } .rk-item { padding: 0 18px 0 0; } .rk-item::before { margin-bottom: 12px; } }
   @media (max-width: 640px) { .rk { padding: 30px 24px 26px; } .rk-timeline { grid-template-columns: 1fr; } .rk-item { padding: 0 0 26px 34px; } .rk-item::before { position: absolute; left: 0; top: 2px; margin: 0; } .rk-item:last-child { padding-bottom: 4px; } }
@@ -163,17 +158,38 @@
   @media (max-width: 640px) { .themes { grid-template-columns: 1fr; } }
 
   /* ---------- Format ---------- */
-  .format { background: var(--green-900); color: #dfe9db; }
+  .format { position: relative; background: radial-gradient(ellipse at 85% 0%, rgba(111,143,124,.28), transparent 55%), linear-gradient(120deg, #16241c 0%, #243e30 55%, #3f6350 100%); color: var(--green-150); }
   .format h2 { color: #fff; }
   .format h2 em { color: var(--green-300); }
-  .format .section-lead { color: var(--green-300); }
-  .format-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin-top: 52px; }
-  .format-step { border-top: 1px solid rgba(255,255,255,.18); padding-top: 22px; }
-  .format-step .fnum { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .24em; color: var(--green-400); display: block; margin-bottom: 12px; }
-  .format-step h3 { font-family: var(--sans); font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-  .format-step p { font-size: 13.5px; color: var(--green-300); }
-  @media (max-width: 900px) { .format-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .format-grid { grid-template-columns: 1fr; } }
+  .format .section-lead { color: var(--green-200); }
+  .format-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-top: 48px; }
+  .format-grid::before { content: ""; position: absolute; top: 26px; left: 44px; right: calc((100% - 54px) / 4 - 44px); height: 1px; background: linear-gradient(90deg, var(--green-500), var(--green-300)); }
+  .format-step { position: relative; padding: 0 18px 24px; border-radius: 16px; background: linear-gradient(180deg, transparent 48px, rgba(183,204,187,.06) 48px, rgba(183,204,187,.12)); }
+  .format-step .fnum { position: relative; display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 26px; border: 1px solid var(--green-400); border-radius: 50%; background: var(--green-900); color: var(--green-150); font-size: 13px; font-weight: 600; letter-spacing: .08em; box-shadow: 0 0 0 6px rgba(30,53,41,.45); }
+  .format-step:nth-child(2) .fnum { background: #294936; }
+  .format-step:nth-child(3) .fnum { background: #365c43; }
+  .format-step:nth-child(4) .fnum { background: #446f51; }
+  .format-step h3 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -.02em; }
+  .format-step p { font-size: 14px; line-height: 1.7; color: var(--green-200); }
+  .section-motion.motion-ready .hl-row li, .section-motion.motion-ready .format-step { opacity: 0; transform: translateY(16px); }
+  .section-motion.motion-ready.is-visible .hl-row li, .section-motion.motion-ready.is-visible .format-step { opacity: 1; transform: none; transition: opacity .55s ease, transform .55s ease, background .2s ease; }
+  .section-motion.is-visible li:nth-child(2), .section-motion.is-visible .format-step:nth-child(2) { transition-delay: .08s; }
+  .section-motion.is-visible li:nth-child(3), .section-motion.is-visible .format-step:nth-child(3) { transition-delay: .16s; }
+  .section-motion.is-visible li:nth-child(4), .section-motion.is-visible .format-step:nth-child(4) { transition-delay: .24s; }
+  @media (max-width: 900px) { .format-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 18px; } .format-grid::before { display: none; } }
+  @media (max-width: 560px) {
+    .format-grid { grid-template-columns: 1fr; gap: 0; }
+    .format-grid::before { display: block; top: 20px; bottom: 48px; left: 25px; right: auto; width: 1px; height: auto; background: linear-gradient(180deg, var(--green-500), var(--green-300)); }
+    .format-step { display: grid; grid-template-columns: 52px minmax(0,1fr); column-gap: 20px; padding: 0 0 30px; border-radius: 0; background: none; }
+    .format-step .fnum { grid-row: 1 / span 2; margin: 0; }
+    .format-step h3 { margin: 7px 0 10px; }
+    .format-step p { grid-column: 2; }
+    .format-step:last-child { padding-bottom: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .section-motion.motion-ready .hl-row li, .section-motion.motion-ready .format-step { opacity: 1; transform: none; transition: none; }
+    .section-motion .hl-row li, .section-motion .format-step, .section-motion.motion-ready.is-visible .hl-row li, .section-motion.motion-ready.is-visible .format-step { transition: none; }
+  }
 
   /* ---------- Agenda ---------- */
   .agenda { max-width: 1080px; margin: 48px auto 0; }
@@ -759,7 +775,7 @@
       </div>
     </div>
 
-    <div class="hl-strip">
+    <div class="hl-strip section-motion">
       <div class="hl-head">
         <div>
           <span class="hl-eyebrow">Conference Highlights</span>
@@ -768,10 +784,10 @@
         <span class="hl-meta">18 November 2026 · Hong Kong</span>
       </div>
       <ol class="hl-row">
-        <li><span class="hl-num">01</span><p>Keynote speeches from leading investors and industry experts</p></li>
-        <li><span class="hl-num">02</span><p>In-depth panel discussions on the trends shaping private markets</p></li>
-        <li><span class="hl-num">03</span><p>Coffee-break exchange in a curated, senior-level setting</p></li>
-        <li><span class="hl-num">04</span><p>Investor networking sessions across the LP–GP ecosystem</p></li>
+        <li><span class="hl-num" aria-hidden="true">01</span><div><h4>Keynote perspectives</h4><p>Keynote speeches from leading investors and industry experts</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">02</span><div><h4>Panel discussions</h4><p>In-depth panel discussions on the trends shaping private markets</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">03</span><div><h4>Curated exchange</h4><p>Coffee-break exchange in a curated, senior-level setting</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">04</span><div><h4>Investor networking</h4><p>Investor networking sessions across the LP–GP ecosystem</p></div></li>
       </ol>
     </div>
   </div>
@@ -1060,16 +1076,16 @@
 </section>
 
 <!-- ============ FORMAT ============ -->
-<section class="format">
+<section class="format section-motion">
   <div class="wrap">
     <span class="num" style="color:var(--green-400);">07 — EVENT FORMAT</span>
     <h2 class="section-title">From insight <em>to exchange</em></h2>
     <p class="section-lead">A curated investment forum combining thought leadership, strategic dialogue and investor networking — designed to connect capital, ideas and opportunities across Asia's private equity ecosystem.</p>
     <div class="format-grid">
-      <div class="format-step"><span class="fnum">01 · INSIGHT</span><h3>Insight</h3><p>Keynote speeches from leading investors and industry experts.</p></div>
-      <div class="format-step"><span class="fnum">02 · DIALOGUE</span><h3>Dialogue</h3><p>Focused panel discussions exploring the trends shaping private markets.</p></div>
-      <div class="format-step"><span class="fnum">03 · CONNECTION</span><h3>Connection</h3><p>Face-to-face networking among LPs, GPs, family offices and institutional investors.</p></div>
-      <div class="format-step"><span class="fnum">04 · OPPORTUNITY</span><h3>Opportunity</h3><p>A platform for investment opportunities, fundraising and strategic partnerships.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">01</span><h3>Insight</h3><p>Keynote speeches from leading investors and industry experts.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">02</span><h3>Dialogue</h3><p>Focused panel discussions exploring the trends shaping private markets.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">03</span><h3>Connection</h3><p>Face-to-face networking among LPs, GPs, family offices and institutional investors.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">04</span><h3>Opportunity</h3><p>A platform for investment opportunities, fundraising and strategic partnerships.</p></div>
     </div>
   </div>
 </section>
@@ -1315,7 +1331,23 @@
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
   regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage)showStep(2);else if(regStep===2)submitRegistration()});
   regForm.elements.email.addEventListener('blur',function(){var hint=document.getElementById('emailHint');hint.classList.toggle('error',this.value&&!businessEmail(this.value))});
-  renderMulti();loadPackages();  /* ---------- Stats count-up ---------- */
+  renderMulti();loadPackages();
+
+  /* ---------- Conference section entrance ---------- */
+  (function () {
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var panels = document.querySelectorAll('.section-motion');
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+    panels.forEach(function (panel) { panel.classList.add('motion-ready'); observer.observe(panel); });
+  })();
+
+  /* ---------- Stats count-up ---------- */
   (function () {
     var els = Array.prototype.slice.call(document.querySelectorAll('.stat b[data-count]'));
     if (!els.length || !('IntersectionObserver' in window)) return;
