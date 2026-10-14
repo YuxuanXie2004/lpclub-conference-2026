@@ -10,7 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 const sheet = require('./sheet');
 const feishu = require('./feishu');
-const { PACKAGES } = require('./packages');
+const { PACKAGES, IDENTITIES } = require('./packages');
 
 (function loadDotEnv() {
   const file = path.join(__dirname, '.env');
@@ -225,13 +225,14 @@ function rateAllowed(ip) {
 function validPhone(v) { const s = String(v || '').replace(/[\s().-]/g, ''); return /^\+?\d{6,18}$/.test(s); }
 function validDate(v) { if (!v) return true; const d = Date.parse(v + (String(v).length === 10 ? 'T00:00:00Z' : '')); return !Number.isNaN(d); }
 function requiredFields(a) {
-  const req = ['fullName','company','companyType','country','jobTitle','email','phone','matchmaking','visaLetter'];
+  const req = ['fullName','company','companyType','country','jobTitle','email','phone','visaLetter'];
   return req.filter(k => !cleanString(a[k]));
 }
 
 function normaliseOrder(input) {
   const a = input && input.attendee ? input.attendee : {};
-  const packageId = cleanString(input && input.packageId, 50);
+  const requestedId = cleanString(input && input.packageId, 50);
+  const packageId = Object.prototype.hasOwnProperty.call(IDENTITIES, requestedId) ? requestedId + '_ticket' : requestedId;
   const p = Object.prototype.hasOwnProperty.call(PACKAGES, packageId) ? PACKAGES[packageId] : null;
   if (!p) throw Object.assign(new Error('Please select a valid registration category.'), { statusCode: 400 });
   const missing = requiredFields(a);
@@ -247,7 +248,7 @@ function normaliseOrder(input) {
     source: 'conference.lp-club.cn',
     status: 'Received',
     currency: 'USD',
-    package: { id: p.id, name: p.name, ticketName: p.ticketName, price: p.price, displayPrice: p.displayPrice },
+    package: { id: p.id, identityId: p.identityId, identityName: p.identityName, optionId: p.optionId, organisationType: p.organisationType, name: p.name, ticketName: p.ticketName, price: p.price, displayPrice: p.displayPrice },
     items: [{ name: p.ticketName, qty: 1, lineTotal: p.price }],
     subtotal: p.price,
     total: p.price,
@@ -259,7 +260,7 @@ function normaliseOrder(input) {
       whatsappSame: cleanString(a.whatsappSame, 10), whatsappNumber: cleanString(a.whatsappNumber, 60), email: cleanString(a.email, 180).toLowerCase(),
       focus: Array.isArray(a.focus) ? a.focus.map(x => cleanString(x, 80)).slice(0, 12) : [],
       purpose: Array.isArray(a.purpose) ? a.purpose.map(x => cleanString(x, 80)).slice(0, 12) : [],
-      matchmaking: cleanString(a.matchmaking, 10), visaLetter: cleanString(a.visaLetter, 10), arrivalDate: cleanString(a.arrivalDate, 20),
+      matchmaking: p.optionId === 'matchmaking' ? 'Yes' : 'No', visaLetter: cleanString(a.visaLetter, 10), arrivalDate: cleanString(a.arrivalDate, 20),
       guests: a.guests === '' || a.guests == null ? '' : Math.max(0, Math.min(20, Number(a.guests) || 0)), consent: Boolean(a.consent)
     }
   };

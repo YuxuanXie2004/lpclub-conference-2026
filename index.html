@@ -628,6 +628,7 @@
   .reg-step.active{color:var(--green-900)}.reg-step.active i{background:var(--green-800);color:#fff;border-color:var(--green-800)}
   .reg-line{height:1px;width:36px;background:var(--green-200)}
   .reg-body{padding:28px;overflow:auto;flex:1}
+  .reg-screen{padding:0}
   .reg-screen[hidden]{display:none!important}
   .reg-section-title{font-family:var(--sans);font-size:18px;color:var(--green-900);margin:0 0 7px}
   .reg-section-lead{font-size:13.5px;color:var(--ink-soft);margin-bottom:22px;line-height:1.65}
@@ -652,6 +653,15 @@
   .reg-note{margin-top:16px;font-size:11.5px;color:var(--green-500);line-height:1.6}
   .reg-privacy{margin-top:10px;padding:12px 14px;border-radius:11px;background:var(--green-50);border:1px solid var(--line);font-size:11.5px;line-height:1.65;color:var(--ink-soft)}.reg-privacy b{color:var(--green-900)}
   @media(max-width:720px){.reg-backdrop{padding:0;place-items:stretch}.reg-panel{height:100vh;max-height:none;border-radius:0}.reg-grid{grid-template-columns:1fr}.reg-field.full{grid-column:auto}.reg-head,.reg-body,.reg-foot,.reg-steps{padding-left:18px;padding-right:18px}.reg-step span{display:none}.reg-line{flex:1}.reg-package{grid-template-columns:22px 1fr}.reg-price{grid-column:2;text-align:left}.reg-foot{flex-wrap:wrap}.reg-actions{width:100%}.reg-actions .btn{flex:1}.reg-summary{flex-direction:column}.reg-head h3{font-size:20px}}
+
+  /* Identity selection within the existing registration modal. */
+  .reg-identity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+  .reg-identity{border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;background:#fff;text-align:left;font:inherit;cursor:pointer}
+  .reg-identity b{display:block;color:var(--green-900);font-size:14px}
+  .reg-identity small{display:block;color:var(--ink-soft);font-size:12px;line-height:1.5;margin-top:4px}
+  .reg-identity:hover,.reg-identity.selected{border-color:var(--green-800)}
+  .reg-identity.selected,.reg-identity:focus-visible,.reg-package:focus-within{outline:2px solid var(--green-500);outline-offset:2px}
+  @media(max-width:720px){.reg-identity-grid{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -1104,16 +1114,21 @@
       <button class="reg-close" type="button" id="regClose" aria-label="Close">×</button>
     </div>
     <div class="reg-steps">
-      <div class="reg-step active" data-step-indicator="1"><i>1</i><span>Package</span></div><div class="reg-line"></div>
+      <div class="reg-step active" data-step-indicator="1"><i>1</i><span>Registration</span></div><div class="reg-line"></div>
       <div class="reg-step" data-step-indicator="2"><i>2</i><span>Your details</span></div><div class="reg-line"></div>
       <div class="reg-step" data-step-indicator="3"><i>3</i><span>Confirmation</span></div>
     </div>
     <div class="reg-body">
       <div class="reg-alert" id="regAlert" role="alert" aria-live="polite"></div>
       <section class="reg-screen" data-reg-step="1">
-        <h4 class="reg-section-title">Choose your registration category</h4>
-        <p class="reg-section-lead">Select the category that best represents you. Your registration package and fee update automatically.</p>
-        <div class="reg-packages" id="regPackages"><div class="reg-note">Loading registration packages…</div></div>
+        <h4 class="reg-section-title">1. Choose your identity</h4>
+        <p class="reg-section-lead">Select the category that best represents you.</p>
+        <div class="reg-identity-grid" id="regIdentities"><div class="reg-note">Loading registration categories…</div></div>
+        <div id="regParticipationWrap" hidden>
+          <h4 class="reg-section-title" style="margin-top:26px">2. Choose one participation option</h4>
+          <p class="reg-section-lead">Choose one delegate pass or package. Speaking, Panel / Roundtable and 1-on-1 LP Matchmaking packages each include one delegate pass for one attendee.</p>
+          <div class="reg-packages" id="regPackages"></div>
+        </div>
         <p class="reg-note">LP CLUB reviews attendee eligibility. Selecting a category does not constitute payment or final admission approval.</p>
       </section>
       <section class="reg-screen" data-reg-step="2" hidden>
@@ -1135,7 +1150,6 @@
             <div class="reg-field"><label>WhatsApp / WeChat number</label><input name="whatsappNumber"></div>
             <div class="reg-field full"><div class="reg-group-label">Investment focus</div><div class="reg-choice-grid" data-multi="focus"></div></div>
             <div class="reg-field full"><div class="reg-group-label">Purpose of attendance</div><div class="reg-choice-grid" data-multi="purpose"></div></div>
-            <div class="reg-field"><label>Interested in LP & GP 1-on-1 matchmaking? <span>*</span></label><select name="matchmaking" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
             <div class="reg-field"><label>Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
             <div class="reg-field"><label>Expected arrival date</label><input name="arrivalDate" type="date"></div>
             <div class="reg-field"><label>Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
@@ -1176,7 +1190,9 @@
   var regForm = document.getElementById('regForm');
   var regAlert = document.getElementById('regAlert');
   var regPackagesEl = document.getElementById('regPackages');
-  var regStep = 1, selectedPackage = null, packageList = [];
+  var regIdentitiesEl = document.getElementById('regIdentities');
+  var regParticipationWrap = document.getElementById('regParticipationWrap');
+  var regStep = 1, selectedIdentity = null, selectedPackage = null, packageList = [], packageLoadError = '';
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
     focus:['Private Equity','Private Credit','Secondaries','Co-Investment','AI & Technology','Healthcare','Cross-Border Investment','Real Assets','Other'],
@@ -1188,23 +1204,67 @@
   function showAlert(msg){regAlert.textContent=msg;regAlert.classList.toggle('show',Boolean(msg))}
   function businessEmail(value){var s=String(value||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return false;return PERSONAL_DOMAINS.indexOf(s.split('@').pop())===-1}
   function renderMulti(){Object.keys(MULTI).forEach(function(key){var box=document.querySelector('[data-multi="'+key+'"]');if(!box)return;box.innerHTML=MULTI[key].map(function(v){return '<label class="reg-chip"><input type="checkbox" value="'+escHtml(v)+'"><span>'+escHtml(v)+'</span></label>'}).join('')})}
-  function renderPackages(){regPackagesEl.innerHTML=packageList.map(function(p){return '<label class="reg-package" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'"><span class="reg-radio"></span><span><b>'+escHtml(p.name)+'</b><small>'+escHtml(p.note||p.ticketName||'')+'</small></span><span class="reg-price">'+escHtml(money(p))+'</span></label>'}).join('');
-    regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.addEventListener('click',function(){regPackagesEl.querySelectorAll('.reg-package').forEach(function(x){x.classList.remove('selected')});row.classList.add('selected');var id=row.getAttribute('data-package');selectedPackage=packageList.find(function(p){return p.id===id})||null;regNext.disabled=!selectedPackage;showAlert('')})})}
-  function fallbackPackages(){return [
-    {id:'lp',name:'Limited Partner (LP)',ticketName:'LP Delegate Pass',price:0,displayPrice:'Complimentary / By invitation',note:'For qualified institutional allocators and LPs. Subject to organiser review.'},
-    {id:'lpclub_member',name:'LP CLUB Member',ticketName:'LP CLUB Member Delegate Pass',price:0,displayPrice:'Complimentary / By invitation',note:'Complimentary delegate pass for LP CLUB members.'},
-    {id:'gp',name:'General Partner (GP)',ticketName:'GP Delegate Pass',price:1800,displayPrice:'USD 1,800',note:'For fund managers and investment firms.'},
-    {id:'investment_company',name:'Investor',ticketName:'Investment Company Delegate Pass',price:3150,displayPrice:'USD 3,150',note:'For other investment-related organisations. Final rate must be verified before public launch.'},
-    {id:'standard',name:'Standard',ticketName:'Standard Delegate Pass',price:3150,displayPrice:'USD 3,150',note:'Standard conference registration.'}
-  ]}
-  function loadPackages(){fetch('/api/packages').then(function(r){if(!r.ok)throw new Error();return r.json()}).then(function(d){packageList=d.packages||fallbackPackages();renderPackages()}).catch(function(){packageList=fallbackPackages();renderPackages()})}
-  function openReg(){if(regStep===3){regForm.reset();selectedPackage=null;regPackagesEl.querySelectorAll('.reg-package').forEach(function(x){x.classList.remove('selected')})}regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20)}
+  function validPackages(data){
+    if(!data || data.ok!==true || !Array.isArray(data.packages) || data.packages.length!==20)return false;
+    var identities=['lp','lpclub_member','gp','investment_company','standard'];
+    var options=['ticket','speaking','panel','matchmaking'], seen={};
+    return data.packages.every(function(p){
+      if(!p || identities.indexOf(p.identityId)===-1 || options.indexOf(p.optionId)===-1 || p.id!==p.identityId+'_'+p.optionId || seen[p.id])return false;
+      if(!Number.isFinite(p.price) || p.price<0 || !Number.isInteger(p.price) || p.available!==true)return false;
+      if(!['identityName','name','ticketName','organisationType','displayPrice'].every(function(k){return typeof p[k]==='string' && p[k].trim()}))return false;
+      seen[p.id]=true;return true;
+    });
+  }
+  function renderIdentities(){
+    var identities=packageList.filter(function(p){return p.optionId==='ticket'});
+    regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity" data-identity="'+escHtml(p.identityId)+'" aria-pressed="false"><b>'+escHtml(p.identityName)+'</b><small>'+escHtml(p.note||'')+'</small></button>'}).join('');
+    regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(btn){btn.addEventListener('click',function(){
+      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;
+      regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(x){x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',String(x===btn))});
+      renderPackages();regParticipationWrap.hidden=false;regNext.disabled=true;showAlert('');
+    })});
+  }
+  function renderPackages(){
+    var list=packageList.filter(function(p){return p.identityId===selectedIdentity});
+    regPackagesEl.innerHTML=list.map(function(p){return '<label class="reg-package" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'"><span class="reg-radio"></span><span><b>'+escHtml(p.ticketName)+'</b><small>'+escHtml(p.note||'')+'</small></span><span class="reg-price">'+escHtml(money(p))+'</span></label>'}).join('');
+    regPackagesEl.querySelectorAll('input').forEach(function(input){input.addEventListener('change',function(){
+      selectedPackage=list.find(function(p){return p.id===input.value})||null;
+      regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.classList.toggle('selected',row.getAttribute('data-package')===input.value)});
+      regNext.disabled=!selectedPackage;showAlert('');
+    })});
+  }
+  async function loadPackages(){
+    try{
+      var response=await fetch('/api/packages');
+      if(!response.ok)throw new Error('Package request failed');
+      var data=await response.json();
+      if(!validPackages(data))throw new Error('Invalid package catalogue');
+      packageList=data.packages;packageLoadError='';renderIdentities();
+    }catch(err){
+      packageList=[];selectedIdentity=null;selectedPackage=null;regIdentitiesEl.innerHTML='';regPackagesEl.innerHTML='';regParticipationWrap.hidden=true;regNext.disabled=true;
+      packageLoadError='Registration pricing could not be loaded. Please refresh or contact LP CLUB.';showAlert(packageLoadError);
+    }
+  }
+  function openReg(){
+    if(regStep===3){regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';renderIdentities()}
+    regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
+  }
   function closeReg(){regModal.classList.remove('open');regModal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
-  function showStep(n){regStep=n;document.querySelectorAll('[data-reg-step]').forEach(function(s){s.hidden=Number(s.getAttribute('data-reg-step'))!==n});document.querySelectorAll('[data-step-indicator]').forEach(function(el){el.classList.toggle('active',Number(el.getAttribute('data-step-indicator'))<=n)});regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=n===1?!selectedPackage:false;showAlert('');if(n===2&&selectedPackage){document.getElementById('regSummaryName').textContent=selectedPackage.ticketName;document.getElementById('regSummaryPrice').textContent=money(selectedPackage);var org=regForm.elements.companyType;if(selectedPackage.id==='lp')org.value='Limited Partner (LP)';if(selectedPackage.id==='lpclub_member')org.value='LP CLUB Member';if(selectedPackage.id==='gp')org.value='General Partner (GP)';if(selectedPackage.id==='investment_company')org.value='Investment Company'}}
+  function showStep(n){
+    regStep=n;document.querySelectorAll('[data-reg-step]').forEach(function(s){s.hidden=Number(s.getAttribute('data-reg-step'))!==n});
+    document.querySelectorAll('[data-step-indicator]').forEach(function(el){el.classList.toggle('active',Number(el.getAttribute('data-step-indicator'))<=n)});
+    regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=n===1?!selectedPackage:false;
+    showAlert(n===1?packageLoadError:'');
+    if(n===2&&selectedPackage){
+      document.getElementById('regSummaryName').textContent=selectedPackage.identityName+' — '+selectedPackage.ticketName;
+      document.getElementById('regSummaryPrice').textContent=money(selectedPackage);
+      regForm.elements.companyType.value=selectedPackage.organisationType;
+    }
+  }
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
-  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),matchmaking:fd.get('matchmaking'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
+  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
   function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){hint.textContent='Please use your business email address. Personal email addresses are not accepted.';hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
-  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formPayload())});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(selectedPackage.ticketName)+'</b><br>'+escHtml(money(selectedPackage))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=false;regNext.textContent='Submit Registration'}}}
+  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formPayload())});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(data.package.identityName+' — '+data.package.ticketName)+'</b><br>'+escHtml(money(data.package))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=false;regNext.textContent='Submit Registration'}}}
 
   document.querySelectorAll('[data-open-form]').forEach(function(btn){btn.addEventListener('click',openReg)});
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
