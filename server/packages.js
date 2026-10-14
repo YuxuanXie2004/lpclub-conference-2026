@@ -23,7 +23,7 @@ const IDENTITIES = {
     note: 'For fund managers and general partners.'
   },
   investment_company: {
-    id: 'investment_company', name: 'Investor', organisationType: 'Investment Company',
+    id: 'investment_company', name: 'Investment Firm', organisationType: 'Investment Company',
     note: 'For investment firms, institutional investors and related investment organisations.'
   },
   standard: {

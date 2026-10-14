@@ -23,7 +23,7 @@ test('server owns GP price', () => {
 
 test('registration offers the five approved identities', () => {
   assert.deepEqual([...new Set(Object.values(backend.PACKAGES).map(p => p.identityId))], ['lp', 'lpclub_member', 'gp', 'investment_company', 'standard']);
-  assert.equal(backend.PACKAGES.investment_company_ticket.name, 'Investor');
+  assert.equal(backend.PACKAGES.investment_company_ticket.name, 'Investment Firm');
 });
 
 test('LP CLUB members receive a complimentary pass and retain their organisation type', () => {

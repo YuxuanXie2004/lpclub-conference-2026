@@ -13,7 +13,7 @@ const packagesSource = `'use strict';
  * Approved 2026 conference pricing — full price only.
  * Early-bird / 10% discount has been removed.
  * Identities shown on the registration site:
- * LP / LP CLUB Member / GP / Investor / Standard.
+ * LP / LP CLUB Member / GP / Investment Firm / Standard.
  */
 
 const BASE_PRICES = {
@@ -73,7 +73,7 @@ const IDENTITIES = {
   },
   investment_company: {
     id: 'investment_company',
-    name: 'Investor',
+    name: 'Investment Firm',
     note: 'For investment firms, institutional investors and related investment organisations.',
     organisationType: 'Investment Company',
     needsVerification: false
@@ -167,10 +167,10 @@ fs.writeFileSync(indexFile, html);
 
 console.log('✓ 14 Oct conference updates applied');
 console.log('- early-bird / 10% discount removed; all prices are full approved prices');
-console.log('- identities: LP / LP CLUB Member / GP / Investor / Standard');
+console.log('- identities: LP / LP CLUB Member / GP / Investment Firm / Standard');
 console.log('- LP CLUB Member rates match LP: 0 / 4000 / 3000 / 5000');
 console.log('- GP: 2000 / 4000 / 3000 / 5000');
-console.log('- Investor: 2800 / 5600 / 4200 / 7000');
+console.log('- Investment Firm: 2800 / 5600 / 4200 / 7000');
 console.log('- Standard: 3500 / 7000 / 5250 / 8750');
 console.log('- Panel Discussion II copy updated exactly as requested');
 console.log('- AI & Healthcare renamed to AI & Frontier Tech & New Energy');
