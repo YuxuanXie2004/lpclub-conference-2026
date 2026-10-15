@@ -96,31 +96,26 @@
   .about-points .card-body b { display: block; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--green-700); margin-bottom: 8px; }
   .about-points .card-body p { font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); margin: 0; }
 
-  .hl-strip { margin-top: 46px; background: linear-gradient(180deg, #ffffff 0%, var(--green-50) 100%); border: 1px solid var(--line); border-radius: 20px; padding: 30px 36px 28px; box-shadow: 0 12px 34px rgba(34,48,42,.05); }
-  .hl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .hl-strip { position: relative; margin-top: 46px; background: radial-gradient(ellipse at top right, rgba(183,204,187,.42), transparent 65%), linear-gradient(135deg, #fbfcf8 0%, #eef3ea 48%, #e3ede2 100%); border: 1px solid var(--green-200); border-radius: 24px; padding: 36px; box-shadow: 0 16px 42px rgba(34,48,42,.06); }
+  .hl-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-bottom: 28px; border-bottom: 1px solid rgba(63,99,80,.18); }
   .hl-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--green-700); }
-  .hl-eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--green-400); }
-  .hl-title { font-family: var(--sans); font-size: 20px; font-weight: 700; color: var(--green-900); letter-spacing: -.02em; line-height: 1.3; margin-top: 10px; }
-  .hl-meta { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--green-500); white-space: nowrap; padding-bottom: 5px; }
-  .hl-row { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; }
-  .hl-row li { padding: 22px 26px 4px 26px; border-left: 1px solid var(--line); }
-  .hl-row li:first-child { padding-left: 0; border-left: none; }
-  .hl-row li:last-child { padding-right: 0; }
-  .hl-num { font-family: var(--sans); font-size: 11.5px; font-weight: 700; letter-spacing: .12em; color: var(--green-400); display: block; margin-bottom: 10px; }
-  .hl-row p { font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
-  @media (max-width: 900px) {
-    .about-points { grid-template-columns: 1fr; gap: 18px; }
-    .hl-row { grid-template-columns: repeat(2, 1fr); }
-    .hl-row li { padding: 20px 0 6px; border-left: none; border-top: 1px solid var(--line); }
-    .hl-row li:nth-child(even) { padding-left: 24px; border-left: 1px solid var(--line); }
-    .hl-row li:nth-child(odd) { padding-right: 24px; }
-    .hl-row li:nth-child(-n+2) { border-top: none; }
-  }
+  .hl-eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--green-700); }
+  .hl-title { max-width: 580px; font-family: var(--sans); font-size: clamp(22px, 2.4vw, 28px); font-weight: 700; color: var(--green-900); letter-spacing: -.025em; line-height: 1.3; margin-top: 12px; }
+  .hl-meta { font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--green-700); white-space: nowrap; padding-bottom: 5px; }
+  .hl-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 30px; list-style: none; margin-top: 18px; }
+  .hl-row li { display: flex; align-items: flex-start; gap: 18px; padding: 22px 14px 22px 0; border-radius: 12px; transition: background .2s ease; }
+  .hl-row li:hover { background: rgba(255,255,255,.48); }
+  .hl-num { flex: 0 0 44px; height: 44px; border-radius: 12px; background: linear-gradient(145deg, var(--green-800), var(--green-700)); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .08em; display: grid; place-items: center; box-shadow: 0 5px 12px rgba(44,74,58,.12); }
+  .hl-row h4 { font-size: 17px; font-weight: 700; line-height: 1.4; color: var(--green-900); margin-bottom: 7px; }
+  .hl-row p { font-size: 14px; line-height: 1.65; color: var(--ink-soft); }
+  @media (max-width: 900px) { .about-points { grid-template-columns: 1fr; gap: 18px; } }
   @media (max-width: 560px) {
-    .hl-strip { padding: 24px 22px 20px; }
-    .hl-row { grid-template-columns: 1fr; }
-    .hl-row li, .hl-row li:nth-child(odd), .hl-row li:nth-child(even) { padding: 18px 0 4px; border-left: none; border-top: 1px solid var(--line); }
-    .hl-row li:first-child { border-top: none; }
+    .hl-strip { padding: 26px 22px; border-radius: 18px; }
+    .hl-head { gap: 16px; padding-bottom: 22px; }
+    .hl-meta { white-space: normal; }
+    .hl-row { grid-template-columns: 1fr; gap: 0; margin-top: 8px; }
+    .hl-row li { gap: 14px; padding: 20px 0; border-bottom: 1px solid rgba(63,99,80,.14); }
+    .hl-row li:last-child { padding-bottom: 0; border-bottom: 0; }
   }
   @media (max-width: 1024px) { .rk-timeline { grid-template-columns: repeat(3, 1fr); row-gap: 30px; } .rk-timeline::before { display: none; } .rk-item { padding: 0 18px 0 0; } .rk-item::before { margin-bottom: 12px; } }
   @media (max-width: 640px) { .rk { padding: 30px 24px 26px; } .rk-timeline { grid-template-columns: 1fr; } .rk-item { padding: 0 0 26px 34px; } .rk-item::before { position: absolute; left: 0; top: 2px; margin: 0; } .rk-item:last-child { padding-bottom: 4px; } }
@@ -163,17 +158,38 @@
   @media (max-width: 640px) { .themes { grid-template-columns: 1fr; } }
 
   /* ---------- Format ---------- */
-  .format { background: var(--green-900); color: #dfe9db; }
+  .format { position: relative; background: radial-gradient(ellipse at 85% 0%, rgba(111,143,124,.28), transparent 55%), linear-gradient(120deg, #16241c 0%, #243e30 55%, #3f6350 100%); color: var(--green-150); }
   .format h2 { color: #fff; }
   .format h2 em { color: var(--green-300); }
-  .format .section-lead { color: var(--green-300); }
-  .format-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; margin-top: 52px; }
-  .format-step { border-top: 1px solid rgba(255,255,255,.18); padding-top: 22px; }
-  .format-step .fnum { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: .24em; color: var(--green-400); display: block; margin-bottom: 12px; }
-  .format-step h3 { font-family: var(--sans); font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-  .format-step p { font-size: 13.5px; color: var(--green-300); }
-  @media (max-width: 900px) { .format-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .format-grid { grid-template-columns: 1fr; } }
+  .format .section-lead { color: var(--green-200); }
+  .format-grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-top: 48px; }
+  .format-grid::before { content: ""; position: absolute; top: 26px; left: 44px; right: calc((100% - 54px) / 4 - 44px); height: 1px; background: linear-gradient(90deg, var(--green-500), var(--green-300)); }
+  .format-step { position: relative; padding: 0 18px 24px; border-radius: 16px; background: linear-gradient(180deg, transparent 48px, rgba(183,204,187,.06) 48px, rgba(183,204,187,.12)); }
+  .format-step .fnum { position: relative; display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 26px; border: 1px solid var(--green-400); border-radius: 50%; background: var(--green-900); color: var(--green-150); font-size: 13px; font-weight: 600; letter-spacing: .08em; box-shadow: 0 0 0 6px rgba(30,53,41,.45); }
+  .format-step:nth-child(2) .fnum { background: #294936; }
+  .format-step:nth-child(3) .fnum { background: #365c43; }
+  .format-step:nth-child(4) .fnum { background: #446f51; }
+  .format-step h3 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 12px; letter-spacing: -.02em; }
+  .format-step p { font-size: 14px; line-height: 1.7; color: var(--green-200); }
+  .section-motion.motion-ready .hl-row li, .section-motion.motion-ready .format-step { opacity: 0; transform: translateY(16px); }
+  .section-motion.motion-ready.is-visible .hl-row li, .section-motion.motion-ready.is-visible .format-step { opacity: 1; transform: none; transition: opacity .55s ease, transform .55s ease, background .2s ease; }
+  .section-motion.is-visible li:nth-child(2), .section-motion.is-visible .format-step:nth-child(2) { transition-delay: .08s; }
+  .section-motion.is-visible li:nth-child(3), .section-motion.is-visible .format-step:nth-child(3) { transition-delay: .16s; }
+  .section-motion.is-visible li:nth-child(4), .section-motion.is-visible .format-step:nth-child(4) { transition-delay: .24s; }
+  @media (max-width: 900px) { .format-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 18px; } .format-grid::before { display: none; } }
+  @media (max-width: 560px) {
+    .format-grid { grid-template-columns: 1fr; gap: 0; }
+    .format-grid::before { display: block; top: 20px; bottom: 48px; left: 25px; right: auto; width: 1px; height: auto; background: linear-gradient(180deg, var(--green-500), var(--green-300)); }
+    .format-step { display: grid; grid-template-columns: 52px minmax(0,1fr); column-gap: 20px; padding: 0 0 30px; border-radius: 0; background: none; }
+    .format-step .fnum { grid-row: 1 / span 2; margin: 0; }
+    .format-step h3 { margin: 7px 0 10px; }
+    .format-step p { grid-column: 2; }
+    .format-step:last-child { padding-bottom: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .section-motion.motion-ready .hl-row li, .section-motion.motion-ready .format-step { opacity: 1; transform: none; transition: none; }
+    .section-motion .hl-row li, .section-motion .format-step, .section-motion.motion-ready.is-visible .hl-row li, .section-motion.motion-ready.is-visible .format-step { transition: none; }
+  }
 
   /* ---------- Agenda ---------- */
   .agenda { max-width: 1080px; margin: 48px auto 0; }
@@ -628,6 +644,7 @@
   .reg-step.active{color:var(--green-900)}.reg-step.active i{background:var(--green-800);color:#fff;border-color:var(--green-800)}
   .reg-line{height:1px;width:36px;background:var(--green-200)}
   .reg-body{padding:28px;overflow:auto;flex:1}
+  .reg-screen{padding:0}
   .reg-screen[hidden]{display:none!important}
   .reg-section-title{font-family:var(--sans);font-size:18px;color:var(--green-900);margin:0 0 7px}
   .reg-section-lead{font-size:13.5px;color:var(--ink-soft);margin-bottom:22px;line-height:1.65}
@@ -653,6 +670,28 @@
   .reg-privacy{margin-top:10px;padding:12px 14px;border-radius:11px;background:var(--green-50);border:1px solid var(--line);font-size:11.5px;line-height:1.65;color:var(--ink-soft)}.reg-privacy b{color:var(--green-900)}
   @media(max-width:720px){.reg-backdrop{padding:0;place-items:stretch}.reg-panel{height:100vh;max-height:none;border-radius:0}.reg-grid{grid-template-columns:1fr}.reg-field.full{grid-column:auto}.reg-head,.reg-body,.reg-foot,.reg-steps{padding-left:18px;padding-right:18px}.reg-step span{display:none}.reg-line{flex:1}.reg-package{grid-template-columns:22px 1fr}.reg-price{grid-column:2;text-align:left}.reg-foot{flex-wrap:wrap}.reg-actions{width:100%}.reg-actions .btn{flex:1}.reg-summary{flex-direction:column}.reg-head h3{font-size:20px}}
 
+  /* Identity selection within the existing registration modal. */
+  .reg-identity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+  .reg-identity{border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;background:#fff;text-align:left;font:inherit;cursor:pointer}
+  .reg-identity b{display:block;color:var(--green-900);font-size:14px}
+  .reg-identity small{display:block;color:var(--ink-soft);font-size:12px;line-height:1.5;margin-top:4px}
+  .reg-identity:hover,.reg-identity.selected{border-color:var(--green-800)}
+  .reg-identity.selected,.reg-identity:focus-visible,.reg-package:focus-within{outline:2px solid var(--green-500);outline-offset:2px}
+  @media(max-width:720px){.reg-identity-grid{grid-template-columns:1fr}}
+
+  .reg-choice-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+  .reg-choice-head .reg-section-lead{margin-bottom:8px}
+  .reg-vip{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 10px;width:350px;max-width:100%;flex-shrink:0}
+  .reg-vip label{font-size:12px;font-weight:700;color:var(--green-900)}
+  .reg-vip-row{display:flex;gap:8px;min-width:0}
+  .reg-vip input{width:100%;min-width:0;height:38px;border:1px solid var(--green-300);border-radius:8px;padding:8px 10px;background:#fff;font:inherit;font-size:13px}
+  .reg-vip input:focus-visible{outline:2px solid var(--green-500);outline-offset:2px}
+  .reg-vip .btn{height:38px;border-radius:8px;padding:8px 14px;white-space:nowrap;font-size:12px}
+  .reg-vip .btn:disabled{opacity:.5;cursor:not-allowed}
+  .reg-vip-message{grid-column:2;margin:0;font-size:11.5px;line-height:1.5;color:var(--ink-soft);overflow-wrap:anywhere}
+  .reg-vip-message.error{color:#8f352c}
+  @media(max-width:720px){.reg-choice-head{flex-direction:column;gap:12px}.reg-vip{width:100%}}
+
 </style>
 </head>
 <body>
@@ -672,7 +711,7 @@
       <a href="#agenda">Agenda</a>
     </nav>
     <div class="nav-right">
-      <button class="btn btn-primary" data-open-form="Register Interest">Register Interest</button>
+      <button class="btn btn-primary" data-open-form="Book Now">Book Now</button>
     </div>
   </div>
 </header>
@@ -690,7 +729,7 @@
         <div><span>Hosted by</span><strong>LP CLUB GROUP</strong></div>
       </div>
       <div class="hero-cta">
-        <button class="btn btn-light" data-open-form="Register Interest">Register Interest</button>
+        <button class="btn btn-light" data-open-form="Book Now">Book Now</button>
       </div>
     </div>
   </div>
@@ -736,7 +775,7 @@
       </div>
     </div>
 
-    <div class="hl-strip">
+    <div class="hl-strip section-motion">
       <div class="hl-head">
         <div>
           <span class="hl-eyebrow">Conference Highlights</span>
@@ -745,10 +784,10 @@
         <span class="hl-meta">18 November 2026 · Hong Kong</span>
       </div>
       <ol class="hl-row">
-        <li><span class="hl-num">01</span><p>Keynote speeches from leading investors and industry experts</p></li>
-        <li><span class="hl-num">02</span><p>In-depth panel discussions on the trends shaping private markets</p></li>
-        <li><span class="hl-num">03</span><p>Coffee-break exchange in a curated, senior-level setting</p></li>
-        <li><span class="hl-num">04</span><p>Investor networking sessions across the LP–GP ecosystem</p></li>
+        <li><span class="hl-num" aria-hidden="true">01</span><div><h4>Keynote perspectives</h4><p>Keynote speeches from leading investors and industry experts</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">02</span><div><h4>Panel discussions</h4><p>In-depth panel discussions on the trends shaping private markets</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">03</span><div><h4>Curated exchange</h4><p>Coffee-break exchange in a curated, senior-level setting</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">04</span><div><h4>Investor networking</h4><p>Investor networking sessions across the LP–GP ecosystem</p></div></li>
       </ol>
     </div>
   </div>
@@ -1025,8 +1064,8 @@
         <div class="theme-body"><span class="tnum">04</span><h3>Cross-Border Investment</h3><p>Global capital deployment and cross-border allocation strategies for Asian institutional capital.</p></div>
       </div>
       <div class="theme">
-        <img class="theme-img" src="images/theme-05.jpg" alt="AI & Healthcare" loading="lazy">
-        <div class="theme-body"><span class="tnum">05</span><h3>AI &amp; Healthcare</h3><p>Investment insights into artificial intelligence, healthcare and other high-growth emerging sectors.</p></div>
+        <img class="theme-img" src="images/theme-05.jpg" alt="AI &amp; Frontier Tech &amp; New Energy" loading="lazy">
+        <div class="theme-body"><span class="tnum">05</span><h3>AI &amp; Frontier Tech &amp; New Energy</h3><p>Investors explore frontier technology, new energy &amp; power, AI, high-growth emerging and digital infrastructure opportunities.</p></div>
       </div>
       <div class="theme">
         <img class="theme-img" src="images/theme-06.jpg" alt="Secondaries & Co-Investment" loading="lazy">
@@ -1037,16 +1076,16 @@
 </section>
 
 <!-- ============ FORMAT ============ -->
-<section class="format">
+<section class="format section-motion">
   <div class="wrap">
     <span class="num" style="color:var(--green-400);">07 — EVENT FORMAT</span>
     <h2 class="section-title">From insight <em>to exchange</em></h2>
     <p class="section-lead">A curated investment forum combining thought leadership, strategic dialogue and investor networking — designed to connect capital, ideas and opportunities across Asia's private equity ecosystem.</p>
     <div class="format-grid">
-      <div class="format-step"><span class="fnum">01 · INSIGHT</span><h3>Insight</h3><p>Keynote speeches from leading investors and industry experts.</p></div>
-      <div class="format-step"><span class="fnum">02 · DIALOGUE</span><h3>Dialogue</h3><p>Focused panel discussions exploring the trends shaping private markets.</p></div>
-      <div class="format-step"><span class="fnum">03 · CONNECTION</span><h3>Connection</h3><p>Face-to-face networking among LPs, GPs, family offices and institutional investors.</p></div>
-      <div class="format-step"><span class="fnum">04 · OPPORTUNITY</span><h3>Opportunity</h3><p>A platform for investment opportunities, fundraising and strategic partnerships.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">01</span><h3>Insight</h3><p>Keynote speeches from leading investors and industry experts.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">02</span><h3>Dialogue</h3><p>Focused panel discussions exploring the trends shaping private markets.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">03</span><h3>Connection</h3><p>Face-to-face networking among LPs, GPs, family offices and institutional investors.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">04</span><h3>Opportunity</h3><p>A platform for investment opportunities, fundraising and strategic partnerships.</p></div>
     </div>
   </div>
 </section>
@@ -1063,7 +1102,7 @@
       <div class="agenda-row t-keynote"><div class="agenda-time">14:45 – 15:15</div><div class="agenda-session"><b>Keynote Speech II</b><span>A senior LP decision-maker discusses portfolio allocation strategy and risk balance within alternative investments.</span></div></div>
       <div class="agenda-row t-break"><div class="agenda-time">15:15 – 15:35</div><div class="agenda-session"><b>Coffee Break &amp; Networking</b><span>Refreshments and face-to-face exchange between LPs, GPs, family offices and institutional investors.</span></div></div>
       <div class="agenda-row key t-panel"><div class="agenda-time">15:35 – 16:20</div><div class="agenda-session"><b>Panel Discussion I</b><span>Industry experts debate GP fundraising, secondaries and cross-border fund cooperation in the new cycle.</span></div></div>
-      <div class="agenda-row key t-panel"><div class="agenda-time">16:20 – 17:05</div><div class="agenda-session"><b>Panel Discussion II</b><span>Investors explore AI, healthcare and other high-growth emerging sector opportunities across Asia.</span></div></div>
+      <div class="agenda-row key t-panel"><div class="agenda-time">16:20 – 17:05</div><div class="agenda-session"><b>Panel Discussion II</b><span>Investors explore frontier technology, new energy &amp; power, AI computing and digital infrastructure opportunities across Asia.</span></div></div>
       <div class="agenda-row t-close"><div class="agenda-time">17:05 – 17:20</div><div class="agenda-session"><b>Closing Remarks</b><span>Closing summary by the host, reflecting on key takeaways and the road ahead for private capital.</span></div></div>
       <div class="agenda-row t-network"><div class="agenda-time">17:20 – 18:00</div><div class="agenda-session"><b>Networking &amp; Investor Exchange</b><span>Closing reception with curated investor matchmaking, fundraising discussions and partnership building.</span></div></div>
     </div>
@@ -1090,7 +1129,7 @@
   <div class="wrap">
     <h2>The next chapter of private equity begins with <em>deeper connections</em></h2>
     <p>Join senior LPs, GPs, family offices and institutional investors at the Hong Kong Convention and Exhibition Centre on Wednesday, 18 November 2026.</p>
-    <button class="btn btn-light" data-open-form="Register Interest">Register Interest</button>
+    <button class="btn btn-light" data-open-form="Book Now">Book Now</button>
     <p class="contact">Contact: <a href="mailto:LPCLUBGROUP@LP-club.cn">LPCLUBGROUP@LP-club.cn</a> · www.lp-club.cn · Tower 2, China Central Place (CCP), Chaoyang District, Beijing, China</p>
   </div>
 </section>
@@ -1104,16 +1143,27 @@
       <button class="reg-close" type="button" id="regClose" aria-label="Close">×</button>
     </div>
     <div class="reg-steps">
-      <div class="reg-step active" data-step-indicator="1"><i>1</i><span>Package</span></div><div class="reg-line"></div>
+      <div class="reg-step active" data-step-indicator="1"><i>1</i><span>Registration</span></div><div class="reg-line"></div>
       <div class="reg-step" data-step-indicator="2"><i>2</i><span>Your details</span></div><div class="reg-line"></div>
       <div class="reg-step" data-step-indicator="3"><i>3</i><span>Confirmation</span></div>
     </div>
     <div class="reg-body">
       <div class="reg-alert" id="regAlert" role="alert" aria-live="polite"></div>
       <section class="reg-screen" data-reg-step="1">
-        <h4 class="reg-section-title">Choose your registration category</h4>
-        <p class="reg-section-lead">Select the category that best represents you. Your registration package and fee update automatically.</p>
-        <div class="reg-packages" id="regPackages"><div class="reg-note">Loading registration packages…</div></div>
+        <div class="reg-choice-head">
+          <div><h4 class="reg-section-title">1. Choose your identity</h4><p class="reg-section-lead">Select the category that best represents you.</p></div>
+          <div class="reg-vip">
+            <label for="vipCode">VIP Code</label>
+            <div class="reg-vip-row"><input id="vipCode" type="text" maxlength="128" placeholder="Enter VIP Code" autocomplete="off" aria-describedby="vipMessage"><button id="vipApply" type="button" class="btn btn-primary" disabled>Apply</button></div>
+            <p id="vipMessage" class="reg-vip-message" role="status" aria-live="polite">Delegate Pass only. Enter your code and click Apply.</p>
+          </div>
+        </div>
+        <div class="reg-identity-grid" id="regIdentities"><div class="reg-note">Loading registration categories…</div></div>
+        <div id="regParticipationWrap" hidden>
+          <h4 class="reg-section-title" style="margin-top:26px">2. Choose one participation option</h4>
+          <p class="reg-section-lead">Choose one delegate pass or package. Speaking, Panel / Roundtable and 1-on-1 LP Matchmaking packages each include one delegate pass for one attendee.</p>
+          <div class="reg-packages" id="regPackages"></div>
+        </div>
         <p class="reg-note">LP CLUB reviews attendee eligibility. Selecting a category does not constitute payment or final admission approval.</p>
       </section>
       <section class="reg-screen" data-reg-step="2" hidden>
@@ -1124,7 +1174,7 @@
             <div class="reg-field"><label>Salutation</label><select name="salutation"><option value="">Select</option><option>Mr.</option><option>Ms.</option><option>Dr.</option><option>Prof.</option></select></div>
             <div class="reg-field"><label>Full name <span>*</span></label><input name="fullName" autocomplete="name" required></div>
             <div class="reg-field full"><label>Company / Organization <span>*</span></label><input name="company" autocomplete="organization" required></div>
-            <div class="reg-field"><label>Organization type <span>*</span></label><select name="companyType" required><option value="">Select</option><option>Limited Partner (LP)</option><option>General Partner (GP)</option><option>Family Office</option><option>Government Authority</option><option>Listed Company</option><option>Institutional Investor</option><option>Investment Company</option><option>Professional Service</option><option>Other</option></select></div>
+            <div class="reg-field"><label>Organization type <span>*</span></label><select name="companyType" required><option value="">Select</option><option>Limited Partner (LP)</option><option>LP CLUB Member</option><option>General Partner (GP)</option><option>Family Office</option><option>Government Authority</option><option>Listed Company</option><option>Institutional Investor</option><option>Investment Company</option><option>Professional Service</option><option>Other</option></select></div>
             <div class="reg-field"><label>Job title <span>*</span></label><input name="jobTitle" autocomplete="organization-title" required></div>
             <div class="reg-field"><label>Department</label><input name="department"></div>
             <div class="reg-field"><label>Country / Region <span>*</span></label><input name="country" autocomplete="country-name" required></div>
@@ -1135,7 +1185,6 @@
             <div class="reg-field"><label>WhatsApp / WeChat number</label><input name="whatsappNumber"></div>
             <div class="reg-field full"><div class="reg-group-label">Investment focus</div><div class="reg-choice-grid" data-multi="focus"></div></div>
             <div class="reg-field full"><div class="reg-group-label">Purpose of attendance</div><div class="reg-choice-grid" data-multi="purpose"></div></div>
-            <div class="reg-field"><label>Interested in LP & GP 1-on-1 matchmaking? <span>*</span></label><select name="matchmaking" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
             <div class="reg-field"><label>Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
             <div class="reg-field"><label>Expected arrival date</label><input name="arrivalDate" type="date"></div>
             <div class="reg-field"><label>Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
@@ -1176,7 +1225,12 @@
   var regForm = document.getElementById('regForm');
   var regAlert = document.getElementById('regAlert');
   var regPackagesEl = document.getElementById('regPackages');
-  var regStep = 1, selectedPackage = null, packageList = [];
+  var regIdentitiesEl = document.getElementById('regIdentities');
+  var regParticipationWrap = document.getElementById('regParticipationWrap');
+  var regStep = 1, selectedIdentity = null, selectedPackage = null, packageList = [], packageLoadError = '';
+  var vipCode=document.getElementById('vipCode'), vipApply=document.getElementById('vipApply'), vipMessage=document.getElementById('vipMessage');
+  var appliedVipCode='', vipPackage=null, vipPending=false, vipRequestId=0;
+  var vipSubmissionKey='', vipSubmissionPayload='';
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
     focus:['Private Equity','Private Credit','Secondaries','Co-Investment','AI & Technology','Healthcare','Cross-Border Investment','Real Assets','Other'],
@@ -1184,33 +1238,117 @@
   };
 
   function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
-  function money(p){return p && p.displayPrice ? p.displayPrice : (p && p.price===0 ? 'Complimentary / By invitation' : 'USD '+Number((p&&p.price)||0).toLocaleString('en-US'))}
+  function money(p){if(p&&p.vipApplied)return 'USD 0 · Complimentary / VIP Code';return p && p.displayPrice ? p.displayPrice : (p && p.price===0 ? 'Complimentary / By invitation' : 'USD '+Number((p&&p.price)||0).toLocaleString('en-US'))}
   function showAlert(msg){regAlert.textContent=msg;regAlert.classList.toggle('show',Boolean(msg))}
   function businessEmail(value){var s=String(value||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return false;return PERSONAL_DOMAINS.indexOf(s.split('@').pop())===-1}
   function renderMulti(){Object.keys(MULTI).forEach(function(key){var box=document.querySelector('[data-multi="'+key+'"]');if(!box)return;box.innerHTML=MULTI[key].map(function(v){return '<label class="reg-chip"><input type="checkbox" value="'+escHtml(v)+'"><span>'+escHtml(v)+'</span></label>'}).join('')})}
-  function renderPackages(){regPackagesEl.innerHTML=packageList.map(function(p){return '<label class="reg-package" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'"><span class="reg-radio"></span><span><b>'+escHtml(p.name)+'</b><small>'+escHtml(p.note||p.ticketName||'')+'</small></span><span class="reg-price">'+escHtml(money(p))+'</span></label>'}).join('');
-    regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.addEventListener('click',function(){regPackagesEl.querySelectorAll('.reg-package').forEach(function(x){x.classList.remove('selected')});row.classList.add('selected');var id=row.getAttribute('data-package');selectedPackage=packageList.find(function(p){return p.id===id})||null;regNext.disabled=!selectedPackage;showAlert('')})})}
-  function fallbackPackages(){return [
-    {id:'lp',name:'Limited Partner (LP)',ticketName:'LP Delegate Pass',price:0,displayPrice:'Complimentary / By invitation',note:'For qualified institutional allocators and LPs. Subject to organiser review.'},
-    {id:'gp',name:'General Partner (GP)',ticketName:'GP Delegate Pass',price:1800,displayPrice:'USD 1,800',note:'For fund managers and investment firms.'},
-    {id:'gp_early',name:'GP Early',ticketName:'GP Early Delegate Pass',price:1800,displayPrice:'USD 1,800',note:'Early registration category for qualifying GP delegates. Final rate must be verified before public launch.'},
-    {id:'investment_company',name:'Other Investment Company',ticketName:'Investment Company Delegate Pass',price:3150,displayPrice:'USD 3,150',note:'For other investment-related organisations. Final rate must be verified before public launch.'},
-    {id:'standard',name:'Standard',ticketName:'Standard Delegate Pass',price:3150,displayPrice:'USD 3,150',note:'Standard conference registration.'}
-  ]}
-  function loadPackages(){fetch('/api/packages').then(function(r){if(!r.ok)throw new Error();return r.json()}).then(function(d){packageList=d.packages||fallbackPackages();renderPackages()}).catch(function(){packageList=fallbackPackages();renderPackages()})}
-  function openReg(){if(regStep===3){regForm.reset();selectedPackage=null;regPackagesEl.querySelectorAll('.reg-package').forEach(function(x){x.classList.remove('selected')})}regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20)}
+  function effectivePackage(p){return vipPackage&&p&&vipPackage.id===p.id?vipPackage:p}
+  function updateVipControls(){vipApply.disabled=vipPending||!selectedPackage||selectedPackage.optionId!=='ticket'||!vipCode.value.trim();vipApply.textContent=vipPending?'Checking…':'Apply'}
+  function resetVip(){
+    appliedVipCode='';vipPackage=null;vipPending=false;vipRequestId++;
+    vipMessage.textContent=selectedPackage&&selectedPackage.optionId!=='ticket'?'VIP Code applies to Delegate Pass only. Speaking, Panel and Matchmaking packages are not included.':'Delegate Pass only. Enter your code and click Apply.';vipMessage.classList.remove('error');updateVipControls();
+  }
+  async function applyVipCode(){
+    if(vipApply.disabled)return;
+    var code=vipCode.value.trim(), id=selectedPackage.id, requestId=++vipRequestId;
+    appliedVipCode='';vipPackage=null;vipPending=true;updateVipControls();regNext.disabled=true;renderPackages();
+    vipMessage.textContent='Checking VIP Code…';vipMessage.classList.remove('error');
+    try{
+      var response=await fetch('/api/vip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({packageId:id,vipCode:code})});
+      var data=await response.json();
+      if(requestId!==vipRequestId)return;
+      if(!response.ok||!data.ok)throw new Error(data.error||'VIP Code could not be checked. Please try again.');
+      if(!data.package||data.package.id!==id||data.package.price!==0||data.package.vipApplied!==true)throw new Error('VIP Code could not be checked. Please try again.');
+      appliedVipCode=code;vipPackage=data.package;vipMessage.textContent='VIP Code applied — one complimentary Delegate Pass.';renderPackages();
+    }catch(err){if(requestId===vipRequestId){vipMessage.textContent=err.message||'VIP Code could not be checked. Please try again.';vipMessage.classList.add('error')}}
+    finally{if(requestId===vipRequestId){vipPending=false;updateVipControls();regNext.disabled=!selectedPackage}}
+  }
+  function validPackages(data){
+    if(!data || data.ok!==true || !Array.isArray(data.packages) || data.packages.length!==20)return false;
+    var identities=['lp','lpclub_member','gp','investment_company','standard'];
+    var options=['ticket','speaking','panel','matchmaking'], seen={};
+    return data.packages.every(function(p){
+      if(!p || identities.indexOf(p.identityId)===-1 || options.indexOf(p.optionId)===-1 || p.id!==p.identityId+'_'+p.optionId || seen[p.id])return false;
+      if(!Number.isFinite(p.price) || p.price<0 || !Number.isInteger(p.price) || p.available!==true)return false;
+      if(!['identityName','name','ticketName','organisationType','displayPrice'].every(function(k){return typeof p[k]==='string' && p[k].trim()}))return false;
+      seen[p.id]=true;return true;
+    });
+  }
+  function renderIdentities(){
+    var identities=packageList.filter(function(p){return p.optionId==='ticket'});
+    regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity" data-identity="'+escHtml(p.identityId)+'" aria-pressed="false"><b>'+escHtml(p.identityName)+'</b><small>'+escHtml(p.note||'')+'</small></button>'}).join('');
+    regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(btn){btn.addEventListener('click',function(){
+      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;resetVip();
+      regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(x){x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',String(x===btn))});
+      renderPackages();regParticipationWrap.hidden=false;regNext.disabled=true;showAlert('');
+    })});
+  }
+  function renderPackages(){
+    var list=packageList.filter(function(p){return p.identityId===selectedIdentity});
+    regPackagesEl.innerHTML=list.map(function(p){var checked=selectedPackage&&selectedPackage.id===p.id;return '<label class="reg-package'+(checked?' selected':'')+'" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'" '+(checked?'checked':'')+'><span class="reg-radio"></span><span><b>'+escHtml(p.ticketName)+'</b><small>'+escHtml(p.note||'')+'</small></span><span class="reg-price">'+escHtml(money(effectivePackage(p)))+'</span></label>'}).join('');
+    regPackagesEl.querySelectorAll('input').forEach(function(input){input.addEventListener('change',function(){
+      selectedPackage=list.find(function(p){return p.id===input.value})||null;resetVip();renderPackages();
+      regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.classList.toggle('selected',row.getAttribute('data-package')===input.value)});
+      regNext.disabled=!selectedPackage;showAlert('');
+    })});
+  }
+  async function loadPackages(){
+    try{
+      var response=await fetch('/api/packages');
+      if(!response.ok)throw new Error('Package request failed');
+      var data=await response.json();
+      if(!validPackages(data))throw new Error('Invalid package catalogue');
+      packageList=data.packages;packageLoadError='';renderIdentities();
+    }catch(err){
+      packageList=[];selectedIdentity=null;selectedPackage=null;regIdentitiesEl.innerHTML='';regPackagesEl.innerHTML='';regParticipationWrap.hidden=true;regNext.disabled=true;
+      packageLoadError='Registration pricing could not be loaded. Please refresh or contact LP CLUB.';showAlert(packageLoadError);
+    }
+  }
+  function openReg(){
+    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
+    regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
+  }
   function closeReg(){regModal.classList.remove('open');regModal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
-  function showStep(n){regStep=n;document.querySelectorAll('[data-reg-step]').forEach(function(s){s.hidden=Number(s.getAttribute('data-reg-step'))!==n});document.querySelectorAll('[data-step-indicator]').forEach(function(el){el.classList.toggle('active',Number(el.getAttribute('data-step-indicator'))<=n)});regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=n===1?!selectedPackage:false;showAlert('');if(n===2&&selectedPackage){document.getElementById('regSummaryName').textContent=selectedPackage.ticketName;document.getElementById('regSummaryPrice').textContent=money(selectedPackage);var org=regForm.elements.companyType;if(selectedPackage.id==='lp')org.value='Limited Partner (LP)';if(selectedPackage.id==='gp'||selectedPackage.id==='gp_early')org.value='General Partner (GP)';if(selectedPackage.id==='investment_company')org.value='Investment Company'}}
+  function showStep(n){
+    regStep=n;document.querySelectorAll('[data-reg-step]').forEach(function(s){s.hidden=Number(s.getAttribute('data-reg-step'))!==n});
+    document.querySelectorAll('[data-step-indicator]').forEach(function(el){el.classList.toggle('active',Number(el.getAttribute('data-step-indicator'))<=n)});
+    regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=vipPending||(n===1?!selectedPackage:false);
+    showAlert(n===1?packageLoadError:'');
+    if(n===2&&selectedPackage){
+      document.getElementById('regSummaryName').textContent=selectedPackage.identityName+' — '+selectedPackage.ticketName;
+      document.getElementById('regSummaryPrice').textContent=money(effectivePackage(selectedPackage));
+      regForm.elements.companyType.value=selectedPackage.organisationType;
+    }
+  }
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
-  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),matchmaking:fd.get('matchmaking'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
+  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,vipCode:appliedVipCode||undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
   function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){hint.textContent='Please use your business email address. Personal email addresses are not accepted.';hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
-  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(formPayload())});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(selectedPackage.ticketName)+'</b><br>'+escHtml(money(selectedPackage))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=false;regNext.textContent='Submit Registration'}}}
+  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var payload=formPayload();if(payload.vipCode){var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(data.package.identityName+' — '+data.package.ticketName)+'</b><br>'+escHtml(money(data.package))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.retryable||err.code==='VIP_RETRY_REQUIRED'){vipSubmissionKey='';vipSubmissionPayload=''}if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');vipMessage.textContent=err.message;showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.message+(err.ref?' Registration reference: '+err.ref:''))}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;regNext.textContent=regStep===1?'Continue to Your Details':'Submit Registration'}}}
 
+  vipApply.addEventListener('click',applyVipCode);
+  vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=!selectedPackage});
+  vipCode.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();applyVipCode()}});
   document.querySelectorAll('[data-open-form]').forEach(function(btn){btn.addEventListener('click',openReg)});
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
-  regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage)showStep(2);else if(regStep===2)submitRegistration()});
+  regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage){if(vipCode.value.trim()&&!appliedVipCode){showAlert(selectedPackage.optionId==='ticket'?'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}showStep(2)}else if(regStep===2)submitRegistration()});
   regForm.elements.email.addEventListener('blur',function(){var hint=document.getElementById('emailHint');hint.classList.toggle('error',this.value&&!businessEmail(this.value))});
-  renderMulti();loadPackages();  /* ---------- Stats count-up ---------- */
+  renderMulti();loadPackages();
+
+  /* ---------- Conference section entrance ---------- */
+  (function () {
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var panels = document.querySelectorAll('.section-motion');
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+    panels.forEach(function (panel) { panel.classList.add('motion-ready'); observer.observe(panel); });
+  })();
+
+  /* ---------- Stats count-up ---------- */
   (function () {
     var els = Array.prototype.slice.call(document.querySelectorAll('.stat b[data-count]'));
     if (!els.length || !('IntersectionObserver' in window)) return;

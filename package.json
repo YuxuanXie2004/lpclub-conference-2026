@@ -4,16 +4,19 @@
   "private": true,
   "description": "The 3rd International Private Equity Conference 2026 — site + registration API",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
-    "nodemailer": "^6.9.14"
+    "better-sqlite3": "13.0.3",
+    "nodemailer": "^10.1.1"
   },
   "scripts": {
     "api": "node server/index.js",
     "dev": "node server/index.js",
     "test": "node --test test/*.test.js",
     "start": "node server/index.js",
-    "feishu:init": "node server/init-feishu.js"
+    "feishu:init": "node server/init-feishu.js",
+    "vip:init": "node server/init-vip.js",
+    "vip:backup": "node server/backup-vip.js"
   }
 }

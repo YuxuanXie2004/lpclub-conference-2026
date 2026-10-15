@@ -10,7 +10,10 @@ const path = require('path');
 const crypto = require('crypto');
 const sheet = require('./sheet');
 const feishu = require('./feishu');
-const { PACKAGES } = require('./packages');
+const { PACKAGES, IDENTITIES } = require('./packages');
+const { VipService } = require('./vip');
+const { getStore } = require('./vip-store');
+const { renderVipPage } = require('./vip-admin');
 
 (function loadDotEnv() {
   const file = path.join(__dirname, '.env');
@@ -56,6 +59,7 @@ const SALUTATION = {
 };
 const ORG_TYPE = {
   'Limited Partner (LP)': 'Limited Partner (LP) / 有限合伙人（LP）',
+  'LP CLUB Member': 'LP CLUB Member / LP CLUB会员',
   'General Partner (GP)': 'General Partner (GP) / 普通合伙人（GP）',
   'Family Office': 'Family Office / 家族办公室',
   'Government Authority': 'Government Authority / 政府机构',
@@ -182,18 +186,18 @@ function esc(v) { return String(v || '').replace(/[&<>"']/g, c => ({'&':'&amp;',
 function attendeeEmail(order) {
   const a = order.attendee || {};
   const p = order.package || {};
-  const amount = p.price === 0 ? 'Complimentary / By invitation' : `USD ${Number(p.price).toLocaleString('en-US')}`;
+  const amount = p.displayPrice || (p.price === 0 ? 'Complimentary / By invitation' : `USD ${Number(p.price).toLocaleString('en-US')}`);
   const subject = `Registration received | The 3rd International Private Equity Conference 2026 | ${order.ref}`;
   const html = `<!doctype html><html><body style="margin:0;background:#f4f7f4;font-family:Arial,Helvetica,sans-serif;color:#183026">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7f4;padding:30px 12px"><tr><td align="center">
   <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #dce7df">
   <tr><td style="background:#173f2b;padding:30px 34px;color:#fff"><div style="font-size:22px;font-weight:700;letter-spacing:.04em">LP CLUB GROUP</div><div style="margin-top:8px;color:#b9d3c2;font-size:12px;letter-spacing:.08em;text-transform:uppercase">The 3rd International Private Equity Conference 2026</div></td></tr>
   <tr><td style="padding:34px"><h1 style="font-size:24px;margin:0 0 16px;color:#173f2b">Registration received</h1><p style="line-height:1.7;margin:0 0 18px">Dear ${esc(a.fullName || 'Guest')},</p><p style="line-height:1.7;margin:0 0 22px">Thank you for registering. We have successfully received your details. Our team will review your registration and contact you within 2–3 business days with the next steps.</p>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef5ef;border-radius:12px;padding:18px"><tr><td style="line-height:1.9;font-size:14px"><b>Registration reference:</b> ${esc(order.ref)}<br><b>Attendee:</b> ${esc(a.fullName)}<br><b>Company:</b> ${esc(a.company)}<br><b>Category:</b> ${esc(p.name)}<br><b>Package:</b> ${esc(p.ticketName)}<br><b>Registration fee:</b> ${esc(amount)}</td></tr></table>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef5ef;border-radius:12px;padding:18px"><tr><td style="line-height:1.9;font-size:14px"><b>Registration reference:</b> ${esc(order.ref)}<br><b>Attendee:</b> ${esc(a.fullName)}<br><b>Company:</b> ${esc(a.company)}<br><b>Category:</b> ${esc(p.name)}<br><b>Package:</b> ${esc(p.ticketName)}<br><b>Registration fee:</b> ${esc(amount)}<br><b>Pricing basis:</b> ${esc(order.pricingBasis)}</td></tr></table>
   <h2 style="font-size:16px;margin:26px 0 8px;color:#173f2b">Event details</h2><p style="line-height:1.8;margin:0">Wednesday, 18 November 2026<br>Hong Kong Convention and Exhibition Centre<br>Hong Kong, China</p>
   <p style="line-height:1.7;margin:26px 0 0">We look forward to welcoming you in Hong Kong.</p><p style="line-height:1.7;margin:16px 0 0"><b>LP CLUB GROUP</b><br>LPCLUBGROUP@LP-club.cn · www.lp-club.cn</p></td></tr>
   </table></td></tr></table></body></html>`;
-  const text = `Dear ${a.fullName || 'Guest'},\n\nThank you for registering for The 3rd International Private Equity Conference 2026.\n\nRegistration reference: ${order.ref}\nAttendee: ${a.fullName || ''}\nCompany: ${a.company || ''}\nCategory: ${p.name || ''}\nPackage: ${p.ticketName || ''}\nRegistration fee: ${amount}\n\nWednesday, 18 November 2026\nHong Kong Convention and Exhibition Centre, Hong Kong, China\n\nOur team will review your registration and contact you within 2–3 business days with the next steps.\n\nLP CLUB GROUP`;
+  const text = `Dear ${a.fullName || 'Guest'},\n\nThank you for registering for The 3rd International Private Equity Conference 2026.\n\nRegistration reference: ${order.ref}\nAttendee: ${a.fullName || ''}\nCompany: ${a.company || ''}\nCategory: ${p.name || ''}\nPackage: ${p.ticketName || ''}\nRegistration fee: ${amount}\nPricing basis: ${order.pricingBasis}\n\nWednesday, 18 November 2026\nHong Kong Convention and Exhibition Centre, Hong Kong, China\n\nOur team will review your registration and contact you within 2–3 business days with the next steps.\n\nLP CLUB GROUP`;
   return { from: `LP CLUB GROUP <${SMTP.user}>`, to: a.email, cc: ORGANISER, subject, html, text };
 }
 
@@ -224,15 +228,28 @@ function rateAllowed(ip) {
 function validPhone(v) { const s = String(v || '').replace(/[\s().-]/g, ''); return /^\+?\d{6,18}$/.test(s); }
 function validDate(v) { if (!v) return true; const d = Date.parse(v + (String(v).length === 10 ? 'T00:00:00Z' : '')); return !Number.isNaN(d); }
 function requiredFields(a) {
-  const req = ['fullName','company','companyType','country','jobTitle','email','phone','matchmaking','visaLetter'];
+  const req = ['fullName','company','companyType','country','jobTitle','email','phone','visaLetter'];
   return req.filter(k => !cleanString(a[k]));
 }
 
+function registrationPackage(input) {
+  const requestedId = cleanString(input && input.packageId, 50);
+  const packageId = Object.prototype.hasOwnProperty.call(IDENTITIES, requestedId) ? requestedId + '_ticket' : requestedId;
+  const p = Object.prototype.hasOwnProperty.call(PACKAGES, packageId) ? PACKAGES[packageId] : null;
+  if (!p) throw Object.assign(new Error('Please select a valid registration category.'), { statusCode: 400 });
+  return p;
+}
+
+function vipService() { return new VipService({store:getStore(process.env),feishu,packages:PACKAGES}); }
+function validateVip(input) {
+  return { package: vipService().preview(registrationPackage(input), input && input.vipCode) };
+}
+function vipReady() { try { getStore(process.env); return true; } catch (_) { return false; } }
+
 function normaliseOrder(input) {
   const a = input && input.attendee ? input.attendee : {};
-  const packageId = cleanString(input && input.packageId, 50);
-  const p = PACKAGES[packageId];
-  if (!p) throw Object.assign(new Error('Please select a valid registration category.'), { statusCode: 400 });
+  const basePackage = registrationPackage(input);
+  const p = { ...basePackage, vipApplied: false };
   const missing = requiredFields(a);
   if (missing.length) throw Object.assign(new Error('Please complete all required fields: ' + missing.join(', ')), { statusCode: 400 });
   if (!isBusinessEmail(a.email)) throw Object.assign(new Error('Please use your business email address. Personal email addresses are not accepted.'), { statusCode: 400, code: 'BUSINESS_EMAIL_REQUIRED' });
@@ -246,7 +263,7 @@ function normaliseOrder(input) {
     source: 'conference.lp-club.cn',
     status: 'Received',
     currency: 'USD',
-    package: { id: p.id, name: p.name, ticketName: p.ticketName, price: p.price, displayPrice: p.displayPrice },
+    package: { id: p.id, identityId: p.identityId, identityName: p.identityName, optionId: p.optionId, organisationType: p.organisationType, name: p.name, ticketName: p.ticketName, price: p.price, displayPrice: p.displayPrice, vipApplied: p.vipApplied },
     items: [{ name: p.ticketName, qty: 1, lineTotal: p.price }],
     subtotal: p.price,
     total: p.price,
@@ -258,41 +275,41 @@ function normaliseOrder(input) {
       whatsappSame: cleanString(a.whatsappSame, 10), whatsappNumber: cleanString(a.whatsappNumber, 60), email: cleanString(a.email, 180).toLowerCase(),
       focus: Array.isArray(a.focus) ? a.focus.map(x => cleanString(x, 80)).slice(0, 12) : [],
       purpose: Array.isArray(a.purpose) ? a.purpose.map(x => cleanString(x, 80)).slice(0, 12) : [],
-      matchmaking: cleanString(a.matchmaking, 10), visaLetter: cleanString(a.visaLetter, 10), arrivalDate: cleanString(a.arrivalDate, 20),
+      matchmaking: p.optionId === 'matchmaking' ? 'Yes' : 'No', visaLetter: cleanString(a.visaLetter, 10), arrivalDate: cleanString(a.arrivalDate, 20),
       guests: a.guests === '' || a.guests == null ? '' : Math.max(0, Math.min(20, Number(a.guests) || 0)), consent: Boolean(a.consent)
     }
   };
 }
 
-async function processOrder(input) {
-  feishu.assertConfigured();
-  const order = normaliseOrder(input);
-  const duplicate = await feishu.findActiveRecordByEmail(order.attendee.email);
+async function persistOrder(order) {
+  let duplicate;
+  try { duplicate = await feishu.findActiveRecordByEmail(order.attendee.email); }
+  catch(e) { throw Object.assign(new Error('Registration database is unavailable. Please try again shortly.'), {statusCode:503,code:'DATABASE_UNAVAILABLE',definitelyNotSaved:true}); }
   if (duplicate) {
     const fields = duplicate.fields || {};
     const status = fields['Status / 状态'] || 'Received';
     if (status !== 'Rejected' && status !== 'Cancelled') {
       const ref = fields['Registration Reference / 报名编号'] || '';
-      const err = new Error(`A registration already exists for this business email${ref ? ` (${ref})` : ''}. Please contact LP CLUB if you need to update it.`);
-      throw Object.assign(err, { statusCode: 409, code: 'DUPLICATE_REGISTRATION', ref });
+      throw Object.assign(new Error(`A registration already exists for this business email${ref ? ` (${ref})` : ''}. Please contact LP CLUB if you need to update it.`), {statusCode:409,code:'DUPLICATE_REGISTRATION',ref,definitelyNotSaved:true});
     }
   }
-
-  let record;
-  try {
-    record = await feishu.createRecord(toFields(order));
-  } catch (e) {
-    const err = new Error('Registration could not be saved to the registration database. Please try again shortly.');
-    throw Object.assign(err, { statusCode: 503, code: 'DATABASE_UNAVAILABLE', cause: e.message });
+  try { return await feishu.createRecord(toFields(order)); }
+  catch(e) { throw Object.assign(new Error('Registration could not be saved to the registration database. Please try again shortly.'), {statusCode:503,code:'DATABASE_UNAVAILABLE',definitelyNotSaved:e.definitelyNotSaved===true}); }
+}
+async function processOrder(input) {
+  feishu.assertConfigured();
+  let order = normaliseOrder(input), record, result, redemption;
+  if(input && input.vipCode != null && input.vipCode !== '') {
+    redemption=await vipService().redeem(order,input,persistOrder);
+    if(redemption.replayed)return redemption.result;
+    order=redemption.order;record=redemption.record;result=redemption.result;
+  } else {
+    // Pending VIP registrations also protect their email from full-price resubmission.
+    if (vipReady() && getStore(process.env).emailPending(order.attendee.email)) throw Object.assign(new Error('A VIP registration for this email is being processed. Please contact LP CLUB.'), {statusCode:409,code:'VIP_EMAIL_PROCESSING'});
+    record=await persistOrder(order);
+    if(!record || !record.record_id)throw Object.assign(new Error('Registration database did not confirm the saved record.'),{statusCode:503,code:'DATABASE_UNAVAILABLE'});
+    result={ref:order.ref,package:order.package,saved:true,feishu:{recordId:record.record_id},email:{skipped:true,reason:'SMTP not configured'}};
   }
-
-  const result = {
-    ref: order.ref,
-    package: order.package,
-    saved: true,
-    feishu: { recordId: record && record.record_id || '' },
-    email: { skipped: true, reason: 'SMTP not configured' }
-  };
 
   if (nodemailer && SMTP.pass) {
     try {
@@ -310,6 +327,7 @@ async function processOrder(input) {
       }
     }
   }
+  if(redemption) {try {getStore(process.env).saveResult(redemption.attemptId,result);}catch(_) { /* The code is already used; mail must not be repeated. */ }}
   return result;
 }
 
@@ -330,7 +348,7 @@ function setSecurityHeaders(res) {
   res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 }
 function json(res, code, payload) {
-  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token', 'Access-Control-Allow-Methods': 'POST,GET,OPTIONS' };
+  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token', 'Access-Control-Allow-Methods': 'POST,GET,PATCH,OPTIONS' };
   if (ALLOW_ORIGIN) headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN;
   if (typeof res.setHeader === 'function') { Object.entries(headers).forEach(([k,v]) => res.setHeader(k,v)); setSecurityHeaders(res); }
   if (typeof res.status === 'function' && typeof res.json === 'function') return res.status(code).json(payload);
@@ -364,15 +382,46 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && pathname === '/health') {
     let feishuOk = false;
     try { feishu.assertConfigured(); feishuOk = true; } catch (_) {}
-    return json(res, 200, { ok: true, service: 'lpclub-conference', database: feishuOk ? 'feishu' : 'not-configured', feishu: feishuOk, email: Boolean(nodemailer && SMTP.pass), admin: Boolean(ADMIN_TOKEN), packagesReady: !Object.values(PACKAGES).some(p => p.needsVerification) });
+    return json(res, 200, { ok: true, service: 'lpclub-conference', database: feishuOk ? 'feishu' : 'not-configured', feishu: feishuOk, email: Boolean(nodemailer && SMTP.pass), admin: Boolean(ADMIN_TOKEN), vipReady: vipReady(), packagesReady: !Object.values(PACKAGES).some(p => p.needsVerification) });
   }
   if (req.method === 'GET' && pathname === '/api/packages') return json(res, 200, { ok: true, packages: Object.values(PACKAGES) });
+
+  if (pathname === '/vip-codes' || pathname.startsWith('/api/admin/vip-codes')) {
+    if (!allowed()) return json(res,401,{ok:false,error:'unauthorised'});
+    if (req.method === 'GET' && pathname === '/vip-codes') {
+      setSecurityHeaders(res);
+      res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
+      return res.end(renderVipPage(ADMIN_TOKEN));
+    }
+    try {
+      const store=getStore(process.env), base='/api/admin/vip-codes';
+      if(pathname===base && req.method==='GET')return json(res,200,{ok:true,...store.list(Object.fromEntries(url.searchParams))});
+      if(pathname===base && req.method==='POST')return json(res,201,{ok:true,items:store.generate(await readBody(req))});
+      if(pathname===base+'/revoke' && req.method==='POST')return json(res,200,{ok:true,...store.revoke(await readBody(req))});
+      if(pathname===base+'/export' && req.method==='GET') {
+        const items=store.export((url.searchParams.get('ids')||'').split(',').filter(Boolean));
+        const cell=v=>{let s=String(v==null?'':v);if(/^[\s]*[=+@-]|^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+        const rows=[['VIP Code'],...items.map(v=>[v.code])];
+        setSecurityHeaders(res);res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Cache-Control':'no-store','Content-Disposition':'attachment; filename="vip-codes.csv"'});
+        return res.end('\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n'));
+      }
+      const match=pathname.match(/^\/api\/admin\/vip-codes\/([a-zA-Z0-9-]+)(?:\/(reconcile|resolve))?$/);
+      if(match) {
+        const id=match[1],action=match[2];
+        if(!action && req.method==='GET') {store.row(id);store.event(id,'revealed','管理员查看完整兑换码');return json(res,200,{ok:true,...store.detail(id)});}
+        if(!action && req.method==='PATCH')return json(res,200,{ok:true,item:store.update(id,await readBody(req))});
+        if(action==='reconcile' && req.method==='POST')return json(res,200,{ok:true,...await vipService().reconcile(id)});
+        if(action==='resolve' && req.method==='POST')return json(res,200,{ok:true,item:store.resolve(id,(await readBody(req)).reason)});
+      }
+      return json(res,404,{ok:false,error:'not found'});
+    } catch(e) {return json(res,e.statusCode||503,{ok:false,code:e.code||'VIP_STORAGE_UNAVAILABLE',error:e.statusCode?e.message:'VIP storage is unavailable.'});}
+  }
 
   if (req.method === 'GET' && pathname === '/table') {
     if (!allowed()) return json(res, 401, { ok: false, error: 'unauthorised' });
     setSecurityHeaders(res);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    return res.end(sheet.renderTablePage(ADMIN_TOKEN));
+    return res.end(sheet.renderTablePage(ADMIN_TOKEN, url.searchParams.get('mode')));
   }
 
   if (req.method === 'GET' && pathname === '/api/registrations') {
@@ -447,6 +496,16 @@ const server = http.createServer(async (req, res) => {
     } catch (e) { return json(res, 400, { ok: false, error: e.message || 'restore failed' }); }
   }
 
+  if (req.method === 'POST' && pathname === '/api/vip') {
+    try {
+      if (!rateAllowed('vip:' + clientIp(req))) return json(res, 429, { ok: false, code: 'RATE_LIMITED', error: 'Too many VIP Code attempts. Please try again later.' });
+      const input = await readBody(req);
+      return json(res, 200, { ok: true, ...validateVip(input) });
+    } catch (e) {
+      return json(res, e.statusCode || 500, { ok: false, code: e.code || 'VIP_ERROR', error: e.message || 'VIP Code could not be checked.' });
+    }
+  }
+
   if (req.method === 'POST' && pathname === '/api/order') {
     try {
       const ip = clientIp(req);
@@ -455,7 +514,7 @@ const server = http.createServer(async (req, res) => {
       const result = await processOrder(order);
       return json(res, 200, { ok: true, ...result });
     } catch (e) {
-      return json(res, e.statusCode || 500, { ok: false, code: e.code || 'REGISTRATION_ERROR', error: e.message || 'Registration failed', ref: e.ref || undefined });
+      return json(res, e.statusCode || 500, { ok: false, code: e.code || 'REGISTRATION_ERROR', error: e.message || 'Registration failed', ref: e.ref || undefined, retryable: e.retryable || undefined });
     }
   }
 
@@ -465,6 +524,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 if (require.main === module) {
+  vipReady();
   server.listen(PORT, () => {
     console.log(`LP CLUB conference → http://localhost:${PORT}`);
     console.log(`health             → http://localhost:${PORT}/health`);
@@ -474,4 +534,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { toFields, fromFeishuRecord, processOrder, json, sheet, feishu, isBusinessEmail, normaliseOrder, PACKAGES, validPhone, rateAllowed };
+module.exports = { toFields, fromFeishuRecord, processOrder, json, sheet, feishu, isBusinessEmail, normaliseOrder, validateVip, PACKAGES, validPhone, rateAllowed, server };
