@@ -32,8 +32,8 @@
     --serif: var(--sans); /* unified sans - no decorative serif anywhere */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { font-family: var(--sans); color: var(--ink); background: var(--cream); line-height: 1.65; font-size: 16px; -webkit-font-smoothing: antialiased; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { font-family: var(--sans); color: var(--ink); background: var(--cream); line-height: 1.65; font-size: 16px; -webkit-font-smoothing: antialiased; overflow-x: hidden; width: 100%; }
   img { max-width: 100%; display: block; }
   a { color: inherit; text-decoration: none; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
@@ -117,8 +117,6 @@
     .hl-row li { gap: 14px; padding: 20px 0; border-bottom: 1px solid rgba(63,99,80,.14); }
     .hl-row li:last-child { padding-bottom: 0; border-bottom: 0; }
   }
-  @media (max-width: 1024px) { .rk-timeline { grid-template-columns: repeat(3, 1fr); row-gap: 30px; } .rk-timeline::before { display: none; } .rk-item { padding: 0 18px 0 0; } .rk-item::before { margin-bottom: 12px; } }
-  @media (max-width: 640px) { .rk { padding: 30px 24px 26px; } .rk-timeline { grid-template-columns: 1fr; } .rk-item { padding: 0 0 26px 34px; } .rk-item::before { position: absolute; left: 0; top: 2px; margin: 0; } .rk-item:last-child { padding-bottom: 4px; } }
 
   /* ---------- Values ---------- */
   .bg-tint { background: var(--green-50); }
@@ -441,20 +439,53 @@
   .gallery { background: #fff; }
 
   /* ---------- LP CLUB Ranking series ---------- */
-  .rk { margin-top: 60px; background: var(--green-50); border: 1px solid var(--line); border-radius: 24px; padding: 42px 44px 36px; }
+  .rk { margin-top: 60px; background: var(--green-50); border: 1px solid var(--line); border-radius: 24px; padding: 42px 44px 36px; position: relative; overflow: hidden; }
+  .rk-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .rk-head-copy { max-width: 820px; }
   .rk-eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--green-700); }
   .rk-eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--green-400); }
   .rk-title { font-family: var(--sans); font-size: clamp(21px, 2.3vw, 28px); font-weight: 700; color: var(--green-900); letter-spacing: -.02em; margin-top: 10px; }
   .rk-lead { max-width: 780px; color: var(--ink-soft); font-size: 15.5px; line-height: 1.65; margin-top: 12px; }
-  .rk-timeline { margin-top: 40px; display: grid; grid-template-columns: repeat(6, 1fr); position: relative; }
-  .rk-timeline::before { content: ""; position: absolute; top: 8px; left: 7px; right: 7px; height: 2px; background: var(--green-200); }
-  .rk-item { position: relative; padding: 0 20px 4px 0; }
+  .rk-btns { display: flex; gap: 10px; flex-shrink: 0; }
+  .rk-btn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--green-800); font-size: 16px; cursor: pointer; transition: all .18s ease; display: inline-flex; align-items: center; justify-content: center; }
+  .rk-btn:hover:not(:disabled) { background: var(--green-800); border-color: var(--green-800); color: #fff; }
+  .rk-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .rk-scroll { margin-top: 36px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; scroll-behavior: smooth; scroll-snap-type: x proximity; padding: 4px 2px 16px; cursor: grab; user-select: none; scrollbar-width: thin; scrollbar-color: var(--green-300) rgba(44,74,58,.06); }
+  .rk-scroll.dragging { cursor: grabbing; scroll-behavior: auto; scroll-snap-type: none; }
+  .rk-scroll::-webkit-scrollbar { height: 6px; }
+  .rk-scroll::-webkit-scrollbar-track { background: rgba(44,74,58,.06); border-radius: 99px; }
+  .rk-scroll::-webkit-scrollbar-thumb { background: var(--green-300); border-radius: 99px; }
+  .rk-scroll::-webkit-scrollbar-thumb:hover { background: var(--green-500); }
+  .rk-timeline { display: flex; position: relative; width: max-content; min-width: 100%; }
+  .rk-timeline::before { content: ""; position: absolute; top: 8px; left: 8px; right: 8px; height: 2px; background: var(--green-200); }
+  .rk-item { position: relative; flex: 0 0 200px; padding: 0 20px 4px 0; scroll-snap-align: start; }
   .rk-item:last-child { padding-right: 0; }
-  .rk-item::before { content: ""; position: relative; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--green-800); border: 4px solid var(--green-50); box-shadow: 0 0 0 1px var(--green-400); margin-bottom: 14px; }
+  .rk-item::before { content: ""; position: relative; display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--green-800); border: 4px solid var(--green-50); box-shadow: 0 0 0 1px var(--green-400); margin-bottom: 14px; z-index: 1; }
   .rk-year { font-size: 21px; font-weight: 800; color: var(--green-900); letter-spacing: -.01em; margin-bottom: 10px; }
   .rk-item ul { list-style: none; margin: 0; }
-  .rk-item li { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); padding: 8px 0 8px 12px; border-top: 1px solid var(--line); position: relative; }
+  .rk-item li { font-size: 12.5px; line-height: 1.5; color: var(--ink-soft); padding: 8px 0 8px 12px; border-top: 1px solid var(--line); position: relative; user-select: text; }
   .rk-item li::before { content: ""; position: absolute; left: 0; top: 15px; width: 5px; height: 5px; border-radius: 50%; background: var(--green-400); }
+  .rk-hint { display: none; text-align: center; margin-top: 8px; font-size: 11.5px; letter-spacing: .08em; color: var(--green-700); font-weight: 500; opacity: .85; }
+  @media (min-width: 1200px) {
+    .rk-timeline { width: 100%; }
+    .rk-item { flex: 1 1 0; min-width: 0; }
+    .rk-btns { display: none; }
+    .rk-scroll { cursor: default; }
+  }
+  @media (max-width: 768px) {
+    .rk { padding: 30px 20px 24px; border-radius: 20px; }
+    .rk-head { gap: 16px; }
+    .rk-scroll { margin-top: 26px; padding-bottom: 12px; }
+    .rk-item { flex: 0 0 190px; padding-right: 18px; }
+    .rk-btn { width: 38px; height: 38px; font-size: 15px; }
+    .rk-hint { display: block; }
+  }
+  @media (max-width: 480px) {
+    .rk { padding: 24px 16px 20px; margin-top: 40px; }
+    .rk-title { font-size: 20px; line-height: 1.25; }
+    .rk-lead { font-size: 14px; line-height: 1.6; }
+    .rk-item { flex: 0 0 180px; padding-right: 16px; }
+  }
   .gallery-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
   .rail-btns { display: flex; gap: 10px; }
   .rail-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--green-800); font-size: 17px; cursor: pointer; transition: all .18s ease; }
@@ -976,52 +1007,63 @@
 
     <!-- LP CLUB Ranking series -->
     <div class="rk">
-      <span class="rk-eyebrow">LP CLUB Ranking Series</span>
-      <h3 class="rk-title">Six years of independent industry benchmarks</h3>
-      <p class="rk-lead">Independent, impartial and science-based — the LP CLUB rankings are a third-party benchmark for China's private equity industry. From a single annual list in 2021, the series has grown into a full matrix of institutional and individual rankings tracking where capital flows and who earns LPs' trust.</p>
-      <div class="rk-timeline">
-        <div class="rk-item">
-          <div class="rk-year">2021</div>
-          <ul>
-            <li>LP CLUB Annual Rankings</li>
-          </ul>
+      <div class="rk-head">
+        <div class="rk-head-copy">
+          <span class="rk-eyebrow">LP CLUB Ranking Series</span>
+          <h3 class="rk-title">Six years of independent industry benchmarks</h3>
+          <p class="rk-lead">Independent, impartial and science-based — the LP CLUB rankings are a third-party benchmark for China's private equity industry. From a single annual list in 2021, the series has grown into a full matrix of institutional and individual rankings tracking where capital flows and who earns LPs' trust.</p>
         </div>
-        <div class="rk-item">
-          <div class="rk-year">2022</div>
-          <ul>
-            <li>China's Top 100 Most Active Industrial LPs</li>
-            <li>LP CLUB Annual Rankings</li>
-          </ul>
-        </div>
-        <div class="rk-item">
-          <div class="rk-year">2023</div>
-          <ul>
-            <li>LP-Recognized Investment Institutions</li>
-            <li>LP CLUB Annual Rankings</li>
-          </ul>
-        </div>
-        <div class="rk-item">
-          <div class="rk-year">2024</div>
-          <ul>
-            <li>&ldquo;Beyond the Trough&rdquo; Rising-Attention Ranking</li>
-            <li>&ldquo;National Cornerstones&rdquo; Annual Ranking</li>
-          </ul>
-        </div>
-        <div class="rk-item">
-          <div class="rk-year">2025</div>
-          <ul>
-            <li>&ldquo;Breaking Through&rdquo; Mid-Year Rankings</li>
-            <li>Regional Rankings</li>
-            <li>&ldquo;Quality Forward&rdquo; Annual Ranking</li>
-          </ul>
-        </div>
-        <div class="rk-item">
-          <div class="rk-year">2026</div>
-          <ul>
-            <li>&ldquo;New Drivers of Strategic Investment&rdquo; Annual Ranking</li>
-          </ul>
+        <div class="rk-btns" id="rkBtns" aria-label="Ranking timeline navigation">
+          <button class="rk-btn" id="rkPrev" aria-label="Scroll ranking timeline left">&larr;</button>
+          <button class="rk-btn" id="rkNext" aria-label="Scroll ranking timeline right">&rarr;</button>
         </div>
       </div>
+      <div class="rk-scroll" id="rkScroll" tabindex="0" role="region" aria-label="LP CLUB Ranking timeline from 2021 to 2026">
+        <div class="rk-timeline">
+          <div class="rk-item">
+            <div class="rk-year">2021</div>
+            <ul>
+              <li>LP CLUB Annual Rankings</li>
+            </ul>
+          </div>
+          <div class="rk-item">
+            <div class="rk-year">2022</div>
+            <ul>
+              <li>China's Top 100 Most Active Industrial LPs</li>
+              <li>LP CLUB Annual Rankings</li>
+            </ul>
+          </div>
+          <div class="rk-item">
+            <div class="rk-year">2023</div>
+            <ul>
+              <li>LP-Recognized Investment Institutions</li>
+              <li>LP CLUB Annual Rankings</li>
+            </ul>
+          </div>
+          <div class="rk-item">
+            <div class="rk-year">2024</div>
+            <ul>
+              <li>&ldquo;Beyond the Trough&rdquo; Rising-Attention Ranking</li>
+              <li>&ldquo;National Cornerstones&rdquo; Annual Ranking</li>
+            </ul>
+          </div>
+          <div class="rk-item">
+            <div class="rk-year">2025</div>
+            <ul>
+              <li>&ldquo;Breaking Through&rdquo; Mid-Year Rankings</li>
+              <li>Regional Rankings</li>
+              <li>&ldquo;Quality Forward&rdquo; Annual Ranking</li>
+            </ul>
+          </div>
+          <div class="rk-item">
+            <div class="rk-year">2026</div>
+            <ul>
+              <li>&ldquo;New Drivers of Strategic Investment&rdquo; Annual Ranking</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="rk-hint">&larr; Drag or swipe horizontally to explore 2021–2026 &rarr;</div>
     </div>
   </div>
 </section>
@@ -1424,6 +1466,75 @@
       rail.scrollTo({ left: 0, behavior: 'smooth' });
     });
   });
+
+  /* ---------- LP CLUB Ranking timeline horizontal drag & scroll ---------- */
+  (function () {
+    var rkScroll = document.getElementById('rkScroll');
+    if (!rkScroll) return;
+
+    var rkPrev = document.getElementById('rkPrev');
+    var rkNext = document.getElementById('rkNext');
+
+    var isDown = false;
+    var startX = 0;
+    var scrollLeft = 0;
+
+    rkScroll.addEventListener('mousedown', function (e) {
+      isDown = true;
+      rkScroll.classList.add('dragging');
+      startX = e.pageX - rkScroll.offsetLeft;
+      scrollLeft = rkScroll.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', function () {
+      if (isDown) {
+        isDown = false;
+        rkScroll.classList.remove('dragging');
+      }
+    });
+
+    rkScroll.addEventListener('mousemove', function (e) {
+      if (!isDown) return;
+      e.preventDefault();
+      var x = e.pageX - rkScroll.offsetLeft;
+      var walk = (x - startX) * 1.5;
+      rkScroll.scrollLeft = scrollLeft - walk;
+    });
+
+    function getStep() {
+      var item = rkScroll.querySelector('.rk-item');
+      var itemWidth = item ? item.offsetWidth : 200;
+      return Math.max(itemWidth, Math.min(rkScroll.clientWidth * 0.75, 400));
+    }
+
+    if (rkPrev) {
+      rkPrev.addEventListener('click', function () {
+        rkScroll.scrollBy({ left: -getStep(), behavior: 'smooth' });
+      });
+    }
+
+    if (rkNext) {
+      rkNext.addEventListener('click', function () {
+        rkScroll.scrollBy({ left: getStep(), behavior: 'smooth' });
+      });
+    }
+
+    function updateNavState() {
+      if (!rkPrev || !rkNext) return;
+      var max = rkScroll.scrollWidth - rkScroll.clientWidth;
+      if (max <= 5) {
+        rkPrev.disabled = true;
+        rkNext.disabled = true;
+      } else {
+        rkPrev.disabled = rkScroll.scrollLeft <= 5;
+        rkNext.disabled = rkScroll.scrollLeft >= max - 5;
+      }
+    }
+
+    rkScroll.addEventListener('scroll', updateNavState, { passive: true });
+    window.addEventListener('resize', updateNavState);
+    setTimeout(updateNavState, 150);
+  })();
 })();
 </script>
 
