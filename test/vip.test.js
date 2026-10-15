@@ -20,7 +20,8 @@ test('all five delegate passes preview free without consuming and other packages
     assert.equal(p.price,0);assert.equal(p.vipApplied,true);assert.ok(!JSON.stringify(p).includes(f.code));
   }
   for(const option of ['speaking','panel','matchmaking'])assert.throws(()=>f.service.preview(PACKAGES['gp_'+option],f.code),e=>e.code==='VIP_TICKET_ONLY');
-  assert.equal(f.store.row(f.item.id).status,'available');
+  assert.equal(f.service.previewCode(f.code).status,'available');
+  assert.throws(()=>f.service.previewCode('WRONG'),e=>e.code==='INVALID_VIP_CODE');
   assert.throws(()=>f.service.preview(PACKAGES.gp_ticket,'OLD-SHARED-CODE'),e=>e.code==='INVALID_VIP_CODE');
 });
 test('one write only, retry is idempotent, changed payload conflicts, new claimant blocked',async t=>{

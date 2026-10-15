@@ -242,7 +242,14 @@ function registrationPackage(input) {
 
 function vipService() { return new VipService({store:getStore(process.env),feishu,packages:PACKAGES}); }
 function validateVip(input) {
-  return { package: vipService().preview(registrationPackage(input), input && input.vipCode) };
+  const service = vipService();
+  const code = input && input.vipCode;
+  const requestedId = cleanString(input && input.packageId, 50);
+  if (requestedId) {
+    return { valid: true, package: service.preview(registrationPackage(input), code) };
+  }
+  service.previewCode(code);
+  return { valid: true };
 }
 function vipReady() { try { getStore(process.env); return true; } catch (_) { return false; } }
 

@@ -150,6 +150,7 @@ test('management HTTP routes enforce auth and support generate/distribute/export
   await request('/api/admin/vip-codes/'+id,'PATCH',{recipientName:'Jane',recipientEmail:'jane@example-capital.com',note:'@formula',distributedAt:new Date().toISOString()});
   const detail=await (await request('/api/admin/vip-codes/'+id)).json();assert.equal(detail.item.recipientName,'Jane');assert.ok(detail.events.some(e=>e.action==='revealed'));
   const preview=await (await request('/api/vip','POST',{packageId:'gp_ticket',vipCode:detail.item.code},false)).json();assert.equal(preview.package.price,0);assert.equal(store.row(id).status,'available');
+  const codeOnly=await (await request('/api/vip','POST',{vipCode:detail.item.code},false)).json();assert.equal(codeOnly.ok,true);assert.equal(codeOnly.valid,true);
   assert.equal((await request('/api/admin/vip-codes/'+id+'?token=wrong')).status,401);
   assert.equal((await request('/api/admin/vip-codes/'+crypto.randomUUID())).status,404);
   const csv=await request('/api/admin/vip-codes/export?ids='+id);assert.match(csv.headers.get('Content-Type'),/text\/csv/);const contents=await csv.text();assert.ok(contents.includes(detail.item.code));assert.ok(!contents.includes('Danger'));assert.ok(!contents.includes('@formula'));assert.equal(contents.trim().split('\r\n')[0].replace(/^\uFEFF/,''),'"VIP Code"');
@@ -157,6 +158,7 @@ test('management HTTP routes enforce auth and support generate/distribute/export
   const mixed=await (await request('/api/admin/vip-codes/export?ids='+id+','+otherId)).text();assert.ok(mixed.includes(detail.item.code));
   const used=await (await request('/api/admin/vip-codes/'+otherId)).json();assert.equal(used.item.status,'revoked');
   const rejected=await (await request('/api/vip','POST',{packageId:'gp_ticket',vipCode:used.item.code},false)).json();assert.equal(rejected.code,'VIP_REVOKED');
+  const rejectedNoPkg=await (await request('/api/vip','POST',{vipCode:used.item.code},false)).json();assert.equal(rejectedNoPkg.code,'VIP_REVOKED');
   const list=await (await request('/api/admin/vip-codes?status=revoked')).json();assert.equal(list.total,1);
   const health=await (await request('/health')).json();assert.equal(health.vipReady,true);
 });

@@ -18,6 +18,7 @@ function resultFor(order, recordId) {
 class VipService {
   constructor({store,feishu,packages}) { this.store=store;this.feishu=feishu;this.packages=packages; }
   preview(p, code) { discountPackage(p);this.store.preview(code);return discountPackage(p); }
+  previewCode(code) { return this.store.preview(code); }
   async redeem(order, input, writeRegistration) {
     discountPackage(order.package);
     // Only normalized registration data contributes to the fingerprint; server-generated references do not.

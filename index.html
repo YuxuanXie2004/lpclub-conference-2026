@@ -1229,7 +1229,7 @@
   var regParticipationWrap = document.getElementById('regParticipationWrap');
   var regStep = 1, selectedIdentity = null, selectedPackage = null, packageList = [], packageLoadError = '';
   var vipCode=document.getElementById('vipCode'), vipApply=document.getElementById('vipApply'), vipMessage=document.getElementById('vipMessage');
-  var appliedVipCode='', vipPackage=null, vipPending=false, vipRequestId=0;
+  var appliedVipCode='', vipPending=false, vipRequestId=0;
   var vipSubmissionKey='', vipSubmissionPayload='';
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
@@ -1243,26 +1243,58 @@
   function showAlert(msg){regAlert.textContent=msg;regAlert.classList.toggle('show',Boolean(msg))}
   function businessEmail(value){var s=String(value||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return false;return PERSONAL_DOMAINS.indexOf(s.split('@').pop())===-1}
   function renderMulti(){Object.keys(MULTI).forEach(function(key){var box=document.querySelector('[data-multi="'+key+'"]');if(!box)return;box.innerHTML=MULTI[key].map(function(v){return '<label class="reg-chip"><input type="checkbox" value="'+escHtml(v)+'"><span>'+escHtml(v)+'</span></label>'}).join('')})}
-  function effectivePackage(p){return vipPackage&&p&&vipPackage.id===p.id?vipPackage:p}
-  function updateVipControls(){vipApply.disabled=vipPending||!selectedPackage||selectedPackage.optionId!=='ticket'||!vipCode.value.trim();vipApply.textContent=vipPending?'Checking…':'Apply'}
+  function effectivePackage(p){
+    if(appliedVipCode && p && p.optionId === 'ticket'){
+      return Object.assign({}, p, {price: 0, displayPrice: 'Complimentary / VIP Code', vipApplied: true});
+    }
+    return p;
+  }
+  function updateVipControls(){
+    vipApply.disabled = vipPending || !vipCode.value.trim();
+    vipApply.textContent = vipPending ? 'Checking…' : 'Apply';
+  }
   function resetVip(){
-    appliedVipCode='';vipPackage=null;vipPending=false;vipRequestId++;
-    vipMessage.textContent=selectedPackage&&selectedPackage.optionId!=='ticket'?'VIP Code applies to Delegate Pass only. Speaking, Panel and Matchmaking packages are not included.':'Delegate Pass only. Enter your code and click Apply.';vipMessage.classList.remove('error');updateVipControls();
+    appliedVipCode = '';
+    vipPending = false;
+    vipRequestId++;
+    vipMessage.textContent = 'Delegate Pass only. Enter your code and click Apply.';
+    vipMessage.classList.remove('error');
+    updateVipControls();
   }
   async function applyVipCode(){
-    if(vipApply.disabled)return;
-    var code=vipCode.value.trim(), id=selectedPackage.id, requestId=++vipRequestId;
-    appliedVipCode='';vipPackage=null;vipPending=true;updateVipControls();regNext.disabled=true;renderPackages();
-    vipMessage.textContent='Checking VIP Code…';vipMessage.classList.remove('error');
+    if(vipApply.disabled) return;
+    var code = vipCode.value.trim(), requestId = ++vipRequestId;
+    appliedVipCode = '';
+    vipPending = true;
+    updateVipControls();
+    regNext.disabled = regStep === 1 ? !selectedPackage : false;
+    renderPackages();
+    vipMessage.textContent = 'Checking VIP Code…';
+    vipMessage.classList.remove('error');
     try{
-      var response=await fetch(apiUrl('/api/vip'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({packageId:id,vipCode:code})});
-      var data=await response.json();
-      if(requestId!==vipRequestId)return;
-      if(!response.ok||!data.ok)throw new Error(data.error||'VIP Code could not be checked. Please try again.');
-      if(!data.package||data.package.id!==id||data.package.price!==0||data.package.vipApplied!==true)throw new Error('VIP Code could not be checked. Please try again.');
-      appliedVipCode=code;vipPackage=data.package;vipMessage.textContent='VIP Code applied — one complimentary Delegate Pass.';renderPackages();
-    }catch(err){if(requestId===vipRequestId){vipMessage.textContent=err.message||'VIP Code could not be checked. Please try again.';vipMessage.classList.add('error')}}
-    finally{if(requestId===vipRequestId){vipPending=false;updateVipControls();regNext.disabled=!selectedPackage}}
+      var response = await fetch(apiUrl('/api/vip'), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({vipCode: code})
+      });
+      var data = await response.json();
+      if(requestId !== vipRequestId) return;
+      if(!response.ok || !data.ok) throw new Error(data.error || 'VIP Code could not be checked. Please try again.');
+      appliedVipCode = code;
+      vipMessage.textContent = 'VIP Code applied — one complimentary Delegate Pass.';
+      renderPackages();
+    }catch(err){
+      if(requestId === vipRequestId){
+        vipMessage.textContent = err.message || 'VIP Code could not be checked. Please try again.';
+        vipMessage.classList.add('error');
+      }
+    }finally{
+      if(requestId === vipRequestId){
+        vipPending = false;
+        updateVipControls();
+        regNext.disabled = regStep === 1 ? !selectedPackage : false;
+      }
+    }
   }
   function validPackages(data){
     if(!data || data.ok!==true || !Array.isArray(data.packages) || data.packages.length!==20)return false;
@@ -1279,7 +1311,7 @@
     var identities=packageList.filter(function(p){return p.optionId==='ticket'});
     regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity" data-identity="'+escHtml(p.identityId)+'" aria-pressed="false"><b>'+escHtml(p.identityName)+'</b><small>'+escHtml(p.note||'')+'</small></button>'}).join('');
     regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(btn){btn.addEventListener('click',function(){
-      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;resetVip();
+      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;
       regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(x){x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',String(x===btn))});
       renderPackages();regParticipationWrap.hidden=false;regNext.disabled=true;showAlert('');
     })});
@@ -1288,7 +1320,7 @@
     var list=packageList.filter(function(p){return p.identityId===selectedIdentity});
     regPackagesEl.innerHTML=list.map(function(p){var checked=selectedPackage&&selectedPackage.id===p.id;return '<label class="reg-package'+(checked?' selected':'')+'" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'" '+(checked?'checked':'')+'><span class="reg-radio"></span><span><b>'+escHtml(p.ticketName)+'</b><small>'+escHtml(p.note||'')+'</small></span><span class="reg-price">'+escHtml(money(effectivePackage(p)))+'</span></label>'}).join('');
     regPackagesEl.querySelectorAll('input').forEach(function(input){input.addEventListener('change',function(){
-      selectedPackage=list.find(function(p){return p.id===input.value})||null;resetVip();renderPackages();
+      selectedPackage=list.find(function(p){return p.id===input.value})||null;renderPackages();
       regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.classList.toggle('selected',row.getAttribute('data-package')===input.value)});
       regNext.disabled=!selectedPackage;showAlert('');
     })});
@@ -1327,11 +1359,11 @@
   async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var payload=formPayload();if(payload.vipCode){var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(data.package.identityName+' — '+data.package.ticketName)+'</b><br>'+escHtml(money(data.package))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.retryable||err.code==='VIP_RETRY_REQUIRED'){vipSubmissionKey='';vipSubmissionPayload=''}if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');vipMessage.textContent=err.message;showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.message+(err.ref?' Registration reference: '+err.ref:''))}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;regNext.textContent=regStep===1?'Continue to Your Details':'Submit Registration'}}}
 
   vipApply.addEventListener('click',applyVipCode);
-  vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=!selectedPackage});
+  vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=regStep===1?!selectedPackage:false});
   vipCode.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();applyVipCode()}});
   document.querySelectorAll('[data-open-form]').forEach(function(btn){btn.addEventListener('click',openReg)});
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
-  regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage){if(vipCode.value.trim()&&!appliedVipCode){showAlert(selectedPackage.optionId==='ticket'?'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}showStep(2)}else if(regStep===2)submitRegistration()});
+  regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage){if(vipCode.value.trim()&&!appliedVipCode){showAlert(selectedPackage.optionId==='ticket'?'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}if(appliedVipCode&&selectedPackage.optionId!=='ticket'){showAlert('VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}showAlert('');showStep(2)}else if(regStep===2)submitRegistration()});
   regForm.elements.email.addEventListener('blur',function(){var hint=document.getElementById('emailHint');hint.classList.toggle('error',this.value&&!businessEmail(this.value))});
   renderMulti();loadPackages();
 
