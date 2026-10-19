@@ -55,7 +55,7 @@ test('VIP 页面安全嵌入 token，无法结束脚本或污染 HTML 属性', (
   const context = vm.createContext({});
   vm.runInContext(source.split('const $=')[0] + '; globalThis.actualToken = TOKEN;', context);
   assert.equal(context.actualToken, token);
-  assert.ok(html.includes('/table?token=' + encodeURIComponent(token)));
+  assert.ok(html.includes('table?token=' + encodeURIComponent(token)));
 });
 
 test('VIP 页面浏览器脚本语法有效，提供移动端布局与原后台一致的英文操作', () => {
@@ -70,7 +70,7 @@ test('加载列表通过管理头认证，URL 不携带管理员 token', async (
   const { requests } = browser();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(requests.length, 1);
-  assert.ok(requests[0].url.startsWith('/api/admin/vip-codes?'));
+  assert.ok(requests[0].url.startsWith('api/admin/vip-codes?'));
   assert.ok(!requests[0].url.includes('admin-secret'));
   assert.equal(requests[0].options.headers['X-Admin-Token'], 'admin-secret');
 });

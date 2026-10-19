@@ -11,6 +11,8 @@ module.exports=async function localServer(){
   async findRecordByReference(ref){return state.records.find(r=>r.fields['Registration Reference / 报名编号']===ref)||null;},
   async createRecord(fields){const record={record_id:'rec-'+crypto.randomUUID(),fields};if(state.saveMode==='confirmed-fail')throw Object.assign(Error('explicit rejection'),{definitelyNotSaved:true});state.records.push(record);if(state.saveMode==='ambiguous')throw Error('response timed out');return record;},
   async updateRecord(id,fields){Object.assign(state.records.find(r=>r.record_id===id).fields,fields);},
+  async softDelete(id,actor,reason){await this.updateRecord(id,{'Is Deleted / 已删除':true,'Deleted By / 删除人':actor,'Deletion Reason / 删除原因':reason});},
+  async restore(id){await this.updateRecord(id,{'Is Deleted / 已删除':false});},
   async listActiveRecords(){return state.records.filter(r=>!r.fields['Is Deleted / 已删除']);},async listDeletedRecords(){return state.records.filter(r=>r.fields['Is Deleted / 已删除']);}
  };
  const file=path.resolve(__dirname,'../../server/index.js'),realRequire=createRequire(file),module={exports:{}};

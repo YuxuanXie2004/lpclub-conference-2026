@@ -29,6 +29,7 @@ const { renderVipPage } = require('./vip-admin');
 
 const ROOT = path.join(__dirname, '..');
 const PORT = Number(process.env.PORT || 8787);
+const HOST = process.env.HOST || '0.0.0.0';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const SMTP = {
   host: process.env.SMTP_HOST || 'smtp.feishu.cn',
@@ -532,7 +533,7 @@ const server = http.createServer(async (req, res) => {
 
 if (require.main === module) {
   vipReady();
-  server.listen(PORT, () => {
+  server.listen(PORT, HOST, () => {
     console.log(`LP CLUB conference → http://localhost:${PORT}`);
     console.log(`health             → http://localhost:${PORT}/health`);
     console.log(`admin table        → ${ADMIN_TOKEN ? `http://localhost:${PORT}/table?token=${ADMIN_TOKEN}` : 'disabled (set ADMIN_TOKEN)'}`);
