@@ -16,7 +16,7 @@ async function fillDetails(page) {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   try {
     for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
-      const page = await browser.newPage({ viewport });
+      const page = await browser.newPage({ viewport, locale: 'en-US' });
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.route('**/api/packages', route => route.fulfill({ json: catalogue }));
@@ -66,7 +66,7 @@ async function fillDetails(page) {
     }
 
     for (const response of [null, { ok: true, packages: [] }, { ok: true, packages: [{}] }, { ok: false, packages: catalogue.packages }]) {
-      const page = await browser.newPage();
+      const page = await browser.newPage({ locale: 'en-US' });
       await page.route('**/api/packages', route => response === null ? route.abort() : route.fulfill({ json: response }));
       await page.goto(url);
       await page.locator('[data-open-form]').first().click();
@@ -78,7 +78,7 @@ async function fillDetails(page) {
     console.log('PASS catalogue failures block registration');
 
     for (const code of ['DATABASE_UNAVAILABLE', 'DUPLICATE_REGISTRATION']) {
-      const page = await browser.newPage();
+      const page = await browser.newPage({ locale: 'en-US' });
       await page.route('**/api/packages', route => route.fulfill({ json: catalogue }));
       await page.route('**/api/order', route => route.fulfill({ status: code === 'DATABASE_UNAVAILABLE' ? 503 : 409, json: {
         ok: false, code, error: 'Registration failed', ref: code === 'DUPLICATE_REGISTRATION' ? 'LPC26-EXISTING' : undefined

@@ -204,3 +204,7 @@ npm test
 ```
 
 The tests cover business-email validation, server-owned package pricing, the default soft-delete flag, and Feishu record mapping.
+
+The public site supports English and Simplified Chinese. On first visit, the browser's preferred language selects Chinese for `zh` locales and English otherwise. The header language buttons save an explicit choice in `localStorage`; blocked storage does not prevent switching. Display translations preserve canonical registration values and server-owned prices. The navigation and footer use `images/lpclub-logo.png`; the browser icon uses `images/lpclub-icon.png`.
+
+With Playwright resolvable from Node (or `NODE_PATH`) and Chrome installed, run `node test/browser-i18n.cjs`. It starts its own temporary HTTP server and simulates registration APIs, covering browser defaults, saved preference, storage failure, subpath assets, desktop/mobile layout and Chinese registration. Existing English browser tests specify `en-US` explicitly so OS language does not affect their assertions.

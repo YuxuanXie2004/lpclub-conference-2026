@@ -8,6 +8,15 @@
 <meta http-equiv="Expires" content="0" />
 <title>The 3rd International Private Equity Conference 2026 | LP CLUB GROUP</title>
 <meta name="description" content="The 3rd International Private Equity Conference, hosted by LP CLUB GROUP — connecting LPs, GPs & global capital. Wednesday, 18 November 2026, Hong Kong Convention and Exhibition Centre, Hong Kong, China." />
+<link rel="icon" type="image/png" sizes="180x180" href="images/lpclub-icon.png" />
+<script>
+(function () {
+  var saved;
+  try { saved = localStorage.getItem('lpclub-language'); } catch (_) {}
+  var preferred = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+  document.documentElement.lang = saved === 'zh-CN' || saved === 'en' ? saved : (/^zh(?:-|$)/i.test(preferred) ? 'zh-CN' : 'en');
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -64,6 +73,23 @@
   .nav-links a:hover { color: var(--green-800); }
   .nav .btn { padding: 10px 22px; font-size: 13px; }
   @media (max-width: 960px) { .nav-links { display: none; } }
+
+  .brand-logo { width: 150px; height: auto; flex-shrink: 0; }
+  footer .brand-logo { width: 180px; filter: brightness(0) invert(1); }
+  .language-switch { display: inline-flex; flex-shrink: 0; padding: 3px; gap: 2px; border: 1px solid var(--line); border-radius: 999px; }
+  .language-switch button { border: 0; border-radius: 999px; padding: 6px 9px; background: transparent; color: var(--ink-soft); font: 500 12px var(--sans); cursor: pointer; }
+  .language-switch button[aria-pressed="true"] { background: var(--green-800); color: #fff; }
+  .language-switch button:focus-visible { outline: 2px solid var(--green-700); outline-offset: 2px; }
+  @media (max-width: 1160px) { .nav-links { gap: 16px; } }
+  @media (max-width: 1050px) { .nav-links { display: none; } }
+  @media (max-width: 480px) {
+    .nav { gap: 12px; }
+    .nav .brand-logo { width: 110px; }
+    .nav-right { gap: 8px; }
+    .nav .btn { padding: 9px 12px; font-size: 12px; letter-spacing: 0; white-space: nowrap; }
+    .language-switch button { padding: 6px 7px; font-size: 11px; }
+  }
+  @media (max-width: 359px) { .nav.wrap { padding-left: 14px; padding-right: 14px; } .nav .brand-logo { width: 92px; } .nav { gap: 8px; } }
 
   /* ---------- Hero ---------- */
   .hero { position: relative; background: linear-gradient(100deg, rgba(9,22,16,.80) 0%, rgba(9,22,16,.58) 48%, rgba(9,22,16,.34) 100%), url("images/hero-bg.jpg") center 38% / cover no-repeat #0d1a14; padding: 148px 0 138px; overflow: hidden; }
@@ -731,18 +757,22 @@
 <header>
   <div class="wrap nav">
     <a class="brand" href="#top">
-      <span>LP CLUB GROUP<small>PRIVATE EQUITY PLATFORM</small></span>
+      <img class="brand-logo" src="images/lpclub-logo.png" alt="LP CLUB" width="2021" height="698">
     </a>
     <nav class="nav-links">
-      <a href="#about">About</a>
-      <a href="#host">Host</a>
-      <a href="#gallery">Track Record</a>
-      <a href="#attend">Who Will Attend</a>
-      <a href="#themes">Themes</a>
-      <a href="#agenda">Agenda</a>
+      <a href="#about" data-zh="关于大会">About</a>
+      <a href="#host" data-zh="主办方">Host</a>
+      <a href="#gallery" data-zh="往届回顾">Track Record</a>
+      <a href="#attend" data-zh="参会嘉宾">Who Will Attend</a>
+      <a href="#themes" data-zh="投资主题">Themes</a>
+      <a href="#agenda" data-zh="大会议程">Agenda</a>
     </nav>
     <div class="nav-right">
-      <button class="btn btn-primary" data-open-form="Book Now">Book Now</button>
+      <div class="language-switch" role="group" aria-label="Language / 语言">
+        <button type="button" data-language="zh-CN" lang="zh-CN" aria-pressed="false">中文</button>
+        <button type="button" data-language="en" lang="en" aria-pressed="false">English</button>
+      </div>
+      <button class="btn btn-primary" data-open-form="Book Now" data-zh="立即报名">Book Now</button>
     </div>
   </div>
 </header>
@@ -751,16 +781,16 @@
 <section class="hero" id="top">
   <div class="wrap hero-grid">
     <div>
-      <p class="kicker">PRIVATE CAPITAL / ASIA · 3rd EDITION</p>
-      <h1>The 3rd International <em>Private Equity</em> Conference</h1>
-      <p class="sub">A room for capital, insight and deeper connections — connecting LPs, GPs &amp; global capital in the heart of Asia.</p>
+      <p class="kicker" data-zh="私募资本 / 亚洲 · 第三届">PRIVATE CAPITAL / ASIA · 3rd EDITION</p>
+      <h1 data-zh="第三届国际&lt;em&gt;私募股权&lt;/em&gt;大会">The 3rd International <em>Private Equity</em> Conference</h1>
+      <p class="sub" data-zh="汇聚资本与洞见，深化交流合作——立足亚洲，连接 LP、GP 与全球资本。">A room for capital, insight and deeper connections — connecting LPs, GPs &amp; global capital in the heart of Asia.</p>
       <div class="hero-meta">
-        <div><span>Date</span><strong>Wednesday, 18 November 2026</strong></div>
-        <div><span>Venue</span><strong>Hong Kong Convention and Exhibition Centre</strong></div>
-        <div><span>Hosted by</span><strong>LP CLUB GROUP</strong></div>
+        <div><span data-zh="日期">Date</span><strong data-zh="2026年11月18日，星期三">Wednesday, 18 November 2026</strong></div>
+        <div><span data-zh="地点">Venue</span><strong data-zh="香港会议展览中心">Hong Kong Convention and Exhibition Centre</strong></div>
+        <div><span data-zh="主办方">Hosted by</span><strong>LP CLUB GROUP</strong></div>
       </div>
       <div class="hero-cta">
-        <button class="btn btn-light" data-open-form="Book Now">Book Now</button>
+        <button class="btn btn-light" data-open-form="Book Now" data-zh="立即报名">Book Now</button>
       </div>
     </div>
   </div>
@@ -769,39 +799,39 @@
 <!-- ============ STATS ============ -->
 <div class="stats">
   <div class="wrap">
-    <div class="stat"><b>3rd</b><span>Edition of the flagship forum</span></div>
-    <div class="stat"><b data-count="4000" data-suffix="+">4,000+</b><span>GPs in the LP CLUB network</span></div>
-    <div class="stat"><b data-count="2000" data-suffix="+">2,000+</b><span>Institutional &amp; individual investors</span></div>
-    <div class="stat"><b data-count="200" data-suffix="+">200+</b><span>Listed corporate partners</span></div>
+    <div class="stat"><b data-zh="第三届">3rd</b><span data-zh="旗舰大会">Edition of the flagship forum</span></div>
+    <div class="stat"><b data-count="4000" data-suffix="+">4,000+</b><span data-zh="LP CLUB 网络覆盖的 GP">GPs in the LP CLUB network</span></div>
+    <div class="stat"><b data-count="2000" data-suffix="+">2,000+</b><span data-zh="机构及个人投资者">Institutional &amp; individual investors</span></div>
+    <div class="stat"><b data-count="200" data-suffix="+">200+</b><span data-zh="上市公司合作伙伴">Listed corporate partners</span></div>
   </div>
 </div>
 
 <!-- ============ ABOUT ============ -->
 <section id="about">
   <div class="wrap about-block">
-    <span class="num">01 — ABOUT THE CONFERENCE</span>
-    <h2 class="section-title">A focused platform for <em>capital, insight</em> and meaningful connection</h2>
-    <p class="about-lead">The 3rd International Private Equity Conference, hosted by <strong>LP CLUB</strong>, is a flagship gathering for global allocators and private equity practitioners navigating a changing investment landscape.</p>
+    <span class="num" data-zh="01 — 关于大会">01 — ABOUT THE CONFERENCE</span>
+    <h2 class="section-title" data-zh="汇聚&lt;em&gt;资本与洞见&lt;/em&gt;，建立深度连接">A focused platform for <em>capital, insight</em> and meaningful connection</h2>
+    <p class="about-lead" data-zh="由 &lt;strong&gt;LP CLUB&lt;/strong&gt; 主办的第三届国际私募股权大会，汇聚全球资产配置者与私募股权从业者，共同探讨投资格局变化中的机遇与挑战。">The 3rd International Private Equity Conference, hosted by <strong>LP CLUB</strong>, is a flagship gathering for global allocators and private equity practitioners navigating a changing investment landscape.</p>
     <div class="about-points">
       <div class="card">
-        <img class="card-img" src="images/about-01.jpg" alt="Who is in the room" loading="lazy">
+        <img class="card-img" src="images/about-01.jpg" alt="Who is in the room" loading="lazy" data-zh-alt="与会嘉宾">
         <div class="card-body">
-          <b>Who is in the room</b>
-          <p>Senior LP decision-makers, leading GPs, family offices, government authorities and listed companies.</p>
+          <b data-zh="与谁相聚">Who is in the room</b>
+          <p data-zh="资深 LP 决策者、头部 GP、家族办公室、政府机构及上市公司。">Senior LP decision-makers, leading GPs, family offices, government authorities and listed companies.</p>
         </div>
       </div>
       <div class="card">
-        <img class="card-img" src="images/about-02.jpg" alt="What is on the agenda" loading="lazy">
+        <img class="card-img" src="images/about-02.jpg" alt="What is on the agenda" loading="lazy" data-zh-alt="大会主题">
         <div class="card-body">
-          <b>What is on the agenda</b>
-          <p>Capital-flow reallocation, cross-border fund cooperation, fundraising, secondaries, private credit and regional outlooks.</p>
+          <b data-zh="探讨什么">What is on the agenda</b>
+          <p data-zh="资本流向重塑、跨境基金合作、募资、私募二级市场、私募信贷及区域市场展望。">Capital-flow reallocation, cross-border fund cooperation, fundraising, secondaries, private credit and regional outlooks.</p>
         </div>
       </div>
       <div class="card">
-        <img class="card-img" src="images/about-03.jpg" alt="Why it matters" loading="lazy">
+        <img class="card-img" src="images/about-03.jpg" alt="Why it matters" loading="lazy" data-zh-alt="参会价值">
         <div class="card-body">
-          <b>Why it matters</b>
-          <p>Align strategies, build trusted partnerships and capture opportunities in the new cycle of global private equity.</p>
+          <b data-zh="为何参与">Why it matters</b>
+          <p data-zh="交流投资策略，建立互信合作，把握全球私募股权新周期中的机遇。">Align strategies, build trusted partnerships and capture opportunities in the new cycle of global private equity.</p>
         </div>
       </div>
     </div>
@@ -809,16 +839,16 @@
     <div class="hl-strip section-motion">
       <div class="hl-head">
         <div>
-          <span class="hl-eyebrow">Conference Highlights</span>
-          <h3 class="hl-title">Built for substance, access and real conversation</h3>
+          <span class="hl-eyebrow" data-zh="大会亮点">Conference Highlights</span>
+          <h3 class="hl-title" data-zh="聚焦实质内容，连接资源，深入交流">Built for substance, access and real conversation</h3>
         </div>
-        <span class="hl-meta">18 November 2026 · Hong Kong</span>
+        <span class="hl-meta" data-zh="2026年11月18日 · 香港">18 November 2026 · Hong Kong</span>
       </div>
       <ol class="hl-row">
-        <li><span class="hl-num" aria-hidden="true">01</span><div><h4>Keynote perspectives</h4><p>Keynote speeches from leading investors and industry experts</p></div></li>
-        <li><span class="hl-num" aria-hidden="true">02</span><div><h4>Panel discussions</h4><p>In-depth panel discussions on the trends shaping private markets</p></div></li>
-        <li><span class="hl-num" aria-hidden="true">03</span><div><h4>Curated exchange</h4><p>Coffee-break exchange in a curated, senior-level setting</p></div></li>
-        <li><span class="hl-num" aria-hidden="true">04</span><div><h4>Investor networking</h4><p>Investor networking sessions across the LP–GP ecosystem</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">01</span><div><h4 data-zh="主题演讲">Keynote perspectives</h4><p data-zh="聆听领先投资者与行业专家的主题演讲">Keynote speeches from leading investors and industry experts</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">02</span><div><h4 data-zh="圆桌讨论">Panel discussions</h4><p data-zh="深入探讨影响私募市场发展的关键趋势">In-depth panel discussions on the trends shaping private markets</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">03</span><div><h4 data-zh="精选交流">Curated exchange</h4><p data-zh="与资深行业人士在茶歇期间深入交流">Coffee-break exchange in a curated, senior-level setting</p></div></li>
+        <li><span class="hl-num" aria-hidden="true">04</span><div><h4 data-zh="投资者交流">Investor networking</h4><p data-zh="连接 LP 与 GP 生态的投资者交流环节">Investor networking sessions across the LP–GP ecosystem</p></div></li>
       </ol>
     </div>
   </div>
@@ -827,21 +857,21 @@
 <!-- ============ POSITIONING ============ -->
 <section class="bg-tint bg-grad">
   <div class="wrap">
-    <span class="num">02 — EVENT POSITIONING</span>
-    <h2 class="section-title">Three core values</h2>
-    <p class="section-lead">Hong Kong provides a unique platform for connecting global capital with Asia's private equity opportunities.</p>
+    <span class="num" data-zh="02 — 大会定位">02 — EVENT POSITIONING</span>
+    <h2 class="section-title" data-zh="三大核心价值">Three core values</h2>
+    <p class="section-lead" data-zh="依托香港的独特优势，连接全球资本与亚洲私募股权投资机遇。">Hong Kong provides a unique platform for connecting global capital with Asia's private equity opportunities.</p>
     <div class="cards-3">
       <div class="card">
-        <img class="card-img" src="images/value-01.jpg" alt="Capital Access" loading="lazy">
-        <div class="card-body"><span class="cnum">01</span><h3>Capital Access</h3><p>Connecting global capital with high-quality opportunities and investment partners.</p></div>
+        <img class="card-img" src="images/value-01.jpg" alt="Capital Access" loading="lazy" data-zh-alt="资本对接">
+        <div class="card-body"><span class="cnum">01</span><h3 data-zh="资本对接">Capital Access</h3><p data-zh="连接全球资本、优质投资机会与投资合作伙伴。">Connecting global capital with high-quality opportunities and investment partners.</p></div>
       </div>
       <div class="card">
-        <img class="card-img" src="images/value-02.jpg" alt="Investment Insight" loading="lazy">
-        <div class="card-body"><span class="cnum">02</span><h3>Investment Insight</h3><p>Sharing market perspectives and allocation insights to uncover Asia's next opportunities.</p></div>
+        <img class="card-img" src="images/value-02.jpg" alt="Investment Insight" loading="lazy" data-zh-alt="投资洞见">
+        <div class="card-body"><span class="cnum">02</span><h3 data-zh="投资洞见">Investment Insight</h3><p data-zh="分享市场观点与配置思路，发掘亚洲市场的新机遇。">Sharing market perspectives and allocation insights to uncover Asia's next opportunities.</p></div>
       </div>
       <div class="card">
-        <img class="card-img" src="images/value-03.jpg" alt="Networking Exchange" loading="lazy">
-        <div class="card-body"><span class="cnum">03</span><h3>Networking Exchange</h3><p>Creating a high-quality platform for institutional dialogue and lasting partnerships.</p></div>
+        <img class="card-img" src="images/value-03.jpg" alt="Networking Exchange" loading="lazy" data-zh-alt="交流合作">
+        <div class="card-body"><span class="cnum">03</span><h3 data-zh="交流合作">Networking Exchange</h3><p data-zh="打造高质量的机构交流平台，建立长期合作关系。">Creating a high-quality platform for institutional dialogue and lasting partnerships.</p></div>
       </div>
     </div>
   </div>
@@ -851,25 +881,25 @@
 <section class="host" id="host">
   <div class="wrap host-grid">
     <div>
-      <span class="num">03 — HOSTED BY</span>
-      <h2 class="section-title">About <em>LP CLUB GROUP</em></h2>
-      <p style="margin-top:24px;">Founded in 2018 and operated under Beijing Yinghuahui Technology Co., Ltd., LP CLUB is a professional third-party service platform dedicated to bridging LPs and GPs and enabling industrial empowerment across China's private equity ecosystem.</p>
-      <p>Regional presence: <strong>Beijing (HQ) · Shanghai · Foshan · Hong Kong</strong></p>
+      <span class="num" data-zh="03 — 主办方">03 — HOSTED BY</span>
+      <h2 class="section-title" data-zh="关于 &lt;em&gt;LP CLUB GROUP&lt;/em&gt;">About <em>LP CLUB GROUP</em></h2>
+      <p style="margin-top:24px;" data-zh="LP CLUB 成立于2018年，由 Beijing Yinghuahui Technology Co., Ltd. 运营，是专业的第三方服务平台，致力于连接 LP 与 GP，推动中国私募股权生态的产业赋能。">Founded in 2018 and operated under Beijing Yinghuahui Technology Co., Ltd., LP CLUB is a professional third-party service platform dedicated to bridging LPs and GPs and enabling industrial empowerment across China's private equity ecosystem.</p>
+      <p data-zh="业务布局：&lt;strong&gt;北京（总部）· 上海 · 佛山 · 香港&lt;/strong&gt;">Regional presence: <strong>Beijing (HQ) · Shanghai · Foshan · Hong Kong</strong></p>
       <div class="host-stats">
-        <div class="host-stat"><b>2018</b><span>Established</span></div>
-        <div class="host-stat"><b>4,000+</b><span>Domestic GPs in network</span></div>
-        <div class="host-stat"><b>2,000+</b><span>Institutional &amp; individual investor relationships</span></div>
-        <div class="host-stat"><b>200+</b><span>Listed corporate partners</span></div>
+        <div class="host-stat"><b>2018</b><span data-zh="成立年份">Established</span></div>
+        <div class="host-stat"><b>4,000+</b><span data-zh="网络覆盖的国内 GP">Domestic GPs in network</span></div>
+        <div class="host-stat"><b>2,000+</b><span data-zh="机构及个人投资者资源">Institutional &amp; individual investor relationships</span></div>
+        <div class="host-stat"><b>200+</b><span data-zh="上市公司合作伙伴">Listed corporate partners</span></div>
       </div>
     </div>
     <div>
-      <h3 style="font-family:var(--sans); font-size:19px; color:var(--green-900); font-weight:700; margin-bottom:10px;">Integrated services across the private equity ecosystem</h3>
+      <h3 style="font-family:var(--sans); font-size:19px; color:var(--green-900); font-weight:700; margin-bottom:10px;" data-zh="覆盖私募股权生态的综合服务">Integrated services across the private equity ecosystem</h3>
       <ul class="host-services">
-        <li><b>Brand Conferences</b><span>High-level summits and customized closed-door events</span></li>
-        <li><b>LP CLUB Rankings</b><span>Independent market intelligence and industry benchmarks</span></li>
-        <li><b>Member+ Ecosystem</b><span>Curated LP–GP connections, investor access and business opportunities</span></li>
-        <li><b>Due Diligence</b><span>Data-driven fund manager and corporate DD</span></li>
-        <li><b>Investor Relations</b><span>Investor access, IPO communications and post-listing IR</span></li>
+        <li><b data-zh="品牌会议">Brand Conferences</b><span data-zh="高端峰会及定制闭门活动">High-level summits and customized closed-door events</span></li>
+        <li><b data-zh="LP CLUB 榜单">LP CLUB Rankings</b><span data-zh="独立市场研究与行业评价标杆">Independent market intelligence and industry benchmarks</span></li>
+        <li><b data-zh="会员+生态">Member+ Ecosystem</b><span data-zh="精选 LP–GP 对接、投资者资源及业务合作机会">Curated LP–GP connections, investor access and business opportunities</span></li>
+        <li><b data-zh="尽职调查">Due Diligence</b><span data-zh="基于数据的基金管理人及企业尽职调查">Data-driven fund manager and corporate DD</span></li>
+        <li><b data-zh="投资者关系">Investor Relations</b><span data-zh="投资者对接、IPO 沟通及上市后投资者关系服务">Investor access, IPO communications and post-listing IR</span></li>
       </ul>
     </div>
   </div>
@@ -878,130 +908,130 @@
 <!-- ============ PAST EVENTS ============ -->
 <section class="gallery" id="gallery">
   <div class="wrap">
-    <span class="num">04 — TRACK RECORD</span>
+    <span class="num" data-zh="04 — 往届回顾">04 — TRACK RECORD</span>
     <div class="gallery-head">
       <div>
-        <h2 class="section-title">A proven track record of <em>bringing capital together</em></h2>
-        <p class="section-lead">From international PE conferences in Hong Kong to LP summits, annual opening conferences and closed-door roundtables across China — a look back at the rooms we've built.</p>
+        <h2 class="section-title" data-zh="以持续积累的实践，&lt;em&gt;汇聚资本力量&lt;/em&gt;">A proven track record of <em>bringing capital together</em></h2>
+        <p class="section-lead" data-zh="从香港的国际私募股权大会，到全国各地的 LP 投资峰会、年度开年大会和闭门圆桌，回顾我们搭建的交流平台。">From international PE conferences in Hong Kong to LP summits, annual opening conferences and closed-door roundtables across China — a look back at the rooms we've built.</p>
       </div>
       <div class="rail-btns">
-        <button class="rail-btn" id="railPrev" aria-label="Scroll gallery left">&larr;</button>
-        <button class="rail-btn" id="railNext" aria-label="Scroll gallery right">&rarr;</button>
+        <button class="rail-btn" id="railPrev" aria-label="Scroll gallery left" data-zh-aria-label="向左浏览照片">&larr;</button>
+        <button class="rail-btn" id="railNext" aria-label="Scroll gallery right" data-zh-aria-label="向右浏览照片">&rarr;</button>
       </div>
     </div>
 
     <div class="filter-bar" id="filterBar">
-      <button class="filter-pill active" data-filter="all">All Events</button>
-      <button class="filter-pill" data-filter="intl">International PE Conference</button>
-      <button class="filter-pill" data-filter="opening">LP Annual Opening Conference</button>
-      <button class="filter-pill" data-filter="summit">LP Investment Summit</button>
-      <button class="filter-pill" data-filter="gp">LP &amp; GP Investment Forum</button>
+      <button class="filter-pill active" data-filter="all" data-zh="全部活动">All Events</button>
+      <button class="filter-pill" data-filter="intl" data-zh="国际私募股权大会">International PE Conference</button>
+      <button class="filter-pill" data-filter="opening" data-zh="LP 年度开年大会">LP Annual Opening Conference</button>
+      <button class="filter-pill" data-filter="summit" data-zh="LP 投资峰会">LP Investment Summit</button>
+      <button class="filter-pill" data-filter="gp" data-zh="LP 与 GP 投资论坛">LP &amp; GP Investment Forum</button>
     </div>
 
-    <div class="rail" id="rail" tabindex="0" aria-label="Past event photos">
+    <div class="rail" id="rail" tabindex="0" aria-label="Past event photos" data-zh-aria-label="往届活动照片">
       <figure class="shot" data-cat="intl">
-        <img src="images/intl-pe-conf-1st-01.jpg" alt="The 1st International Private Equity Conference — keynote session" loading="lazy" />
-        <figcaption><b>International PE Conference · 1st Edition</b><span class="yr">HONG KONG</span></figcaption>
-      </figure>
-      <figure class="shot" data-cat="intl">
-        <img src="images/intl-pe-conf-1st-02.jpg" alt="The 1st International Private Equity Conference — networking" loading="lazy" />
-        <figcaption><b>International PE Conference · 1st Edition</b><span class="yr">HONG KONG</span></figcaption>
+        <img src="images/intl-pe-conf-1st-01.jpg" alt="The 1st International Private Equity Conference — keynote session" loading="lazy"  data-zh-alt="第一届国际私募股权大会 — 主题演讲" />
+        <figcaption><b data-zh="第一届国际私募股权大会">International PE Conference · 1st Edition</b><span class="yr" data-zh="香港">HONG KONG</span></figcaption>
       </figure>
       <figure class="shot" data-cat="intl">
-        <img src="images/intl-pe-conf-2nd-01.jpg" alt="The 2nd International Private Equity Conference — panel discussion" loading="lazy" />
-        <figcaption><b>International PE Conference · 2nd Edition</b><span class="yr">HONG KONG</span></figcaption>
+        <img src="images/intl-pe-conf-1st-02.jpg" alt="The 1st International Private Equity Conference — networking" loading="lazy"  data-zh-alt="第一届国际私募股权大会 — 交流现场" />
+        <figcaption><b data-zh="第一届国际私募股权大会">International PE Conference · 1st Edition</b><span class="yr" data-zh="香港">HONG KONG</span></figcaption>
       </figure>
       <figure class="shot" data-cat="intl">
-        <img src="images/intl-pe-conf-2nd-02.jpg" alt="The 2nd International Private Equity Conference — audience" loading="lazy" />
-        <figcaption><b>International PE Conference · 2nd Edition</b><span class="yr">HONG KONG</span></figcaption>
+        <img src="images/intl-pe-conf-2nd-01.jpg" alt="The 2nd International Private Equity Conference — panel discussion" loading="lazy"  data-zh-alt="第二届国际私募股权大会 — 圆桌讨论" />
+        <figcaption><b data-zh="第二届国际私募股权大会">International PE Conference · 2nd Edition</b><span class="yr" data-zh="香港">HONG KONG</span></figcaption>
       </figure>
       <figure class="shot" data-cat="intl">
-        <img src="images/intl-pe-conf-2nd-03.jpg" alt="The 2nd International Private Equity Conference — networking reception" loading="lazy" />
-        <figcaption><b>International PE Conference · 2nd Edition</b><span class="yr">HONG KONG</span></figcaption>
+        <img src="images/intl-pe-conf-2nd-02.jpg" alt="The 2nd International Private Equity Conference — audience" loading="lazy"  data-zh-alt="第二届国际私募股权大会 — 参会嘉宾" />
+        <figcaption><b data-zh="第二届国际私募股权大会">International PE Conference · 2nd Edition</b><span class="yr" data-zh="香港">HONG KONG</span></figcaption>
+      </figure>
+      <figure class="shot" data-cat="intl">
+        <img src="images/intl-pe-conf-2nd-03.jpg" alt="The 2nd International Private Equity Conference — networking reception" loading="lazy"  data-zh-alt="第二届国际私募股权大会 — 交流招待会" />
+        <figcaption><b data-zh="第二届国际私募股权大会">International PE Conference · 2nd Edition</b><span class="yr" data-zh="香港">HONG KONG</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2026-01.jpg" alt="2026 LP Annual Opening Conference — main stage" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">SHANGHAI · 2026</span></figcaption>
+        <img src="images/lp-opening-2026-01.jpg" alt="2026 LP Annual Opening Conference — main stage" loading="lazy"  data-zh-alt="2026 LP 年度开年大会 — 主舞台" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr" data-zh="上海 · 2026">SHANGHAI · 2026</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2026-03.jpg" alt="2026 LP Annual Opening Conference — audience" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">2026</span></figcaption>
+        <img src="images/lp-opening-2026-03.jpg" alt="2026 LP Annual Opening Conference — audience" loading="lazy"  data-zh-alt="2026 LP 年度开年大会 — 参会嘉宾" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr">2026</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2026-02.jpg" alt="2026 LP Annual Opening Conference — networking" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">SHANGHAI · 2026</span></figcaption>
+        <img src="images/lp-opening-2026-02.jpg" alt="2026 LP Annual Opening Conference — networking" loading="lazy"  data-zh-alt="2026 LP 年度开年大会 — 交流现场" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr" data-zh="上海 · 2026">SHANGHAI · 2026</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2023-01.jpg" alt="2023 LP Annual Opening Conference — main ballroom" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-opening-2023-01.jpg" alt="2023 LP Annual Opening Conference — main ballroom" loading="lazy"  data-zh-alt="2023 LP 年度开年大会 — 主会场" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr">2023</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2023-02.jpg" alt="2023 LP Annual Opening Conference — keynote stage" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-opening-2023-02.jpg" alt="2023 LP Annual Opening Conference — keynote stage" loading="lazy"  data-zh-alt="2023 LP 年度开年大会 — 演讲舞台" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr">2023</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2022-awards-01.jpg" alt="LP Annual Opening Conference — awards ceremony" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference · Awards</b><span class="yr">2022</span></figcaption>
+        <img src="images/lp-opening-2022-awards-01.jpg" alt="LP Annual Opening Conference — awards ceremony" loading="lazy"  data-zh-alt="LP 年度开年大会 — 颁奖典礼" />
+        <figcaption><b data-zh="LP 年度开年大会 · 颁奖典礼">LP Annual Opening Conference · Awards</b><span class="yr">2022</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2023-03.jpg" alt="2023 LP Annual Opening Conference — networking" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-opening-2023-03.jpg" alt="2023 LP Annual Opening Conference — networking" loading="lazy"  data-zh-alt="2023 LP 年度开年大会 — 交流现场" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr">2023</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2025-01.jpg" alt="2025 LP Annual Opening Conference — panel" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">2025</span></figcaption>
+        <img src="images/lp-opening-2025-01.jpg" alt="2025 LP Annual Opening Conference — panel" loading="lazy"  data-zh-alt="2025 LP 年度开年大会 — 圆桌讨论" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr">2025</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-opening-2025-02.jpg" alt="2025 LP Annual Opening Conference — networking" loading="lazy" />
-        <figcaption><b>LP Annual Opening Conference</b><span class="yr">2025</span></figcaption>
+        <img src="images/lp-opening-2025-02.jpg" alt="2025 LP Annual Opening Conference — networking" loading="lazy"  data-zh-alt="2025 LP 年度开年大会 — 交流现场" />
+        <figcaption><b data-zh="LP 年度开年大会">LP Annual Opening Conference</b><span class="yr">2025</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-roundtable-foshan-2024-01.jpg" alt="2024 Industrial LP Roundtable, Foshan — main stage" loading="lazy" />
-        <figcaption><b>Industrial LP Roundtable</b><span class="yr">FOSHAN · 2024</span></figcaption>
+        <img src="images/lp-roundtable-foshan-2024-01.jpg" alt="2024 Industrial LP Roundtable, Foshan — main stage" loading="lazy"  data-zh-alt="2024 佛山产业 LP 圆桌会 — 主舞台" />
+        <figcaption><b data-zh="产业 LP 圆桌会">Industrial LP Roundtable</b><span class="yr" data-zh="佛山 · 2024">FOSHAN · 2024</span></figcaption>
       </figure>
       <figure class="shot" data-cat="opening">
-        <img src="images/lp-roundtable-foshan-2024-02.jpg" alt="2024 Industrial LP Roundtable, Foshan — networking" loading="lazy" />
-        <figcaption><b>Industrial LP Roundtable</b><span class="yr">FOSHAN · 2024</span></figcaption>
+        <img src="images/lp-roundtable-foshan-2024-02.jpg" alt="2024 Industrial LP Roundtable, Foshan — networking" loading="lazy"  data-zh-alt="2024 佛山产业 LP 圆桌会 — 交流现场" />
+        <figcaption><b data-zh="产业 LP 圆桌会">Industrial LP Roundtable</b><span class="yr" data-zh="佛山 · 2024">FOSHAN · 2024</span></figcaption>
       </figure>
       <figure class="shot" data-cat="summit">
-        <img src="images/lp-summit-salon-01.jpg" alt="New Smart Productivity Investment Salon — session" loading="lazy" />
-        <figcaption><b>New Smart Productivity Investment Salon</b><span class="yr">HANGZHOU</span></figcaption>
+        <img src="images/lp-summit-salon-01.jpg" alt="New Smart Productivity Investment Salon — session" loading="lazy"  data-zh-alt="新质生产力投资沙龙 — 会议现场" />
+        <figcaption><b data-zh="新质生产力投资沙龙">New Smart Productivity Investment Salon</b><span class="yr" data-zh="杭州">HANGZHOU</span></figcaption>
       </figure>
       <figure class="shot" data-cat="summit">
-        <img src="images/lp-summit-ind-fo-03.jpg" alt="LP Investment Summit — industrial and family office session" loading="lazy" />
-        <figcaption><b>LP Investment Summit · Industrial &amp; FO</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-summit-ind-fo-03.jpg" alt="LP Investment Summit — industrial and family office session" loading="lazy"  data-zh-alt="LP 投资峰会 — 产业与家族办公室专场" />
+        <figcaption><b data-zh="LP 投资峰会 · 产业与家族办公室">LP Investment Summit · Industrial &amp; FO</b><span class="yr">2023</span></figcaption>
       </figure>
 <figure class="shot" data-cat="summit">
-        <img src="images/lp-summit-industrial-01.jpg" alt="LP Investment Summit — industrial LP panel" loading="lazy" />
-        <figcaption><b>LP Investment Summit · Industrial</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-summit-industrial-01.jpg" alt="LP Investment Summit — industrial LP panel" loading="lazy"  data-zh-alt="LP 投资峰会 — 产业 LP 圆桌" />
+        <figcaption><b data-zh="LP 投资峰会 · 产业">LP Investment Summit · Industrial</b><span class="yr">2023</span></figcaption>
       </figure>
             <figure class="shot" data-cat="summit">
-        <img src="images/lp-summit-ind-fo-01.jpg" alt="LP Investment Summit — industrial and family office" loading="lazy" />
-        <figcaption><b>LP Investment Summit · Industrial &amp; FO</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-summit-ind-fo-01.jpg" alt="LP Investment Summit — industrial and family office" loading="lazy"  data-zh-alt="LP 投资峰会 — 产业与家族办公室专场" />
+        <figcaption><b data-zh="LP 投资峰会 · 产业与家族办公室">LP Investment Summit · Industrial &amp; FO</b><span class="yr">2023</span></figcaption>
       </figure>
       <figure class="shot" data-cat="summit">
-        <img src="images/lp-summit-ind-fo-02.jpg" alt="LP Investment Summit — gala dinner" loading="lazy" />
-        <figcaption><b>LP Investment Summit · Industrial &amp; FO</b><span class="yr">2023</span></figcaption>
+        <img src="images/lp-summit-ind-fo-02.jpg" alt="LP Investment Summit — gala dinner" loading="lazy"  data-zh-alt="LP 投资峰会 — 晚宴" />
+        <figcaption><b data-zh="LP 投资峰会 · 产业与家族办公室">LP Investment Summit · Industrial &amp; FO</b><span class="yr">2023</span></figcaption>
       </figure>
       <figure class="shot" data-cat="gp">
-        <img src="images/lp-gp-forum-01.jpg" alt="LP &amp; GP Investment Forum — venue" loading="lazy" />
-        <figcaption><b>LP &amp; GP Investment Forum</b><span class="yr">2024</span></figcaption>
+        <img src="images/lp-gp-forum-01.jpg" alt="LP &amp; GP Investment Forum — venue" loading="lazy"  data-zh-alt="LP 与 GP 投资论坛 — 会场" />
+        <figcaption><b data-zh="LP 与 GP 投资论坛">LP &amp; GP Investment Forum</b><span class="yr">2024</span></figcaption>
       </figure>
       <figure class="shot" data-cat="gp">
-        <img src="images/lp-gp-forum-02.jpg" alt="LP &amp; GP Investment Forum — panel" loading="lazy" />
-        <figcaption><b>LP &amp; GP Investment Forum</b><span class="yr">2024</span></figcaption>
+        <img src="images/lp-gp-forum-02.jpg" alt="LP &amp; GP Investment Forum — panel" loading="lazy"  data-zh-alt="LP 与 GP 投资论坛 — 圆桌讨论" />
+        <figcaption><b data-zh="LP 与 GP 投资论坛">LP &amp; GP Investment Forum</b><span class="yr">2024</span></figcaption>
       </figure>
       <figure class="shot" data-cat="gp">
-        <img src="images/lp-gp-forum-03.jpg" alt="LP &amp; GP Roundtable — session" loading="lazy" />
-        <figcaption><b>LP &amp; GP Roundtable</b><span class="yr">2024</span></figcaption>
+        <img src="images/lp-gp-forum-03.jpg" alt="LP &amp; GP Roundtable — session" loading="lazy"  data-zh-alt="LP &amp; GP Roundtable — 会议现场" />
+        <figcaption><b data-zh="LP 与 GP 圆桌会">LP &amp; GP Roundtable</b><span class="yr">2024</span></figcaption>
       </figure>
       <figure class="shot" data-cat="gp">
-        <img src="images/lp-gp-forum-04.jpg" alt="LP &amp; GP Roundtable — networking" loading="lazy" />
-        <figcaption><b>LP &amp; GP Roundtable</b><span class="yr">2024</span></figcaption>
+        <img src="images/lp-gp-forum-04.jpg" alt="LP &amp; GP Roundtable — networking" loading="lazy"  data-zh-alt="LP &amp; GP Roundtable — 交流现场" />
+        <figcaption><b data-zh="LP 与 GP 圆桌会">LP &amp; GP Roundtable</b><span class="yr">2024</span></figcaption>
       </figure>
       <figure class="shot" data-cat="gp">
-        <img src="images/lp-gp-forum-05.jpg" alt="LP &amp; GP Investment Forum 2024 — main stage" loading="lazy" />
-        <figcaption><b>LP &amp; GP Investment Forum</b><span class="yr">2024</span></figcaption>
+        <img src="images/lp-gp-forum-05.jpg" alt="LP &amp; GP Investment Forum 2024 — main stage" loading="lazy"  data-zh-alt="2024 LP 与 GP 投资论坛 — 主舞台" />
+        <figcaption><b data-zh="LP 与 GP 投资论坛">LP &amp; GP Investment Forum</b><span class="yr">2024</span></figcaption>
       </figure>
     </div>
 
@@ -1009,61 +1039,61 @@
     <div class="rk">
       <div class="rk-head">
         <div class="rk-head-copy">
-          <span class="rk-eyebrow">LP CLUB Ranking Series</span>
-          <h3 class="rk-title">Six years of independent industry benchmarks</h3>
-          <p class="rk-lead">Independent, impartial and science-based — the LP CLUB rankings are a third-party benchmark for China's private equity industry. From a single annual list in 2021, the series has grown into a full matrix of institutional and individual rankings tracking where capital flows and who earns LPs' trust.</p>
+          <span class="rk-eyebrow" data-zh="LP CLUB 系列榜单">LP CLUB Ranking Series</span>
+          <h3 class="rk-title" data-zh="六年积累，打造独立行业标杆">Six years of independent industry benchmarks</h3>
+          <p class="rk-lead" data-zh="LP CLUB 榜单秉持独立、公正、科学的原则，为中国私募股权行业提供第三方评价参考。从2021年的单一年度榜单，逐步发展为覆盖机构与个人的榜单体系，持续关注资本流向与获得 LP 认可的行业力量。">Independent, impartial and science-based — the LP CLUB rankings are a third-party benchmark for China's private equity industry. From a single annual list in 2021, the series has grown into a full matrix of institutional and individual rankings tracking where capital flows and who earns LPs' trust.</p>
         </div>
-        <div class="rk-btns" id="rkBtns" aria-label="Ranking timeline navigation">
-          <button class="rk-btn" id="rkPrev" aria-label="Scroll ranking timeline left">&larr;</button>
-          <button class="rk-btn" id="rkNext" aria-label="Scroll ranking timeline right">&rarr;</button>
+        <div class="rk-btns" id="rkBtns" aria-label="Ranking timeline navigation" data-zh-aria-label="榜单时间轴导航">
+          <button class="rk-btn" id="rkPrev" aria-label="Scroll ranking timeline left" data-zh-aria-label="向左浏览榜单">&larr;</button>
+          <button class="rk-btn" id="rkNext" aria-label="Scroll ranking timeline right" data-zh-aria-label="向右浏览榜单">&rarr;</button>
         </div>
       </div>
-      <div class="rk-scroll" id="rkScroll" tabindex="0" role="region" aria-label="LP CLUB Ranking timeline from 2021 to 2026">
+      <div class="rk-scroll" id="rkScroll" tabindex="0" role="region" aria-label="LP CLUB Ranking timeline from 2021 to 2026" data-zh-aria-label="LP CLUB 2021至2026年榜单时间轴">
         <div class="rk-timeline">
           <div class="rk-item">
             <div class="rk-year">2021</div>
             <ul>
-              <li>LP CLUB Annual Rankings</li>
+              <li data-zh="LP CLUB 年度榜单">LP CLUB Annual Rankings</li>
             </ul>
           </div>
           <div class="rk-item">
             <div class="rk-year">2022</div>
             <ul>
-              <li>China's Top 100 Most Active Industrial LPs</li>
-              <li>LP CLUB Annual Rankings</li>
+              <li data-zh="中国最活跃产业 LP 100强">China's Top 100 Most Active Industrial LPs</li>
+              <li data-zh="LP CLUB 年度榜单">LP CLUB Annual Rankings</li>
             </ul>
           </div>
           <div class="rk-item">
             <div class="rk-year">2023</div>
             <ul>
-              <li>LP-Recognized Investment Institutions</li>
-              <li>LP CLUB Annual Rankings</li>
+              <li data-zh="LP 认可的投资机构">LP-Recognized Investment Institutions</li>
+              <li data-zh="LP CLUB 年度榜单">LP CLUB Annual Rankings</li>
             </ul>
           </div>
           <div class="rk-item">
             <div class="rk-year">2024</div>
             <ul>
-              <li>&ldquo;Beyond the Trough&rdquo; Rising-Attention Ranking</li>
-              <li>&ldquo;National Cornerstones&rdquo; Annual Ranking</li>
+              <li data-zh="“穿越低谷”关注度上升榜">&ldquo;Beyond the Trough&rdquo; Rising-Attention Ranking</li>
+              <li data-zh="“国之基石”年度榜单">&ldquo;National Cornerstones&rdquo; Annual Ranking</li>
             </ul>
           </div>
           <div class="rk-item">
             <div class="rk-year">2025</div>
             <ul>
-              <li>&ldquo;Breaking Through&rdquo; Mid-Year Rankings</li>
-              <li>Regional Rankings</li>
-              <li>&ldquo;Quality Forward&rdquo; Annual Ranking</li>
+              <li data-zh="“破局”年中榜单">&ldquo;Breaking Through&rdquo; Mid-Year Rankings</li>
+              <li data-zh="区域榜单">Regional Rankings</li>
+              <li data-zh="“向质前行”年度榜单">&ldquo;Quality Forward&rdquo; Annual Ranking</li>
             </ul>
           </div>
           <div class="rk-item">
             <div class="rk-year">2026</div>
             <ul>
-              <li>&ldquo;New Drivers of Strategic Investment&rdquo; Annual Ranking</li>
+              <li data-zh="“战略投资新动能”年度榜单">&ldquo;New Drivers of Strategic Investment&rdquo; Annual Ranking</li>
             </ul>
           </div>
         </div>
       </div>
-      <div class="rk-hint">&larr; Drag or swipe horizontally to explore 2021–2026 &rarr;</div>
+      <div class="rk-hint" data-zh="← 横向拖动或滑动，查看2021—2026年榜单 →">&larr; Drag or swipe horizontally to explore 2021–2026 &rarr;</div>
     </div>
   </div>
 </section>
@@ -1071,14 +1101,14 @@
 <!-- ============ WHO WILL ATTEND ============ -->
 <section id="attend">
   <div class="wrap">
-    <span class="num">05 — WHO WILL ATTEND</span>
-    <h2 class="section-title nowrap">Senior decision-makers across the <em>private equity ecosystem</em></h2>
+    <span class="num" data-zh="05 — 参会嘉宾">05 — WHO WILL ATTEND</span>
+    <h2 class="section-title nowrap" data-zh="汇聚&lt;em&gt;私募股权生态&lt;/em&gt;的资深决策者">Senior decision-makers across the <em>private equity ecosystem</em></h2>
     <div class="attend-grid">
-      <div class="attend-card"><div class="icon">🏦</div><h4>Limited Partners</h4><p>Global institutional allocators</p></div>
-      <div class="attend-card"><div class="icon">📈</div><h4>General Partners</h4><p>Fund managers &amp; investment firms</p></div>
-      <div class="attend-card"><div class="icon">👨‍👩‍👧</div><h4>Family Offices</h4><p>Single &amp; multi-family offices</p></div>
-      <div class="attend-card"><div class="icon">🏛️</div><h4>Government Authorities</h4><p>Policy &amp; guidance funds</p></div>
-      <div class="attend-card"><div class="icon">🏢</div><h4>Listed Companies</h4><p>Corporate investors &amp; partners</p></div>
+      <div class="attend-card"><div class="icon">🏦</div><h4 data-zh="有限合伙人">Limited Partners</h4><p data-zh="全球机构资产配置者">Global institutional allocators</p></div>
+      <div class="attend-card"><div class="icon">📈</div><h4 data-zh="普通合伙人">General Partners</h4><p data-zh="基金管理人与投资机构">Fund managers &amp; investment firms</p></div>
+      <div class="attend-card"><div class="icon">👨‍👩‍👧</div><h4 data-zh="家族办公室">Family Offices</h4><p data-zh="单一家族及联合家族办公室">Single &amp; multi-family offices</p></div>
+      <div class="attend-card"><div class="icon">🏛️</div><h4 data-zh="政府机构">Government Authorities</h4><p data-zh="政策性基金与引导基金">Policy &amp; guidance funds</p></div>
+      <div class="attend-card"><div class="icon">🏢</div><h4 data-zh="上市公司">Listed Companies</h4><p data-zh="企业投资者与合作伙伴">Corporate investors &amp; partners</p></div>
     </div>
   </div>
 </section>
@@ -1086,32 +1116,32 @@
 <!-- ============ THEMES ============ -->
 <section class="bg-tint" id="themes">
   <div class="wrap">
-    <span class="num">06 — KEY INVESTMENT THEMES</span>
-    <h2 class="section-title">What we'll be discussing in <em>2026</em></h2>
+    <span class="num" data-zh="06 — 核心投资主题">06 — KEY INVESTMENT THEMES</span>
+    <h2 class="section-title" data-zh="聚焦 &lt;em&gt;2026&lt;/em&gt; 年投资议题">What we'll be discussing in <em>2026</em></h2>
     <div class="themes">
       <div class="theme">
-        <img class="theme-img" src="images/theme-01.jpg" alt="Global Private Capital Outlook" loading="lazy">
-        <div class="theme-body"><span class="tnum">01</span><h3>Global Private Capital Outlook</h3><p>An overview of trends, risks and opportunities across private equity, private credit and real assets worldwide.</p></div>
+        <img class="theme-img" src="images/theme-01.jpg" alt="Global Private Capital Outlook" loading="lazy" data-zh-alt="全球私募资本展望">
+        <div class="theme-body"><span class="tnum">01</span><h3 data-zh="全球私募资本展望">Global Private Capital Outlook</h3><p data-zh="纵览全球私募股权、私募信贷及实物资产领域的趋势、风险与机遇。">An overview of trends, risks and opportunities across private equity, private credit and real assets worldwide.</p></div>
       </div>
       <div class="theme">
-        <img class="theme-img" src="images/theme-02.jpg" alt="LP Allocation Strategy" loading="lazy">
-        <div class="theme-body"><span class="tnum">02</span><h3>LP Allocation Strategy</h3><p>How limited partners design portfolios to target returns and balance risks within alternative investments.</p></div>
+        <img class="theme-img" src="images/theme-02.jpg" alt="LP Allocation Strategy" loading="lazy" data-zh-alt="LP 资产配置策略">
+        <div class="theme-body"><span class="tnum">02</span><h3 data-zh="LP 资产配置策略">LP Allocation Strategy</h3><p data-zh="探讨有限合伙人如何构建另类投资组合，实现目标回报与风险平衡。">How limited partners design portfolios to target returns and balance risks within alternative investments.</p></div>
       </div>
       <div class="theme">
-        <img class="theme-img" src="images/theme-03.jpg" alt="GP Fundraising" loading="lazy">
-        <div class="theme-body"><span class="tnum">03</span><h3>GP Fundraising</h3><p>The process for general partners to raise capital, build records and maintain long-term relationships with investors.</p></div>
+        <img class="theme-img" src="images/theme-03.jpg" alt="GP Fundraising" loading="lazy" data-zh-alt="GP 募资">
+        <div class="theme-body"><span class="tnum">03</span><h3 data-zh="GP 募资">GP Fundraising</h3><p data-zh="探讨普通合伙人如何募集资金、积累业绩，并与投资者建立长期关系。">The process for general partners to raise capital, build records and maintain long-term relationships with investors.</p></div>
       </div>
       <div class="theme">
-        <img class="theme-img" src="images/theme-04.jpg" alt="Cross-Border Investment" loading="lazy">
-        <div class="theme-body"><span class="tnum">04</span><h3>Cross-Border Investment</h3><p>Global capital deployment and cross-border allocation strategies for Asian institutional capital.</p></div>
+        <img class="theme-img" src="images/theme-04.jpg" alt="Cross-Border Investment" loading="lazy" data-zh-alt="跨境投资">
+        <div class="theme-body"><span class="tnum">04</span><h3 data-zh="跨境投资">Cross-Border Investment</h3><p data-zh="探讨亚洲机构资本的全球投资布局与跨境配置策略。">Global capital deployment and cross-border allocation strategies for Asian institutional capital.</p></div>
       </div>
       <div class="theme">
-        <img class="theme-img" src="images/theme-05.jpg" alt="AI &amp; Frontier Tech &amp; New Energy" loading="lazy">
-        <div class="theme-body"><span class="tnum">05</span><h3>AI &amp; Frontier Tech &amp; New Energy</h3><p>Investors explore frontier technology, new energy &amp; power, AI, high-growth emerging and digital infrastructure opportunities.</p></div>
+        <img class="theme-img" src="images/theme-05.jpg" alt="AI &amp; Frontier Tech &amp; New Energy" loading="lazy" data-zh-alt="人工智能、前沿科技与新能源">
+        <div class="theme-body"><span class="tnum">05</span><h3 data-zh="人工智能、前沿科技与新能源">AI &amp; Frontier Tech &amp; New Energy</h3><p data-zh="探寻前沿科技、新能源与电力、人工智能、高增长新兴领域及数字基础设施的投资机遇。">Investors explore frontier technology, new energy &amp; power, AI, high-growth emerging and digital infrastructure opportunities.</p></div>
       </div>
       <div class="theme">
-        <img class="theme-img" src="images/theme-06.jpg" alt="Secondaries & Co-Investment" loading="lazy">
-        <div class="theme-body"><span class="tnum">06</span><h3>Secondaries &amp; Co-Investment</h3><p>Market landscape and deal opportunities for private capital secondaries and direct co-investments.</p></div>
+        <img class="theme-img" src="images/theme-06.jpg" alt="Secondaries & Co-Investment" loading="lazy" data-zh-alt="私募二级市场与联合投资">
+        <div class="theme-body"><span class="tnum">06</span><h3 data-zh="私募二级市场与联合投资">Secondaries &amp; Co-Investment</h3><p data-zh="分析私募资本二级市场及直接联合投资的市场格局与交易机会。">Market landscape and deal opportunities for private capital secondaries and direct co-investments.</p></div>
       </div>
     </div>
   </div>
@@ -1120,14 +1150,14 @@
 <!-- ============ FORMAT ============ -->
 <section class="format section-motion">
   <div class="wrap">
-    <span class="num" style="color:var(--green-400);">07 — EVENT FORMAT</span>
-    <h2 class="section-title">From insight <em>to exchange</em></h2>
-    <p class="section-lead">A curated investment forum combining thought leadership, strategic dialogue and investor networking — designed to connect capital, ideas and opportunities across Asia's private equity ecosystem.</p>
+    <span class="num" style="color:var(--green-400);" data-zh="07 — 大会形式">07 — EVENT FORMAT</span>
+    <h2 class="section-title" data-zh="从洞见&lt;em&gt;走向交流&lt;/em&gt;">From insight <em>to exchange</em></h2>
+    <p class="section-lead" data-zh="通过主题演讲、战略对话与投资者交流，连接亚洲私募股权生态中的资本、观点与机遇。">A curated investment forum combining thought leadership, strategic dialogue and investor networking — designed to connect capital, ideas and opportunities across Asia's private equity ecosystem.</p>
     <div class="format-grid">
-      <div class="format-step"><span class="fnum" aria-hidden="true">01</span><h3>Insight</h3><p>Keynote speeches from leading investors and industry experts.</p></div>
-      <div class="format-step"><span class="fnum" aria-hidden="true">02</span><h3>Dialogue</h3><p>Focused panel discussions exploring the trends shaping private markets.</p></div>
-      <div class="format-step"><span class="fnum" aria-hidden="true">03</span><h3>Connection</h3><p>Face-to-face networking among LPs, GPs, family offices and institutional investors.</p></div>
-      <div class="format-step"><span class="fnum" aria-hidden="true">04</span><h3>Opportunity</h3><p>A platform for investment opportunities, fundraising and strategic partnerships.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">01</span><h3 data-zh="洞见">Insight</h3><p data-zh="领先投资者与行业专家分享前沿观点。">Keynote speeches from leading investors and industry experts.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">02</span><h3 data-zh="对话">Dialogue</h3><p data-zh="通过专题圆桌，深入探讨私募市场的发展趋势。">Focused panel discussions exploring the trends shaping private markets.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">03</span><h3 data-zh="连接">Connection</h3><p data-zh="LP、GP、家族办公室与机构投资者面对面交流。">Face-to-face networking among LPs, GPs, family offices and institutional investors.</p></div>
+      <div class="format-step"><span class="fnum" aria-hidden="true">04</span><h3 data-zh="机遇">Opportunity</h3><p data-zh="搭建投资机会、基金募资与战略合作的对接平台。">A platform for investment opportunities, fundraising and strategic partnerships.</p></div>
     </div>
   </div>
 </section>
@@ -1135,18 +1165,18 @@
 <!-- ============ AGENDA ============ -->
 <section id="agenda">
   <div class="wrap">
-    <span class="num">08 — AGENDA</span>
-    <h2 class="section-title">A focused exchange of <em>ideas and opportunity</em></h2>
+    <span class="num" data-zh="08 — 大会议程">08 — AGENDA</span>
+    <h2 class="section-title" data-zh="聚焦&lt;em&gt;观点与机遇&lt;/em&gt;的深度交流">A focused exchange of <em>ideas and opportunity</em></h2>
     <div class="agenda">
-      <div class="agenda-row t-network"><div class="agenda-time">13:00 – 14:00</div><div class="agenda-session"><b>Registration &amp; Networking</b><span>On-site check-in, badge collection and informal networking among early arrivals.</span></div></div>
-      <div class="agenda-row key t-open"><div class="agenda-time">14:00 – 14:15</div><div class="agenda-session"><b>Opening Keynote — Welcome Remarks</b><span>Welcome address: LP CLUB GROUP, setting the vision and tone for the conference.</span></div></div>
-      <div class="agenda-row t-keynote"><div class="agenda-time">14:15 – 14:45</div><div class="agenda-session"><b>Keynote Speech I</b><span>A leading global allocator shares the outlook on private equity, private credit and real assets worldwide.</span></div></div>
-      <div class="agenda-row t-keynote"><div class="agenda-time">14:45 – 15:15</div><div class="agenda-session"><b>Keynote Speech II</b><span>A senior LP decision-maker discusses portfolio allocation strategy and risk balance within alternative investments.</span></div></div>
-      <div class="agenda-row t-break"><div class="agenda-time">15:15 – 15:35</div><div class="agenda-session"><b>Coffee Break &amp; Networking</b><span>Refreshments and face-to-face exchange between LPs, GPs, family offices and institutional investors.</span></div></div>
-      <div class="agenda-row key t-panel"><div class="agenda-time">15:35 – 16:20</div><div class="agenda-session"><b>Panel Discussion I</b><span>Industry experts debate GP fundraising, secondaries and cross-border fund cooperation in the new cycle.</span></div></div>
-      <div class="agenda-row key t-panel"><div class="agenda-time">16:20 – 17:05</div><div class="agenda-session"><b>Panel Discussion II</b><span>Investors explore frontier technology, new energy &amp; power, AI computing and digital infrastructure opportunities across Asia.</span></div></div>
-      <div class="agenda-row t-close"><div class="agenda-time">17:05 – 17:20</div><div class="agenda-session"><b>Closing Remarks</b><span>Closing summary by the host, reflecting on key takeaways and the road ahead for private capital.</span></div></div>
-      <div class="agenda-row t-network"><div class="agenda-time">17:20 – 18:00</div><div class="agenda-session"><b>Networking &amp; Investor Exchange</b><span>Closing reception with curated investor matchmaking, fundraising discussions and partnership building.</span></div></div>
+      <div class="agenda-row t-network"><div class="agenda-time">13:00 – 14:00</div><div class="agenda-session"><b data-zh="签到与交流">Registration &amp; Networking</b><span data-zh="现场签到、领取参会证，并与提前到场的嘉宾自由交流。">On-site check-in, badge collection and informal networking among early arrivals.</span></div></div>
+      <div class="agenda-row key t-open"><div class="agenda-time">14:00 – 14:15</div><div class="agenda-session"><b data-zh="开幕致辞">Opening Keynote — Welcome Remarks</b><span data-zh="LP CLUB GROUP 致欢迎辞，介绍大会愿景与核心议题。">Welcome address: LP CLUB GROUP, setting the vision and tone for the conference.</span></div></div>
+      <div class="agenda-row t-keynote"><div class="agenda-time">14:15 – 14:45</div><div class="agenda-session"><b data-zh="主题演讲一">Keynote Speech I</b><span data-zh="全球领先资产配置者分享私募股权、私募信贷与实物资产的市场展望。">A leading global allocator shares the outlook on private equity, private credit and real assets worldwide.</span></div></div>
+      <div class="agenda-row t-keynote"><div class="agenda-time">14:45 – 15:15</div><div class="agenda-session"><b data-zh="主题演讲二">Keynote Speech II</b><span data-zh="资深 LP 决策者探讨另类投资组合的配置策略与风险平衡。">A senior LP decision-maker discusses portfolio allocation strategy and risk balance within alternative investments.</span></div></div>
+      <div class="agenda-row t-break"><div class="agenda-time">15:15 – 15:35</div><div class="agenda-session"><b data-zh="茶歇与交流">Coffee Break &amp; Networking</b><span data-zh="享用茶点，与 LP、GP、家族办公室及机构投资者面对面交流。">Refreshments and face-to-face exchange between LPs, GPs, family offices and institutional investors.</span></div></div>
+      <div class="agenda-row key t-panel"><div class="agenda-time">15:35 – 16:20</div><div class="agenda-session"><b data-zh="圆桌讨论一">Panel Discussion I</b><span data-zh="行业专家探讨新周期下的 GP 募资、私募二级市场与跨境基金合作。">Industry experts debate GP fundraising, secondaries and cross-border fund cooperation in the new cycle.</span></div></div>
+      <div class="agenda-row key t-panel"><div class="agenda-time">16:20 – 17:05</div><div class="agenda-session"><b data-zh="圆桌讨论二">Panel Discussion II</b><span data-zh="投资者探讨亚洲前沿科技、新能源与电力、人工智能算力及数字基础设施机遇。">Investors explore frontier technology, new energy &amp; power, AI computing and digital infrastructure opportunities across Asia.</span></div></div>
+      <div class="agenda-row t-close"><div class="agenda-time">17:05 – 17:20</div><div class="agenda-session"><b data-zh="闭幕致辞">Closing Remarks</b><span data-zh="主办方总结大会观点，展望私募资本的未来发展。">Closing summary by the host, reflecting on key takeaways and the road ahead for private capital.</span></div></div>
+      <div class="agenda-row t-network"><div class="agenda-time">17:20 – 18:00</div><div class="agenda-session"><b data-zh="嘉宾交流与投资者对接">Networking &amp; Investor Exchange</b><span data-zh="通过精选投资者对接、募资洽谈与合作交流，为大会收官。">Closing reception with curated investor matchmaking, fundraising discussions and partnership building.</span></div></div>
     </div>
   </div>
 </section>
@@ -1154,14 +1184,14 @@
 <!-- ============ WHY ATTEND ============ -->
 <section class="bg-tint">
   <div class="wrap">
-    <span class="num">09 — WHY ATTEND</span>
-    <h2 class="section-title">Five reasons to <em>be in the conference</em></h2>
+    <span class="num" data-zh="09 — 参会价值">09 — WHY ATTEND</span>
+    <h2 class="section-title" data-zh="参加大会的&lt;em&gt;五大理由&lt;/em&gt;">Five reasons to <em>be in the conference</em></h2>
     <div class="why-grid">
-      <div class="why-card"><span class="tag">Capital / Access</span><h3>Global Capital Access</h3><p>Connecting LPs, GPs, family offices and institutional investors across Hong Kong, Singapore and Asia.</p></div>
-      <div class="why-card"><span class="tag">Market / Insight</span><h3>Investment Insights</h3><p>Exploring LP allocation, GP fundraising, cross-border investment and emerging opportunities across key industries.</p></div>
-      <div class="why-card"><span class="tag">Region / Connection</span><h3>Cross-Border Connectivity</h3><p>Facilitating cross-border collaboration among capital, investment opportunities and professional service providers.</p></div>
-      <div class="why-card"><span class="tag">Dialogue / Network</span><h3>Executive Networking</h3><p>Meaningful face-to-face engagement through keynote speeches, expert panel discussions and on-site networking.</p></div>
-      <div class="why-card"><span class="tag">Partnership / Action</span><h3>Investment Opportunities</h3><p>Building long-term relationships through fund fundraising, investment opportunities and strategic partnerships.</p></div>
+      <div class="why-card"><span class="tag" data-zh="资本 / 对接">Capital / Access</span><h3 data-zh="连接全球资本">Global Capital Access</h3><p data-zh="连接香港、新加坡及亚洲各地的 LP、GP、家族办公室与机构投资者。">Connecting LPs, GPs, family offices and institutional investors across Hong Kong, Singapore and Asia.</p></div>
+      <div class="why-card"><span class="tag" data-zh="市场 / 洞见">Market / Insight</span><h3 data-zh="把握投资洞见">Investment Insights</h3><p data-zh="探讨 LP 配置、GP 募资、跨境投资及重点行业的新兴机遇。">Exploring LP allocation, GP fundraising, cross-border investment and emerging opportunities across key industries.</p></div>
+      <div class="why-card"><span class="tag" data-zh="区域 / 连接">Region / Connection</span><h3 data-zh="深化跨境合作">Cross-Border Connectivity</h3><p data-zh="促进资本、投资项目与专业服务机构之间的跨境合作。">Facilitating cross-border collaboration among capital, investment opportunities and professional service providers.</p></div>
+      <div class="why-card"><span class="tag" data-zh="对话 / 人脉">Dialogue / Network</span><h3 data-zh="高层深度交流">Executive Networking</h3><p data-zh="通过主题演讲、专家圆桌与现场交流，开展有价值的面对面对话。">Meaningful face-to-face engagement through keynote speeches, expert panel discussions and on-site networking.</p></div>
+      <div class="why-card"><span class="tag" data-zh="合作 / 行动">Partnership / Action</span><h3 data-zh="发掘投资机遇">Investment Opportunities</h3><p data-zh="通过基金募资、投资机会对接与战略合作，建立长期关系。">Building long-term relationships through fund fundraising, investment opportunities and strategic partnerships.</p></div>
     </div>
   </div>
 </section>
@@ -1169,10 +1199,10 @@
 <!-- ============ CTA ============ -->
 <section class="cta-band" id="register">
   <div class="wrap">
-    <h2>The next chapter of private equity begins with <em>deeper connections</em></h2>
-    <p>Join senior LPs, GPs, family offices and institutional investors at the Hong Kong Convention and Exhibition Centre on Wednesday, 18 November 2026.</p>
-    <button class="btn btn-light" data-open-form="Book Now">Book Now</button>
-    <p class="contact">Contact: <a href="mailto:LPCLUBGROUP@LP-club.cn">LPCLUBGROUP@LP-club.cn</a> · www.lp-club.cn · Tower 2, China Central Place (CCP), Chaoyang District, Beijing, China</p>
+    <h2 data-zh="以&lt;em&gt;更深的连接&lt;/em&gt;，开启私募股权新篇章">The next chapter of private equity begins with <em>deeper connections</em></h2>
+    <p data-zh="2026年11月18日，星期三，诚邀您与资深 LP、GP、家族办公室及机构投资者相聚香港会议展览中心。">Join senior LPs, GPs, family offices and institutional investors at the Hong Kong Convention and Exhibition Centre on Wednesday, 18 November 2026.</p>
+    <button class="btn btn-light" data-open-form="Book Now" data-zh="立即报名">Book Now</button>
+    <p class="contact" data-zh="联系：&lt;a href=&quot;mailto:LPCLUBGROUP@LP-club.cn&quot;&gt;LPCLUBGROUP@LP-club.cn&lt;/a&gt; · www.lp-club.cn · 中国北京市朝阳区华贸中心2号楼">Contact: <a href="mailto:LPCLUBGROUP@LP-club.cn">LPCLUBGROUP@LP-club.cn</a> · www.lp-club.cn · Tower 2, China Central Place (CCP), Chaoyang District, Beijing, China</p>
   </div>
 </section>
 
@@ -1181,65 +1211,65 @@
 <div class="reg-backdrop" id="registrationModal" aria-hidden="true">
   <div class="reg-panel" role="dialog" aria-modal="true" aria-labelledby="regTitle">
     <div class="reg-head">
-      <div><div class="reg-kicker">LP CLUB GROUP · Conference Registration</div><h3 id="regTitle">Register your interest</h3><p>The 3rd International Private Equity Conference · 18 November 2026 · Hong Kong</p></div>
-      <button class="reg-close" type="button" id="regClose" aria-label="Close">×</button>
+      <div><div class="reg-kicker" data-zh="LP CLUB GROUP · 大会报名">LP CLUB GROUP · Conference Registration</div><h3 id="regTitle" data-zh="大会报名">Register your interest</h3><p data-zh="第三届国际私募股权大会 · 2026年11月18日 · 香港">The 3rd International Private Equity Conference · 18 November 2026 · Hong Kong</p></div>
+      <button class="reg-close" type="button" id="regClose" aria-label="Close" data-zh-aria-label="关闭">×</button>
     </div>
     <div class="reg-steps">
-      <div class="reg-step active" data-step-indicator="1"><i>1</i><span>Registration</span></div><div class="reg-line"></div>
-      <div class="reg-step" data-step-indicator="2"><i>2</i><span>Your details</span></div><div class="reg-line"></div>
-      <div class="reg-step" data-step-indicator="3"><i>3</i><span>Confirmation</span></div>
+      <div class="reg-step active" data-step-indicator="1"><i>1</i><span data-zh="报名选项">Registration</span></div><div class="reg-line"></div>
+      <div class="reg-step" data-step-indicator="2"><i>2</i><span data-zh="个人资料">Your details</span></div><div class="reg-line"></div>
+      <div class="reg-step" data-step-indicator="3"><i>3</i><span data-zh="报名确认">Confirmation</span></div>
     </div>
     <div class="reg-body">
       <div class="reg-alert" id="regAlert" role="alert" aria-live="polite"></div>
       <section class="reg-screen" data-reg-step="1">
         <div class="reg-choice-head">
-          <div><h4 class="reg-section-title">1. Choose your identity</h4><p class="reg-section-lead">Select the category that best represents you.</p></div>
+          <div><h4 class="reg-section-title" data-zh="1. 选择您的身份">1. Choose your identity</h4><p class="reg-section-lead" data-zh="请选择最符合您情况的身份类别。">Select the category that best represents you.</p></div>
           <div class="reg-vip">
-            <label for="vipCode">VIP Code</label>
-            <div class="reg-vip-row"><input id="vipCode" type="text" maxlength="128" placeholder="Enter VIP Code" autocomplete="off" aria-describedby="vipMessage"><button id="vipApply" type="button" class="btn btn-primary" disabled>Apply</button></div>
+            <label for="vipCode" data-zh="VIP 兑换码">VIP Code</label>
+            <div class="reg-vip-row"><input id="vipCode" type="text" maxlength="128" placeholder="Enter VIP Code" data-zh-placeholder="输入 VIP 兑换码" autocomplete="off" aria-describedby="vipMessage"><button id="vipApply" type="button" class="btn btn-primary" disabled>Apply</button></div>
             <p id="vipMessage" class="reg-vip-message" role="status" aria-live="polite">Delegate Pass only. Enter your code and click Apply.</p>
           </div>
         </div>
-        <div class="reg-identity-grid" id="regIdentities"><div class="reg-note">Loading registration categories…</div></div>
+        <div class="reg-identity-grid" id="regIdentities"><div class="reg-note" data-zh="正在加载报名类别…">Loading registration categories…</div></div>
         <div id="regParticipationWrap" hidden>
-          <h4 class="reg-section-title" style="margin-top:26px">2. Choose one participation option</h4>
-          <p class="reg-section-lead">Choose one delegate pass or package. Speaking, Panel / Roundtable and 1-on-1 LP Matchmaking packages each include one delegate pass for one attendee.</p>
+          <h4 class="reg-section-title" style="margin-top:26px" data-zh="2. 选择一种参会方式">2. Choose one participation option</h4>
+          <p class="reg-section-lead" data-zh="请选择一种参会通行证或套餐。演讲、圆桌讨论及一对一 LP 对接套餐均包含一位嘉宾的参会通行证。">Choose one delegate pass or package. Speaking, Panel / Roundtable and 1-on-1 LP Matchmaking packages each include one delegate pass for one attendee.</p>
           <div class="reg-packages" id="regPackages"></div>
         </div>
-        <p class="reg-note">LP CLUB reviews attendee eligibility. Selecting a category does not constitute payment or final admission approval.</p>
+        <p class="reg-note" data-zh="LP CLUB 将审核参会资格。选择类别不代表已付款或已获得最终参会确认。">LP CLUB reviews attendee eligibility. Selecting a category does not constitute payment or final admission approval.</p>
       </section>
       <section class="reg-screen" data-reg-step="2" hidden>
-        <div class="reg-summary"><div><span>Selected registration</span><b id="regSummaryName">—</b></div><strong id="regSummaryPrice">—</strong></div>
+        <div class="reg-summary"><div><span data-zh="已选报名方案">Selected registration</span><b id="regSummaryName">—</b></div><strong id="regSummaryPrice">—</strong></div>
         <form id="regForm" novalidate>
-          <h4 class="reg-section-title">Your details</h4><p class="reg-section-lead">Please provide accurate professional information. Fields marked * are required.</p>
+          <h4 class="reg-section-title" data-zh="个人资料">Your details</h4><p class="reg-section-lead" data-zh="请准确填写职业信息。标有 * 的项目为必填项。">Please provide accurate professional information. Fields marked * are required.</p>
           <div class="reg-grid">
-            <div class="reg-field"><label>Salutation</label><select name="salutation"><option value="">Select</option><option>Mr.</option><option>Ms.</option><option>Dr.</option><option>Prof.</option></select></div>
-            <div class="reg-field"><label>Full name <span>*</span></label><input name="fullName" autocomplete="name" required></div>
-            <div class="reg-field full"><label>Company / Organization <span>*</span></label><input name="company" autocomplete="organization" required></div>
-            <div class="reg-field"><label>Organization type <span>*</span></label><select name="companyType" required><option value="">Select</option><option>Limited Partner (LP)</option><option>LP CLUB Member</option><option>General Partner (GP)</option><option>Family Office</option><option>Government Authority</option><option>Listed Company</option><option>Institutional Investor</option><option>Investment Company</option><option>Professional Service</option><option>Other</option></select></div>
-            <div class="reg-field"><label>Job title <span>*</span></label><input name="jobTitle" autocomplete="organization-title" required></div>
-            <div class="reg-field"><label>Department</label><input name="department"></div>
-            <div class="reg-field"><label>Country / Region <span>*</span></label><input name="country" autocomplete="country-name" required></div>
-            <div class="reg-field"><label>City</label><input name="city" autocomplete="address-level2"></div>
-            <div class="reg-field"><label>Business email <span>*</span></label><input name="email" type="email" autocomplete="email" required><div class="hint" id="emailHint">Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.</div></div>
-            <div class="reg-field"><label>Mobile number <span>*</span></label><div style="display:grid;grid-template-columns:90px 1fr;gap:8px"><input name="dial" value="+86" aria-label="Country code"><input name="phone" type="tel" autocomplete="tel" required></div></div>
-            <div class="reg-field"><label>Same as WhatsApp / WeChat?</label><select name="whatsappSame"><option>Yes</option><option>No</option></select></div>
-            <div class="reg-field"><label>WhatsApp / WeChat number</label><input name="whatsappNumber"></div>
-            <div class="reg-field full"><div class="reg-group-label">Investment focus</div><div class="reg-choice-grid" data-multi="focus"></div></div>
-            <div class="reg-field full"><div class="reg-group-label">Purpose of attendance</div><div class="reg-choice-grid" data-multi="purpose"></div></div>
-            <div class="reg-field"><label>Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="">Select</option><option>Yes</option><option>No</option></select></div>
-            <div class="reg-field"><label>Expected arrival date</label><input name="arrivalDate" type="date"></div>
-            <div class="reg-field"><label>Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
-            <div class="reg-field full"><label class="reg-consent"><input name="consent" type="checkbox" required><span>I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
+            <div class="reg-field"><label data-zh="称谓">Salutation</label><select name="salutation"><option value="" data-zh="请选择">Select</option><option data-zh="先生" value="Mr.">Mr.</option><option data-zh="女士" value="Ms.">Ms.</option><option data-zh="博士" value="Dr.">Dr.</option><option data-zh="教授" value="Prof.">Prof.</option></select></div>
+            <div class="reg-field"><label data-zh="姓名 &lt;span&gt;*&lt;/span&gt;">Full name <span>*</span></label><input name="fullName" autocomplete="name" required></div>
+            <div class="reg-field full"><label data-zh="公司 / 机构 &lt;span&gt;*&lt;/span&gt;">Company / Organization <span>*</span></label><input name="company" autocomplete="organization" required></div>
+            <div class="reg-field"><label data-zh="机构类型 &lt;span&gt;*&lt;/span&gt;">Organization type <span>*</span></label><select name="companyType" required><option value="" data-zh="请选择">Select</option><option data-zh="有限合伙人（LP）" value="Limited Partner (LP)">Limited Partner (LP)</option><option data-zh="LP CLUB 会员" value="LP CLUB Member">LP CLUB Member</option><option data-zh="普通合伙人（GP）" value="General Partner (GP)">General Partner (GP)</option><option data-zh="家族办公室" value="Family Office">Family Office</option><option data-zh="政府机构" value="Government Authority">Government Authority</option><option data-zh="上市公司" value="Listed Company">Listed Company</option><option data-zh="机构投资者" value="Institutional Investor">Institutional Investor</option><option data-zh="投资公司" value="Investment Company">Investment Company</option><option data-zh="专业服务机构" value="Professional Service">Professional Service</option><option data-zh="其他" value="Other">Other</option></select></div>
+            <div class="reg-field"><label data-zh="职位 &lt;span&gt;*&lt;/span&gt;">Job title <span>*</span></label><input name="jobTitle" autocomplete="organization-title" required></div>
+            <div class="reg-field"><label data-zh="部门">Department</label><input name="department"></div>
+            <div class="reg-field"><label data-zh="国家 / 地区 &lt;span&gt;*&lt;/span&gt;">Country / Region <span>*</span></label><input name="country" autocomplete="country-name" required></div>
+            <div class="reg-field"><label data-zh="城市">City</label><input name="city" autocomplete="address-level2"></div>
+            <div class="reg-field"><label data-zh="企业邮箱 &lt;span&gt;*&lt;/span&gt;">Business email <span>*</span></label><input name="email" type="email" autocomplete="email" required><div class="hint" id="emailHint">Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.</div></div>
+            <div class="reg-field"><label data-zh="手机号码 &lt;span&gt;*&lt;/span&gt;">Mobile number <span>*</span></label><div style="display:grid;grid-template-columns:90px 1fr;gap:8px"><input name="dial" value="+86" aria-label="Country code" data-zh-aria-label="国际区号"><input name="phone" type="tel" autocomplete="tel" required></div></div>
+            <div class="reg-field"><label data-zh="是否与 WhatsApp / 微信号码相同？">Same as WhatsApp / WeChat?</label><select name="whatsappSame"><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
+            <div class="reg-field"><label data-zh="WhatsApp / 微信号码">WhatsApp / WeChat number</label><input name="whatsappNumber"></div>
+            <div class="reg-field full"><div class="reg-group-label" data-zh="投资方向">Investment focus</div><div class="reg-choice-grid" data-multi="focus"></div></div>
+            <div class="reg-field full"><div class="reg-group-label" data-zh="参会目的">Purpose of attendance</div><div class="reg-choice-grid" data-multi="purpose"></div></div>
+            <div class="reg-field"><label data-zh="是否需要签证邀请函？&lt;span&gt;*&lt;/span&gt;">Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="" data-zh="请选择">Select</option><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
+            <div class="reg-field"><label data-zh="预计抵达日期">Expected arrival date</label><input name="arrivalDate" type="date"></div>
+            <div class="reg-field"><label data-zh="随行人数">Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
+            <div class="reg-field full"><label class="reg-consent"><input name="consent" type="checkbox" required><span data-zh="本人确认所填信息准确，并同意 LP CLUB GROUP 使用这些信息处理本次大会报名及与本人联系大会相关事宜。">I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy" data-zh="&lt;b&gt;隐私说明。&lt;/b&gt;报名信息仅用于大会管理、参会资格审核、活动沟通、应申请提供的邀请函 / 签证支持及相关后续服务。信息访问应仅限获授权的 LP CLUB 工作人员及已配置的服务提供方。请勿提交敏感金融账户信息或密码。"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
           </div>
         </form>
       </section>
       <section class="reg-screen" data-reg-step="3" hidden>
-        <div class="reg-success"><div class="reg-check">✓</div><h4>Registration received</h4><p id="regSuccessText">Thank you. Your registration has been successfully submitted.</p><div class="reg-ref">Registration reference · <b id="regRef">—</b></div><div class="reg-success-card" id="regSuccessCard"></div><p class="reg-note" id="regEmailStatus">A confirmation email will be sent to your business email when outgoing mail is configured on the server.</p></div>
+        <div class="reg-success"><div class="reg-check">✓</div><h4 data-zh="已收到您的报名">Registration received</h4><p id="regSuccessText">Thank you. Your registration has been successfully submitted.</p><div class="reg-ref"><span data-zh="报名编号 · ">Registration reference · </span><b id="regRef">—</b></div><div class="reg-success-card" id="regSuccessCard"></div><p class="reg-note" id="regEmailStatus">A confirmation email will be sent to your business email when outgoing mail is configured on the server.</p></div>
       </section>
     </div>
     <div class="reg-foot" id="regFoot">
-      <button class="reg-back" type="button" id="regBack" hidden>← Back</button>
+      <button class="reg-back" type="button" id="regBack" hidden data-zh="← 返回">← Back</button>
       <div class="reg-actions"><button class="btn btn-primary" type="button" id="regNext" disabled>Continue</button></div>
     </div>
   </div>
@@ -1249,15 +1279,133 @@
 <footer>
   <div class="wrap">
     <a class="brand" href="#top">
-      <span>LP CLUB GROUP<small>WHERE CAPITAL, INSIGHT AND CONNECTIONS CONVERGE</small></span>
+      <img class="brand-logo" src="images/lpclub-logo.png" alt="LP CLUB" width="2021" height="698">
     </a>
-    <div>© 2026 LP CLUB GROUP. All rights reserved.</div>
+    <div data-zh="© 2026 LP CLUB GROUP. 保留所有权利。">© 2026 LP CLUB GROUP. All rights reserved.</div>
     <div><a href="mailto:LPCLUBGROUP@LP-club.cn">LPCLUBGROUP@LP-club.cn</a> · <a href="https://www.lp-club.cn" target="_blank" rel="noopener">www.lp-club.cn</a></div>
   </div>
 </footer>
 
 <script>
 (function () {
+  /* ---------- Language and presentation text ---------- */
+  var language = document.documentElement.lang;
+  var originalMarkup = new Map();
+  document.querySelectorAll('[data-zh]').forEach(function(el){ originalMarkup.set(el, el.innerHTML); });
+  var messages = new Map();
+  var translations = {
+    'Apply':'应用', 'Checking…':'校验中…', 'Checking VIP Code…':'正在校验 VIP 兑换码…',
+    'Continue':'继续', 'Continue to Your Details':'继续填写资料', 'Submit Registration':'提交报名', 'Submitting…':'正在提交…',
+    'Delegate Pass only. Enter your code and click Apply.':'仅适用于参会通行证。输入兑换码后点击“应用”。',
+    'VIP Code applied — one complimentary Delegate Pass.':'VIP 兑换码已应用，可免费领取一张参会通行证。',
+    'VIP Code could not be checked. Please try again.':'无法校验 VIP 兑换码，请重试。',
+    'Registration pricing could not be loaded. Please refresh or contact LP CLUB.':'无法加载报名价格，请刷新页面或联系 LP CLUB。',
+    'Complimentary / By invitation':'免费 / 邀请制', 'Complimentary / VIP Code':'免费 / VIP 兑换码',
+    'USD 0 · Complimentary / VIP Code':'USD 0 · 免费 / VIP 兑换码',
+    'Limited Partner (LP)':'有限合伙人（LP）', 'LP CLUB Member':'LP CLUB 会员', 'General Partner (GP)':'普通合伙人（GP）',
+    'Investment Firm':'投资机构', 'Standard':'标准报名',
+    'Complimentary delegate pass, subject to LP qualification review.':'免费参会通行证，须通过 LP 资格审核。',
+    'Complimentary delegate pass for LP CLUB members.':'LP CLUB 会员免费参会通行证。',
+    'For fund managers and general partners.':'适用于基金管理人与普通合伙人。',
+    'For investment firms, institutional investors and related investment organisations.':'适用于投资机构、机构投资者及相关投资组织。',
+    'Standard conference registration.':'标准大会报名。',
+    'Delegate Pass':'参会通行证', 'Speaking Package':'演讲套餐', 'Panel / Roundtable Package':'小组讨论 / 圆桌套餐',
+    '1-on-1 LP Matchmaking Package':'一对一 LP 对接套餐',
+    'Includes 1 delegate pass + keynote/speaking opportunity.':'包含一张参会通行证及主题演讲机会。',
+    'Includes 1 delegate pass + panel/roundtable participation.':'包含一张参会通行证及小组讨论 / 圆桌参与机会。',
+    'Includes 1 delegate pass + curated LP matchmaking.':'包含一张参会通行证及精选 LP 对接。',
+    'Private Equity':'私募股权', 'Private Credit':'私募信贷', 'Secondaries':'私募二级市场', 'Co-Investment':'联合投资',
+    'AI & Technology':'人工智能与科技', 'Healthcare':'医疗健康', 'Cross-Border Investment':'跨境投资', 'Real Assets':'实物资产', 'Other':'其他',
+    'Market Insights':'市场洞见', 'Investment Opportunities':'投资机会', 'Fundraising':'募资', 'LP-GP Partnership':'LP–GP 合作', 'Networking':'人脉交流',
+    'Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.':'请使用企业邮箱。不接受 Gmail、Outlook、Yahoo、iCloud、QQ、163 等个人邮箱。',
+    'Please use your business email address. Personal email addresses are not accepted.':'请使用企业邮箱，不接受个人邮箱。',
+    'Please enter a valid mobile number.':'请输入有效的手机号码。',
+    'Please enter a valid expected arrival date.':'请输入有效的预计抵达日期。',
+    'Privacy consent is required.':'请阅读并同意隐私说明。',
+    'Please select a valid registration category.':'请选择有效的报名类别。',
+    'Please complete all required fields.':'请填写所有必填项。',
+    'Registration could not be submitted.':'报名提交失败，请稍后重试。',
+    'Failed to fetch':'网络请求失败，请检查网络连接后重试。',
+    'Load failed':'网络请求失败，请检查网络连接后重试。',
+    'Registration database is unavailable. Please try again shortly.':'报名服务暂不可用，请稍后重试。',
+    'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.':'操作失败，请重试或联系 LPCLUBGROUP@LP-club.cn。',
+    'The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.':'该 VIP 兑换码无法兑换。请使用新的兑换码或确认标准票价。',
+    'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'请先点击“应用”校验 VIP 兑换码，或清空兑换码以使用标准票价。',
+    'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.':'VIP 兑换码仅适用于参会通行证。请选择参会通行证，或清空兑换码后继续选择此套餐。',
+    'Invalid VIP Code. Please check your code.':'VIP 兑换码无效，请检查后重试。',
+    'This VIP Code has already been used.':'该 VIP 兑换码已被使用。',
+    'This VIP Code has been revoked.':'该 VIP 兑换码已被撤销。',
+    'This VIP Code has expired.':'该 VIP 兑换码已过期。',
+    'This VIP Code is being processed. Please contact LP CLUB.':'该 VIP 兑换码正在处理中，请联系 LP CLUB。',
+    'Please contact LP CLUB to confirm your registration.':'请联系 LP CLUB 核对您的报名，请勿重新提交新的报名。',
+    'A registration for this email is being processed. Please contact LP CLUB.':'该邮箱的报名正在处理中，请联系 LP CLUB。',
+    'VIP storage is unavailable. Please contact LP CLUB.':'VIP 兑换服务暂不可用，请联系 LP CLUB。',
+    'Please submit again to retry this registration.':'请重新提交以重试本次报名。',
+    'Please retry this registration from the website.':'请返回网站重试本次报名。',
+    'This submission has changed. Please start a new registration.':'报名内容已发生变化，请重新开始报名。',
+    'Too many attempts were submitted from this connection. Please try again later.':'当前网络的提交次数过多，请稍后重试。',
+    'A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.':'该企业邮箱已有报名记录（{ref}）。如需更新，请联系 LP CLUB。',
+    'A registration already exists for this business email. Please contact LP CLUB if you need to update it.':'该企业邮箱已有报名记录。如需更新，请联系 LP CLUB。',
+    '{message} Registration reference: {ref}':'{message} 报名编号：{ref}',
+    'Thank you, {name}. Your registration has been successfully submitted.':'感谢您，{name}。您的报名已成功提交。',
+    'Thank you. Your registration has been successfully submitted.':'感谢您，报名已成功提交。',
+    'Next step':'下一步',
+    'Our team will review your registration and contact you within 2–3 business days.':'我们的团队将审核您的报名，并在2–3个工作日内与您联系。',
+    'A confirmation email has been sent to {email}.':'确认邮件已发送至 {email}。',
+    'Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at {email}.':'您的报名已保存。确认邮件暂未发送，LP CLUB 仍可通过 {email} 与您联系。',
+    'A confirmation email will be sent to your business email when outgoing mail is configured on the server.':'邮件服务配置完成后，确认邮件将发送至您的企业邮箱。'
+  };
+  var errorMessages = {
+    INVALID_VIP_CODE:'Invalid VIP Code. Please check your code.', VIP_USED:'This VIP Code has already been used.',
+    VIP_REVOKED:'This VIP Code has been revoked.', VIP_EXPIRED:'This VIP Code has expired.',
+    VIP_PROCESSING:'This VIP Code is being processed. Please contact LP CLUB.', VIP_REVIEW_REQUIRED:'Please contact LP CLUB to confirm your registration.',
+    VIP_EMAIL_PROCESSING:'A registration for this email is being processed. Please contact LP CLUB.', VIP_STORAGE_UNAVAILABLE:'VIP storage is unavailable. Please contact LP CLUB.',
+    VIP_RETRY_REQUIRED:'Please submit again to retry this registration.', INVALID_IDEMPOTENCY_KEY:'Please retry this registration from the website.',
+    IDEMPOTENCY_CONFLICT:'This submission has changed. Please start a new registration.',
+    VIP_TICKET_ONLY:'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.',
+    BUSINESS_EMAIL_REQUIRED:'Please use your business email address. Personal email addresses are not accepted.',
+    INVALID_PHONE:'Please enter a valid mobile number.', INVALID_DATE:'Please enter a valid expected arrival date.', CONSENT_REQUIRED:'Privacy consent is required.',
+    DATABASE_UNAVAILABLE:'Registration database is unavailable. Please try again shortly.', RATE_LIMITED:'Too many attempts were submitted from this connection. Please try again later.',
+    DUPLICATE_REGISTRATION:'A registration already exists for this business email. Please contact LP CLUB if you need to update it.'
+  };
+  var requiredFieldsPrefix='Please complete all required fields: ';
+  var requiredFieldLabels={fullName:'姓名',company:'公司 / 机构',companyType:'机构类型',country:'国家 / 地区',jobTitle:'职位',email:'企业邮箱',phone:'手机号码',visaLetter:'签证邀请函选项'};
+  function t(key, values){
+    if(language==='zh-CN' && key.indexOf(requiredFieldsPrefix)===0){
+      return '请填写以下必填项：'+key.slice(requiredFieldsPrefix.length).split(', ').map(function(field){return Object.prototype.hasOwnProperty.call(requiredFieldLabels,field)?requiredFieldLabels[field]:field}).join('、');
+    }
+    var text = language === 'zh-CN' && Object.prototype.hasOwnProperty.call(translations, key) ? translations[key] : key;
+    return text.replace(/\{(\w+)\}/g, function(match, name){return values && Object.prototype.hasOwnProperty.call(values, name) ? (typeof values[name]==='function'?values[name]():String(values[name])) : match});
+  }
+  function setMessage(el, key, values){ messages.set(el, {key:key, values:values}); el.textContent=t(key, values); }
+  function errorMessage(err){
+    if(typeof err.message==='string' && err.message.indexOf(requiredFieldsPrefix)===0)return err.message;
+    return errorMessages[err.code] || (Object.prototype.hasOwnProperty.call(translations,err.message) ? err.message : 'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.');
+  }
+  function setLanguage(next, remember){
+    language = next === 'zh-CN' ? 'zh-CN' : 'en';
+    document.documentElement.lang=language;
+    originalMarkup.forEach(function(original, el){el.innerHTML=language==='zh-CN'?el.getAttribute('data-zh'):original});
+    document.querySelectorAll('[data-zh-alt], [data-zh-aria-label], [data-zh-placeholder]').forEach(function(el){
+      ['alt','aria-label','placeholder'].forEach(function(attr){
+        if(!el.hasAttribute('data-zh-'+attr))return;
+        if(!el.hasAttribute('data-en-'+attr))el.setAttribute('data-en-'+attr,el.getAttribute(attr));
+        el.setAttribute(attr,el.getAttribute('data-'+(language==='zh-CN'?'zh':'en')+'-'+attr));
+      });
+    });
+    document.title=language==='zh-CN'?'第三届国际私募股权大会 2026 | LP CLUB GROUP':'The 3rd International Private Equity Conference 2026 | LP CLUB GROUP';
+    var description=document.querySelector('meta[name="description"]');
+    if(!description.dataset.en)description.dataset.en=description.content;
+    description.content=language==='zh-CN'?'LP CLUB GROUP 主办第三届国际私募股权大会，连接 LP、GP 与全球资本。2026年11月18日，星期三，中国香港会议展览中心。':description.dataset.en;
+    document.querySelectorAll('[data-language]').forEach(function(btn){btn.setAttribute('aria-pressed',String(btn.dataset.language===language))});
+    messages.forEach(function(message, el){el.textContent=t(message.key,message.values)});
+    if(packageList && packageList.length){renderIdentities();renderPackages();updateSummary();}
+    document.querySelectorAll('[data-multi] .reg-chip').forEach(function(label){label.querySelector('span').textContent=t(label.querySelector('input').value)});
+    if(registrationResult)renderSuccess();
+    if(vipApply)updateVipControls();
+    if(remember)try {localStorage.setItem('lpclub-language',language);} catch (_) {}
+  }
+
   /* ---------- Integrated 3-step registration ---------- */
   var regModal = document.getElementById('registrationModal');
   var regClose = document.getElementById('regClose');
@@ -1272,7 +1420,7 @@
   var regStep = 1, selectedIdentity = null, selectedPackage = null, packageList = [], packageLoadError = '';
   var vipCode=document.getElementById('vipCode'), vipApply=document.getElementById('vipApply'), vipMessage=document.getElementById('vipMessage');
   var appliedVipCode='', vipPending=false, vipRequestId=0;
-  var vipSubmissionKey='', vipSubmissionPayload='';
+  var vipSubmissionKey='', vipSubmissionPayload='', registrationResult=null;
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
     focus:['Private Equity','Private Credit','Secondaries','Co-Investment','AI & Technology','Healthcare','Cross-Border Investment','Real Assets','Other'],
@@ -1281,10 +1429,10 @@
 
   function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
   function apiUrl(endpoint){var p=window.location.pathname||'';p=/\.[a-zA-Z0-9]+$/.test(p)?p.replace(/\/[^/]*$/,''):p.replace(/\/+$/,'');return (p?p:'')+endpoint}
-  function money(p){if(p&&p.vipApplied)return 'USD 0 · Complimentary / VIP Code';return p && p.displayPrice ? p.displayPrice : (p && p.price===0 ? 'Complimentary / By invitation' : 'USD '+Number((p&&p.price)||0).toLocaleString('en-US'))}
-  function showAlert(msg){regAlert.textContent=msg;regAlert.classList.toggle('show',Boolean(msg))}
+  function money(p){if(p&&p.vipApplied)return t('USD 0 · Complimentary / VIP Code');return p && p.displayPrice ? t(p.displayPrice) : (p && p.price===0 ? t('Complimentary / By invitation') : 'USD '+Number((p&&p.price)||0).toLocaleString('en-US'))}
+  function showAlert(msg,values){setMessage(regAlert,msg,values);regAlert.classList.toggle('show',Boolean(msg))}
   function businessEmail(value){var s=String(value||'').trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s))return false;return PERSONAL_DOMAINS.indexOf(s.split('@').pop())===-1}
-  function renderMulti(){Object.keys(MULTI).forEach(function(key){var box=document.querySelector('[data-multi="'+key+'"]');if(!box)return;box.innerHTML=MULTI[key].map(function(v){return '<label class="reg-chip"><input type="checkbox" value="'+escHtml(v)+'"><span>'+escHtml(v)+'</span></label>'}).join('')})}
+  function renderMulti(){Object.keys(MULTI).forEach(function(key){var box=document.querySelector('[data-multi="'+key+'"]');if(!box)return;box.innerHTML=MULTI[key].map(function(v){return '<label class="reg-chip"><input type="checkbox" value="'+escHtml(v)+'"><span>'+escHtml(t(v))+'</span></label>'}).join('')})}
   function effectivePackage(p){
     if(appliedVipCode && p && p.optionId === 'ticket'){
       return Object.assign({}, p, {price: 0, displayPrice: 'Complimentary / VIP Code', vipApplied: true});
@@ -1293,13 +1441,13 @@
   }
   function updateVipControls(){
     vipApply.disabled = vipPending || !vipCode.value.trim();
-    vipApply.textContent = vipPending ? 'Checking…' : 'Apply';
+    setMessage(vipApply, vipPending ? 'Checking…' : 'Apply');
   }
   function resetVip(){
     appliedVipCode = '';
     vipPending = false;
     vipRequestId++;
-    vipMessage.textContent = 'Delegate Pass only. Enter your code and click Apply.';
+    setMessage(vipMessage, 'Delegate Pass only. Enter your code and click Apply.');
     vipMessage.classList.remove('error');
     updateVipControls();
   }
@@ -1311,7 +1459,7 @@
     updateVipControls();
     regNext.disabled = regStep === 1 ? !selectedPackage : false;
     renderPackages();
-    vipMessage.textContent = 'Checking VIP Code…';
+    setMessage(vipMessage, 'Checking VIP Code…');
     vipMessage.classList.remove('error');
     try{
       var response = await fetch(apiUrl('/api/vip'), {
@@ -1321,13 +1469,13 @@
       });
       var data = await response.json();
       if(requestId !== vipRequestId) return;
-      if(!response.ok || !data.ok) throw new Error(data.error || 'VIP Code could not be checked. Please try again.');
+      if(!response.ok || !data.ok) throw Object.assign(new Error(data.error || 'VIP Code could not be checked. Please try again.'), {code:data.code});
       appliedVipCode = code;
-      vipMessage.textContent = 'VIP Code applied — one complimentary Delegate Pass.';
+      setMessage(vipMessage, 'VIP Code applied — one complimentary Delegate Pass.');
       renderPackages();
     }catch(err){
       if(requestId === vipRequestId){
-        vipMessage.textContent = err.message || 'VIP Code could not be checked. Please try again.';
+        setMessage(vipMessage, errorMessage(err));
         vipMessage.classList.add('error');
       }
     }finally{
@@ -1351,7 +1499,7 @@
   }
   function renderIdentities(){
     var identities=packageList.filter(function(p){return p.optionId==='ticket'});
-    regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity" data-identity="'+escHtml(p.identityId)+'" aria-pressed="false"><b>'+escHtml(p.identityName)+'</b><small>'+escHtml(p.note||'')+'</small></button>'}).join('');
+    regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity'+(p.identityId===selectedIdentity?' selected':'')+'" data-identity="'+escHtml(p.identityId)+'" aria-pressed="'+String(p.identityId===selectedIdentity)+'"><b>'+escHtml(t(p.identityName))+'</b><small>'+escHtml(t(p.note||''))+'</small></button>'}).join('');
     regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(btn){btn.addEventListener('click',function(){
       selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;
       regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(x){x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',String(x===btn))});
@@ -1360,7 +1508,7 @@
   }
   function renderPackages(){
     var list=packageList.filter(function(p){return p.identityId===selectedIdentity});
-    regPackagesEl.innerHTML=list.map(function(p){var checked=selectedPackage&&selectedPackage.id===p.id;return '<label class="reg-package'+(checked?' selected':'')+'" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'" '+(checked?'checked':'')+'><span class="reg-radio"></span><span><b>'+escHtml(p.ticketName)+'</b><small>'+escHtml(p.note||'')+'</small></span><span class="reg-price">'+escHtml(money(effectivePackage(p)))+'</span></label>'}).join('');
+    regPackagesEl.innerHTML=list.map(function(p){var checked=selectedPackage&&selectedPackage.id===p.id;return '<label class="reg-package'+(checked?' selected':'')+'" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'" '+(checked?'checked':'')+'><span class="reg-radio"></span><span><b>'+escHtml(t(p.ticketName))+'</b><small>'+escHtml(t(p.note||''))+'</small></span><span class="reg-price">'+escHtml(money(effectivePackage(p)))+'</span></label>'}).join('');
     regPackagesEl.querySelectorAll('input').forEach(function(input){input.addEventListener('change',function(){
       selectedPackage=list.find(function(p){return p.id===input.value})||null;renderPackages();
       regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.classList.toggle('selected',row.getAttribute('data-package')===input.value)});
@@ -1380,25 +1528,24 @@
     }
   }
   function openReg(){
-    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
+    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
     regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
   }
   function closeReg(){regModal.classList.remove('open');regModal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
   function showStep(n){
     regStep=n;document.querySelectorAll('[data-reg-step]').forEach(function(s){s.hidden=Number(s.getAttribute('data-reg-step'))!==n});
     document.querySelectorAll('[data-step-indicator]').forEach(function(el){el.classList.toggle('active',Number(el.getAttribute('data-step-indicator'))<=n)});
-    regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';regNext.textContent=n===1?'Continue':'Submit Registration';regNext.disabled=vipPending||(n===1?!selectedPackage:false);
+    regBack.hidden=n!==2;regFoot.style.display=n===3?'none':'flex';setMessage(regNext,n===1?'Continue':'Submit Registration');regNext.disabled=vipPending||(n===1?!selectedPackage:false);
     showAlert(n===1?packageLoadError:'');
     if(n===2&&selectedPackage){
-      document.getElementById('regSummaryName').textContent=selectedPackage.identityName+' — '+selectedPackage.ticketName;
-      document.getElementById('regSummaryPrice').textContent=money(effectivePackage(selectedPackage));
+      updateSummary();
       regForm.elements.companyType.value=selectedPackage.organisationType;
     }
   }
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
   function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,vipCode:appliedVipCode||undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
-  function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){hint.textContent='Please use your business email address. Personal email addresses are not accepted.';hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
-  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;regNext.textContent='Submitting…';showAlert('');try{var payload=formPayload();if(payload.vipCode){var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;throw er}document.getElementById('regRef').textContent=data.ref;var name=regForm.elements.fullName.value;var email=regForm.elements.email.value;document.getElementById('regSuccessText').textContent='Thank you, '+name+'. Your registration has been successfully submitted.';document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(data.package.identityName+' — '+data.package.ticketName)+'</b><br>'+escHtml(money(data.package))+'<br><br><b>Next step</b><br>Our team will review your registration and contact you within 2–3 business days.';var es=document.getElementById('regEmailStatus');if(data.email&&data.email.sent)es.textContent='A confirmation email has been sent to '+email+'.';else es.textContent='Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at '+email+'.';showStep(3)}catch(err){if(err.retryable||err.code==='VIP_RETRY_REQUIRED'){vipSubmissionKey='';vipSubmissionPayload=''}if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');vipMessage.textContent=err.message;showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.message+(err.ref?' Registration reference: '+err.ref:''))}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ('+err.ref+'). Please contact LP CLUB if you need to update the existing registration.')}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(err.message||'Something went wrong. Please try again or contact LPCLUBGROUP@LP-club.cn.')}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;regNext.textContent=regStep===1?'Continue to Your Details':'Submit Registration'}}}
+  function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){setMessage(hint,'Please use your business email address. Personal email addresses are not accepted.');hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
+  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();if(payload.vipCode){var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};renderSuccess();showStep(3)}catch(err){if(err.retryable||err.code==='VIP_RETRY_REQUIRED'){vipSubmissionKey='';vipSubmissionPayload=''}if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
 
   vipApply.addEventListener('click',applyVipCode);
   vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=regStep===1?!selectedPackage:false});
@@ -1407,7 +1554,25 @@
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
   regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage){if(vipCode.value.trim()&&!appliedVipCode){showAlert(selectedPackage.optionId==='ticket'?'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}if(appliedVipCode&&selectedPackage.optionId!=='ticket'){showAlert('VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}showAlert('');showStep(2)}else if(regStep===2)submitRegistration()});
   regForm.elements.email.addEventListener('blur',function(){var hint=document.getElementById('emailHint');hint.classList.toggle('error',this.value&&!businessEmail(this.value))});
-  renderMulti();loadPackages();
+  function updateSummary(){
+    if(!selectedPackage)return;
+    document.getElementById('regSummaryName').textContent=t(selectedPackage.identityName)+' — '+t(selectedPackage.ticketName);
+    document.getElementById('regSummaryPrice').textContent=money(effectivePackage(selectedPackage));
+  }
+  function renderSuccess(){
+    var result=registrationResult, data=result.data;
+    document.getElementById('regRef').textContent=data.ref;
+    setMessage(document.getElementById('regSuccessText'),'Thank you, {name}. Your registration has been successfully submitted.',{name:result.name});
+    document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(t(data.package.identityName)+' — '+t(data.package.ticketName))+'</b><br>'+escHtml(money(data.package))+'<br><br><b>'+escHtml(t('Next step'))+'</b><br>'+escHtml(t('Our team will review your registration and contact you within 2–3 business days.'));
+    setMessage(document.getElementById('regEmailStatus'),data.email&&data.email.sent?'A confirmation email has been sent to {email}.':'Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at {email}.',{email:result.email});
+  }
+  setMessage(vipMessage,'Delegate Pass only. Enter your code and click Apply.');
+  setMessage(regNext,'Continue');
+  setMessage(document.getElementById('emailHint'),'Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.');
+  setMessage(document.getElementById('regSuccessText'),'Thank you. Your registration has been successfully submitted.');
+  setMessage(document.getElementById('regEmailStatus'),'A confirmation email will be sent to your business email when outgoing mail is configured on the server.');
+  document.querySelectorAll('[data-language]').forEach(function(btn){btn.addEventListener('click',function(){setLanguage(btn.dataset.language,true)})});
+  renderMulti();setLanguage(language);loadPackages();
 
   /* ---------- Conference section entrance ---------- */
   (function () {

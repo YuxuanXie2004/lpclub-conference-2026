@@ -4,7 +4,7 @@ const {chromium}=require('playwright'),localServer=require('./helpers/local-serv
  const local=await localServer(),browser=await chromium.launch({channel:'chrome',headless:true});
  try{
   for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
-   const context=await browser.newContext({viewport,permissions:['clipboard-read','clipboard-write']});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+   const context=await browser.newContext({viewport,locale:'en-US',permissions:['clipboard-read','clipboard-write']});const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.goto(local.base+'/table?token=local-test-admin',{waitUntil:'domcontentloaded'});
    assert.deepEqual(await page.locator('.tabs .tab').allTextContents(),['Active Registrations','Deleted / 回收站','VIP Codes']);assert.equal(await page.locator('header .actions').getByText('VIP Codes').count(),0);
    await page.locator('#vipTab').click();assert.equal(await page.locator('#vipTab').getAttribute('aria-current'),'page');

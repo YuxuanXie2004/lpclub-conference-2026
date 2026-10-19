@@ -6,7 +6,7 @@ const localServer=require('./helpers/local-server.cjs');
  try{
   for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
    const item=local.store.generate({count:1,batchName:'Browser '+viewport.width})[0],code=local.store.detail(item.id).item.code;
-   const page=await browser.newPage({viewport});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   const page=await browser.newPage({viewport,locale:'en-US'});const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.goto(local.base,{waitUntil:'domcontentloaded'});await page.locator('[data-open-form]').first().click();
    await page.locator('#vipCode').fill('WRONG');await page.locator('#vipApply').click();await page.locator('#vipMessage').filter({hasText:'Invalid'}).waitFor();
    await page.locator('#vipCode').fill(code.toLowerCase());await page.locator('#vipApply').click();await page.locator('#vipMessage').filter({hasText:'applied'}).waitFor();
@@ -32,7 +32,7 @@ const localServer=require('./helpers/local-server.cjs');
    assert.equal(local.store.row(item.id).status,'used');assert.match(await page.locator('#regSuccessCard').textContent(),/VIP Code/);assert.deepEqual(errors,[]);
    await page.screenshot({path:'/tmp/lpclub-vip-success-'+viewport.width+'.png'});await page.close();console.log('PASS one-time redemption + lost-response retry '+viewport.width+'px');
   }
-  const page=await browser.newPage();const item=local.store.generate({count:1})[0],code=local.store.detail(item.id).item.code;
+  const page=await browser.newPage({locale:'en-US'});const item=local.store.generate({count:1})[0],code=local.store.detail(item.id).item.code;
   await page.goto(local.base,{waitUntil:'domcontentloaded'});await page.locator('[data-open-form]').first().click();await page.locator('[data-identity="gp"]').click();await page.locator('[data-package="gp_ticket"] input').check();
   let release,started;const queued=new Promise(r=>started=r);
   await page.route('**/api/vip',route=>{release=()=>route.fulfill({json:{ok:true,package:{...require('../server/packages').PACKAGES.gp_ticket,price:0,displayPrice:'Complimentary / VIP Code',vipApplied:true}}});started();});
@@ -41,7 +41,7 @@ const localServer=require('./helpers/local-server.cjs');
   assert.equal(await page.locator('[data-package="gp_ticket"] .reg-price').textContent(),'USD 2,000');assert.ok(!(await page.locator('#vipMessage').textContent()).includes('applied'));
   await page.unroute('**/api/vip');local.store.revoke({ids:[item.id],reason:'test'});await page.locator('#vipApply').click();await page.locator('#vipMessage').filter({hasText:'revoked'}).waitFor();
   await page.close();console.log('PASS stale preview and revoked code');
-  const blocked=await browser.newPage();const claimed=local.store.generate({count:1})[0],claimedCode=local.store.detail(claimed.id).item.code;
+  const blocked=await browser.newPage({locale:'en-US'});const claimed=local.store.generate({count:1})[0],claimedCode=local.store.detail(claimed.id).item.code;
   await blocked.goto(local.base,{waitUntil:'domcontentloaded'});await blocked.locator('[data-open-form]').first().click();await blocked.locator('[data-identity="gp"]').click();await blocked.locator('[data-package="gp_ticket"] input').check();await blocked.locator('#vipCode').fill(claimedCode);await blocked.locator('#vipApply').click();await blocked.locator('#vipMessage').filter({hasText:'applied'}).waitFor();await blocked.locator('#regNext').click();
   for(const [name,value]of Object.entries({fullName:'Blocked User',company:'Example',jobTitle:'Partner',country:'Canada',email:'blocked@example-capital.com',phone:'4165551234'}))await blocked.locator('[name="'+name+'"]').fill(value);
   await blocked.locator('[name="visaLetter"]').selectOption('No');await blocked.locator('[name="consent"]').check();
