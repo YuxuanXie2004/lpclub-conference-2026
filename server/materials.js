@@ -199,18 +199,18 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
     }, authContext);
   }
   async function review(ref, { kind, version, rowVersion, decision, reason } = {}) {
-    if (!KINDS.includes(kind) || !['approve', 'reject'].includes(decision)) throw fail('Invalid review');
+    if (!KINDS.includes(kind) || !['pending', 'approve', 'reject'].includes(decision)) throw fail('Invalid review');
     if (decision === 'reject' && !cleanText(reason, 1000)) throw fail('A rejection reason is required');
     return withRow(ref, async (tx, row) => {
       const item = await itemForUpdate(tx, row, kind);
       if (!Number.isInteger(version) || !item.current_version_id || (!Number.isInteger(rowVersion) || rowVersion !== item.row_version)) throw fail('The material changed; refresh before reviewing', 409, 'VERSION_CONFLICT');
       const target = (await tx.query("SELECT id FROM material_versions WHERE item_id=? AND version_no=? AND status<>'deleted' FOR UPDATE", [item.id, version]))[0];
       if (!target) throw fail('The material changed; refresh before reviewing', 409, 'VERSION_CONFLICT');
-      if (decision === 'reject' && kind !== 'card') {
+      if (decision !== 'approve' && kind !== 'card') {
         const entry = (await tx.query('SELECT published_version_id,enabled FROM showcase_entries WHERE item_id=?', [item.id]))[0];
         if (entry?.enabled && entry.published_version_id === target.id) await takeDown(tx, [item], row.event_key);
       }
-      await tx.query('UPDATE material_versions SET status=?,reason=?,reviewed_at=UTC_TIMESTAMP(3),reviewer=? WHERE id=?', [decision === 'approve' ? 'approved' : 'rejected', decision === 'reject' ? cleanText(reason, 1000) : '', 'administrator', target.id]);
+      await tx.query('UPDATE material_versions SET status=?,reason=?,reviewed_at=UTC_TIMESTAMP(3),reviewer=? WHERE id=?', [{ pending: 'pending', approve: 'approved', reject: 'rejected' }[decision], decision === 'reject' ? cleanText(reason, 1000) : '', 'administrator', target.id]);
       const approved = (await tx.query("SELECT id FROM material_versions WHERE item_id=? AND status='approved' ORDER BY version_no DESC LIMIT 1", [item.id]))[0];
       await tx.query('UPDATE material_items SET approved_version_id=?,row_version=row_version+1 WHERE id=?', [approved?.id || null, item.id]);
       await audit(tx, row.id, decision, 'administrator', { kind, version, reason: decision === 'reject' ? cleanText(reason, 1000) : '' });

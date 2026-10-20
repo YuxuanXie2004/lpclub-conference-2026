@@ -5,6 +5,14 @@ const fs = require('node:fs');
 const file = require('node:path').join(__dirname, '../assets/showcase-admin.js');
 function client() { assert.ok(fs.existsSync(file), 'showcase client exists'); return require(file); }
 const card = id => ({ entryId: id, versionId: 'version-'+id, ref:id, materialRevision: 3, name:id, title:'Partner', company:'Fund', crop:{x:.5,y:.5}, eligible:true });
+test('organisation cards render without the More disclosure and keep their editing and ordering controls',()=>{
+ const m=client(),nodes=new Map(),kinds=['portrait','logo'].map(kind=>({dataset:{kind}}));
+ const element={innerHTML:'',querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{value:'',dataset:{},innerHTML:''});return nodes.get(selector);},querySelectorAll(selector){return selector==='[data-kind]'?kinds:[];}};
+ const app=m.init({element,document:{},window:{location:{pathname:'/table'},URL:{},addEventListener(){}},message(){},request:async()=>({json:async()=>({rows:[],items:[],total:0})})});
+ m.acceptBoard(app.state,'logo',{revision:1,items:[card('logo')]});kinds[1].onclick();
+ assert.doesNotMatch(element.innerHTML,/<details|<summary|data-organisation|data-org-results/);
+ for(const control of ['data-adjust-image','data-edit="company"','data-move','data-remove'])assert.ok(element.innerHTML.includes(control));
+});
 test('showcase drafts keep each category independent and ignore late loads after edits',()=>{
  const m=client(), state=m.createDrafts();m.acceptBoard(state,'portrait',{revision:1,items:[card('a')]});m.acceptBoard(state,'logo',{revision:2,items:[card('b')]});
  m.editCard(state,'portrait','a',{name:'Edited'});assert.equal(m.acceptBoard(state,'portrait',{revision:3,items:[]}),false);assert.equal(state.portrait.items[0].name,'Edited');assert.equal(state.logo.items[0].name,'b');assert.equal(m.isDirty(state),true);

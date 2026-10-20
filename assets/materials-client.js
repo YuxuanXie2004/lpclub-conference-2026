@@ -49,6 +49,14 @@
     if (section) section.hidden = !enabled;
     var portrait = document.getElementById('portraitMaterial');
     if (portrait) portrait.hidden = ['speaking', 'panel'].indexOf(optionId) < 0;
+    document.querySelectorAll('[data-material-filename]').forEach(function (label) {
+      var file = selected[label.dataset.materialFilename];
+      label.textContent = file ? file.name : text('No file chosen', '未选择任何文件');
+    });
+    document.querySelectorAll('[data-material-input]').forEach(function (input) {
+      var file = selected[input.dataset.materialInput];
+      input.title = file ? file.name : text('Choose file', '选择文件');
+    });
     document.querySelectorAll('[data-material-clear]').forEach(function (button) { button.textContent = text('Remove', '移除'); });
     renderShowcase(); renderStatus();
   }
@@ -113,14 +121,18 @@
     document.querySelectorAll('[data-material-input]').forEach(function (input) {
       var kind = input.dataset.materialInput, preview = document.querySelector('[data-material-preview="' + kind + '"]');
       input.addEventListener('change', function () {
+        var filename = document.querySelector('[data-material-filename="' + kind + '"]');
+        if (filename) filename.textContent = text('No file chosen', '未选择任何文件');
+        input.title = text('Choose file', '选择文件');
         if (objectUrls[kind]) URL.revokeObjectURL(objectUrls[kind]); selected[kind] = null; preview.replaceChildren();
         var file = input.files[0]; if (!file) return;
         var error = validateFile(file);
         if (error) { preview.textContent = text(error, '请选择不超过 5 MiB 的 JPG、PNG 或 WebP 图片。'); input.value = ''; return; }
-        selected[kind] = file; var img = document.createElement('img'); objectUrls[kind] = URL.createObjectURL(file); img.src = objectUrls[kind]; img.alt = file.name;
+        selected[kind] = file; if (filename) filename.textContent = file.name; input.title = file.name;
+        var img = document.createElement('img'); objectUrls[kind] = URL.createObjectURL(file); img.src = objectUrls[kind]; img.alt = file.name;
         var label = document.createElement('span'); label.textContent = file.name;
         var button = document.createElement('button'); button.type = 'button'; button.dataset.materialClear = kind; button.textContent = text('Remove', '移除');
-        button.onclick = function () { selected[kind] = null; input.value = ''; URL.revokeObjectURL(objectUrls[kind]); delete objectUrls[kind]; preview.replaceChildren(); };
+        button.onclick = function () { selected[kind] = null; input.value = ''; URL.revokeObjectURL(objectUrls[kind]); delete objectUrls[kind]; preview.replaceChildren(); if (filename) filename.textContent = text('No file chosen', '未选择任何文件'); input.title = text('Choose file', '选择文件'); };
         preview.append(img, label, button);
       });
     });

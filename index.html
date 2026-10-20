@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <title>The 3rd International Private Equity Conference 2026 | LP CLUB GROUP</title>
 <meta name="description" content="The 3rd International Private Equity Conference, hosted by LP CLUB GROUP — connecting LPs, GPs & global capital. Wednesday, 18 November 2026, Hong Kong Convention and Exhibition Centre, Hong Kong, China." />
-<link rel="stylesheet" href="assets/materials.css?v=46dd13acd8" />
+<link rel="stylesheet" href="assets/materials.css?v=d21bd517b2" />
 <link rel="icon" type="image/png" sizes="180x180" href="images/lpclub-icon.png" />
 <script>
 (function () {
@@ -1290,20 +1290,32 @@
               <div class="material-field">
                 <h5><label for="materialCard" data-zh="名片 · 可后补">Business card · Can be submitted later</label></h5>
                 <p data-zh="用于内部核验您的职业身份，不会在网站公开展示。">For internal verification of your professional identity. Never displayed publicly.</p>
-                <input id="materialCard" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="card">
+                <div class="material-file-picker">
+                  <input id="materialCard" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="card">
+                  <span class="material-file-button" aria-hidden="true" data-zh="选择文件">Choose file</span>
+                  <span class="material-file-name" aria-hidden="true" data-material-filename="card">No file chosen</span>
+                </div>
                 <div class="material-preview" data-material-preview="card" aria-live="polite"></div>
               </div>
               <div class="material-field" id="portraitMaterial" hidden>
                 <h5><label for="materialPortrait" data-zh="商务照片 · 可后补">Professional portrait · Can be submitted later</label></h5>
                 <p data-zh="商务照片将在您授权并通过审核后，用于本次大会官网的嘉宾展示。您可以现在上传，也可以报名后点击发送至您邮箱的专属链接补交。">With your permission and after approval, your portrait will appear in the speakers section of this conference website. Upload it now or later using the private link sent to your email after registration.</p>
-                <input id="materialPortrait" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="portrait">
+                <div class="material-file-picker">
+                  <input id="materialPortrait" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="portrait">
+                  <span class="material-file-button" aria-hidden="true" data-zh="选择文件">Choose file</span>
+                  <span class="material-file-name" aria-hidden="true" data-material-filename="portrait">No file chosen</span>
+                </div>
                 <div class="material-preview" data-material-preview="portrait" aria-live="polite"></div>
                 <label class="reg-consent"><input id="portraitConsent" type="checkbox"><span data-zh="我同意审核通过后，在本次大会官网公开展示我的照片、姓名、职位及机构信息。">I agree to the approved publication of my portrait, name, job title and organisation on this conference website.</span></label>
               </div>
               <div class="material-field">
                 <h5><label for="materialLogo" data-zh="公司 Logo · 自愿提供">Company logo · Optional</label></h5>
                 <p data-zh="经您授权及审核后，将在本次大会官网的参会机构区展示。可现在上传或通过确认邮件链接后补，建议使用透明背景 PNG。">With your permission and after approval, your logo will appear in the participating organisations section. Upload now or later via your confirmation email. Transparent PNG preferred.</p>
-                <input id="materialLogo" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="logo">
+                <div class="material-file-picker">
+                  <input id="materialLogo" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="logo">
+                  <span class="material-file-button" aria-hidden="true" data-zh="选择文件">Choose file</span>
+                  <span class="material-file-name" aria-hidden="true" data-material-filename="logo">No file chosen</span>
+                </div>
                 <div class="material-preview" data-material-preview="logo" aria-live="polite"></div>
                 <label class="reg-consent"><input id="logoConsent" type="checkbox"><span data-zh="我确认有权授权，并同意审核通过后在本次大会官网公开展示机构 Logo 及机构名称。">I confirm I am authorised to permit publication of the approved organisation logo and name on this conference website.</span></label>
               </div>
@@ -1333,7 +1345,7 @@
   </div>
 </footer>
 
-<script src="assets/materials-client.js?v=7905028c9f"></script>
+<script src="assets/materials-client.js?v=5fd19b4dde"></script>
 <script>
 (function () {
   /* ---------- Language and presentation text ---------- */

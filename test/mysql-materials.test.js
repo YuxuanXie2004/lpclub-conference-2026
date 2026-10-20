@@ -122,6 +122,13 @@ integration('MySQL public media fails closed for revoked consent, deleted regist
   await assert.rejects(broken.publicMedia(id, 1), /SQL unavailable/);
 });
 
+for(const kind of ['card','portrait','logo'])integration('MySQL '+kind+' review can return to pending and removes approval and active publication',async t=>{
+ const f=await fixture(t),{row}=await f.registration();await f.upload(row.ref,kind);await f.review(row.ref,{kind,version:1,decision:'approve'});if(kind!=='card')await f.publish(row.ref,kind);
+ const old=(await f.service.me(row.ref)).assets[kind];await f.review(row.ref,{kind,version:1,decision:'pending'});const state=await f.service.me(row.ref);assert.equal(state.assets[kind].status,kind==='card'?'received':'pending');assert.equal(state.assets[kind].approvedVersionId,null);assert.equal(state.assets[kind].reason,'');assert.ok(state.assets[kind].rowVersion>old.rowVersion);assert.equal(state.assets[kind].publishedVersion,null);assert.ok((await f.service.preview(row.ref,kind)).buffer.length);
+ await assert.rejects(f.service.review(row.ref,{kind,version:1,rowVersion:old.rowVersion,decision:'approve'}),error=>error.statusCode===409);
+ await f.review(row.ref,{kind,version:1,decision:'reject',reason:'Blurry'});await f.review(row.ref,{kind,version:1,decision:'pending'});assert.equal((await f.service.me(row.ref)).assets[kind].reason,'');
+});
+
 integration('MySQL metadata edits remain draft and same institution conflict is explicit on board save', async t => {
   const f = await fixture(t), a = await f.registration(), b = await f.registration();
   for (const r of [a, b]) { await f.upload(r.row.ref, 'logo'); await f.review(r.row.ref, { kind: 'logo', version: 1, decision: 'approve' }); }
