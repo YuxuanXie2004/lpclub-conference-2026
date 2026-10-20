@@ -1,210 +1,81 @@
-# LP CLUB Conference 2026 — Website + Feishu Registration System
+# LP CLUB Conference 2026
 
-## Architecture
+大会中英文官网、报名、VIP、资料收集与审核展示。使用 Node.js 22+、MySQL 8.0.17+ 和持久化服务器磁盘。
 
-Feishu Base is the **only registration database and source of truth**.
+## 数据与事务
 
-```text
-Conference website
-      ↓ POST /api/order
-Node backend
-      ↓
-Feishu Base (only database)
-      ├─ active registrations
-      └─ soft-deleted registrations / recycle bin
-```
+MySQL 是报名、VIP、授权、审核、发布和邮件状态的唯一业务数据源。原件保存在私有磁盘目录，数据库保存不可变文件引用；展示图可以重新生成。运行时不读写飞书或 SQLite，也不在 MySQL 故障时回退到旧存储。
 
-There is **no local registration database, Excel database, or NDJSON backup**.
+`server/migrations/` 使用版本化 SQL 定义报名原有 38 项信息及资料、VIP、幂等、审计、邮件和展示柜状态，共 15 张表（含迁移和密钥校验表）。第二个迁移仅新增跟进备注、通过版本引用及展示柜修订号，保留已有报名、文件和发布状态。金额使用 DECIMAL，日期使用 DATE，时间统一 UTC，多选与快照使用 JSON。新版本暂不迁移历史报名、VIP 或图片关联；旧飞书、SQLite、原件和密钥保留，新库从空数据开始。
 
-Normal website/admin actions work automatically while the Node server is running. `npm run feishu:init` is only a schema setup/migration command and is **not** run for each registration.
+报名、幂等记录、VIP 核销、初始授权、补交凭证和邮件任务在同一个事务提交。每个报名请求必须有 `idempotencyKey`：原请求重试返回原结果，改内容复用同一个键返回 409；同一有效邮箱或已使用 VIP 的真实冲突仍返回 409。超时后继续用原键重试。取消、拒绝或软删除报名不释放已兑换的 VIP。
 
-## Feishu configuration
+## 本地运行
 
-`server/.env` needs:
+1. `npm ci`
+2. 将 `server/.env.example` 复制为忽略提交的 `server/.env`，填写 MySQL 和管理员配置。已存在的 `.env` 请保留，按模板补充缺少项。
+3. 为 `VIP_CODE_ENCRYPTION_KEY`、`MAIL_PAYLOAD_KEY` 和 `MATERIALS_SIGNING_KEY` 分别生成稳定密钥：`node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"`。已有密钥不要替换。
+4. `npm run db:init` 创建指定数据库和版本化表结构；重复运行不会清空数据。初始化账号须具备建库、建表权限，日常运行账号可单独配置。
+5. `npm run dev`
 
-```env
-FEISHU_APP_ID=
-FEISHU_APP_SECRET=
-FEISHU_APP_TOKEN=B7EUbCcwiadz93sGX0xcpoDgnrh
-FEISHU_TABLE_ID=tbl8lbo4hjnVHW9m
-ADMIN_TOKEN=
-```
+默认访问 `http://localhost:8787/`，健康检查 `/health`，后台 `/table?token=<ADMIN_TOKEN>`。后台四个 Tab 在同一页面切换，资料审核使用弹窗，右上角切换语言。
 
-The enterprise app must have Base/Bitable read-write permissions and must be allowed to access the target Base.
+`PUBLIC_BASE_URL` 是邮件链接的固定来源，不使用请求 Host。部署到子路径时必须包含完整目录，例如 `https://lp-club.cn/2026-pe-conference/`。Node 支持直接接收此前缀和由 Nginx 去掉前缀后的请求。
 
-## One-time schema setup
+## 资料与审核
 
-After creating a new Base, or after upgrading this project to soft-delete, run once:
+- 名片所有人可提交，仅供内部核验；照片只向 Speaking、Panel / Roundtable 套餐显示；Logo 所有人自愿提交。缺失文件、未授权均不阻止报名。
+- 每类最多一张静态 JPG、PNG 或 WebP，最大 5 MiB、2500 万像素。实际图片解码后校验；拒绝 SVG、PDF、动画和损坏文件。
+- 设置 `MATERIALS_ENABLED=true`，配置有效官网地址、签名密钥及可写的私有原件目录后启用。关闭开关后普通报名继续，资料操作停止、公开区域隐藏；生命周期操作仍会撤下发布内容。
+- 保存报名后返回十分钟上传凭证，仅供本次上传。确认邮件含三十天补交链接；凭证位于 fragment，页面读取后移除，再通过请求头使用。成功页仅提示查看邮箱，不保存长期身份。
+- 补交页仅允许管理文件和授权，报名身份、邮箱、套餐只读。重发链接会原子废止旧链接并取消未完成的旧邮件任务。已进入 SMTP 的邮件无法撤回，旧链接仍会失效。
+- 素材审核只确认资料质量，不要求先有授权或通过参会资格，也不会自动发布。照片和 Logo 的上架资格由展示柜保存时检查：报名 Approved、对应授权有效、所选版本审核通过，不设付款门槛。名片仅供内部核验。
+- 新图上传和通过审核都不会替换已展示图片。展示柜提示“有新版可替换”，管理员手动选择新版并保存后才更新官网。撤回授权、删除资料、下架、取消、拒绝和软删除会立即停止对应展示；恢复、重新授权或再次审核均不会自动上架。
+- 审核携带素材版本和行版本。负责人、跟进备注、展示文字修改也校验报名修订号；过期页面返回 409，应刷新后重新查看。展示文字各保留一份，默认使用报名内容，界面语言切换不会翻译用户数据。审核记录折叠展示。
+- 原件目录不暴露静态路由。私有预览需认证；公开图片也逐次查询发布资格，缓存命中不跳过授权。公开接口不包含联系方式、名片、内部文件键或凭证。
 
-```bash
-npm install
-npm run feishu:init
-```
+## 手动展示柜
 
-The schema includes all website registration fields plus these recycle-bin fields:
+在“资料审核”内切换“审核工作台 / 官网展示柜”，保持现有四个主 Tab 和审核弹窗。“嘉宾”和“参会机构”分别维护展示列表，左侧候选区可搜索分页，右侧预览支持加入、移出和网格拖拽排序；手机和键盘可使用前移、后移按钮。
 
-- `Is Deleted / 已删除`
-- `Deleted At / 删除时间`
-- `Deleted By / 删除人`
-- `Deletion Reason / 删除原因`
+加入、排序、替换新版、修改文字和照片位置只改变当前浏览器内的草稿。每类展示柜分别点击“保存并更新官网”后，服务端使用 MySQL 事务一次应用完整列表。切换 Tab、工作区、分类或语言会保留草稿；刷新／离开页面提示未保存修改，放弃修改恢复最近一次保存的布局，不提供跨浏览器草稿同步。
 
-Running the command again is safe: existing fields are skipped.
+管理端电脑视图一行展示四张卡片，窄屏自动减少列数。照片固定为 5:6，Logo 固定为 2:1；点击“调整图片”可拖动裁剪框、拖动四角等比例缩放，或使用缩放滑块及方向键调整，并实时预览官网图片。“应用取景”只修改草稿，保存展示柜后才发布，原图保留。机构归并在更多设置中搜索选择已有报名，每个统一机构最多展示一个 Logo。重复机构、失效授权、过期素材或并发修改会使整次保存失败，不会部分上线。立即撤权／下架会同步更新展示柜修订号，旧草稿不能重新发布已失效资料。
 
-## Normal local run
+移出展示柜保留原件和审核结果；旧展示版本、新上传版本、最近通过版本分别记录。管理员可预览所属报名的明确历史版本，但原件和预览依旧需要授权。官网默认展示全部已发布嘉宾；机构 Logo 按数量分为一行（1～3 家）、两行（4～8 家）或三行（9 家及以上），错位持续循环，无暂停按钮或悬停暂停。启用减少动态效果偏好时，机构区改为可手动横向滚动。
 
-```bash
-npm install
-npm run dev
-```
+## 邮件
 
-Open:
+配置 SMTP 和 `MAIL_PAYLOAD_KEY` 后，报名事务仅写邮件任务，HTTP 不等待 SMTP。持久 Node 服务每五秒检查队列，失败最多五次，间隔为一分钟、五分钟、十五分钟、一小时，超时或重启后按租约恢复。后台可重新发送资料链接。
 
-```text
-http://localhost:8787
-```
+邮件任务载荷经 AES-GCM 加密，发送成功后清除；数据库中的长期补交凭证仅存摘要。SMTP 不支持与数据库一起提交，传输结果不确定时可能收到重复邮件，但不会重复报名或兑换 VIP。自动化测试使用模拟 SMTP，不发送真实测试邮件；真实投递须人工验收。
 
-Health:
+## 接口
 
-```text
-http://localhost:8787/health
-```
+- `POST /api/order`：统一幂等报名，返回编号、套餐、邮件排队状态和短时上传凭证。
+- `POST /api/vip`：预览兑换资格与服务端价格，不核销。
+- `GET /api/registrations`：后台按 `mode/q/status/package/page/pageSize` 筛选分页；`ref` 获取详情。
+- `POST /api/admin/status|delete|restore`：携带 `ref`、`rowVersion`；软删除、恢复和状态变更。
+- `GET /export.csv`：导出全部匹配记录，按批次读取，不只导出当前页。
+- `/api/admin/vip-codes*`：生成、查询、分发记录、撤销和导出。
+- `/api/materials/*`：本人资料状态、上传、预览、删除及分项授权。
+- `/api/admin/materials/*`：分页查询、分项审核、单份展示文字草稿、负责人及备注、立即下架和手动重发链接。
+- `GET /api/admin/showcase/:kind`：已保存展示柜与修订号；`:kind` 为 `portrait` 或 `logo`。
+- `GET /api/admin/showcase/:kind/candidates`：候选素材、资格条件、新版提示，支持搜索分页。
+- `PUT /api/admin/showcase/:kind`：携带修订号和完整有序卡片列表，原子保存该展示柜。
+- `/api/public/showcase`、`/api/public/media/:id/:version`：已发布内容及展示图。
 
-Admin operations page (requires `ADMIN_TOKEN`):
+后台统一使用现有 `X-Admin-Token`。不增加账号体系或员工身份；审计如实标记管理员，负责人仅作跟进信息。
 
-```text
-http://localhost:8787/table?token=YOUR_ADMIN_TOKEN
-```
-
-## Registration flow
-
-A successful website submission does this automatically:
-
-1. validates the selected package and server-owned price;
-2. validates required fields and business email;
-3. checks Feishu for an active duplicate email;
-4. creates a new Feishu record with `Is Deleted = false`;
-5. returns the registration reference to the confirmation page;
-6. if SMTP is configured, sends the attendee confirmation email and updates the email status in Feishu.
-
-If Feishu cannot save the record, the website **does not show registration success**.
-
-## Soft delete / restore
-
-The admin page has two views:
-
-- **Active Registrations** — normal records only;
-- **Deleted / 回收站** — records whose `Is Deleted / 已删除` flag is true.
-
-Clicking Delete does **not** call the Feishu delete-record endpoint. It updates:
-
-```text
-Is Deleted = true
-Deleted At = current time
-Deleted By = LP CLUB admin
-Deletion Reason = optional reason
-```
-
-Normal GET/list/export operations hide these records.
-
-Clicking Restore changes the record back to:
-
-```text
-Is Deleted = false
-Deleted At = empty
-Deleted By = empty
-Deletion Reason = empty
-```
-
-Do not manually hard-delete rows in Feishu if you want them recoverable.
-
-## Admin APIs
-
-```text
-GET  /api/registrations?mode=active
-GET  /api/registrations?mode=deleted
-POST /api/admin/status
-POST /api/admin/delete
-POST /api/admin/restore
-GET  /export.csv?mode=active
-GET  /export.csv?mode=deleted
-```
-
-All admin endpoints require the configured admin token.
-
-## Email
-
-Email is optional until LP CLUB provides SMTP credentials:
-
-```env
-SMTP_HOST=smtp.feishu.cn
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=LPCLUBGROUP@LP-club.cn
-SMTP_PASS=
-ORGANISER_EMAIL=LPCLUBGROUP@LP-club.cn
-```
-
-Registrations still save to Feishu when SMTP is not configured.
-
-## Packages
-
-The authoritative prices live in:
-
-```text
-server/packages.js
-```
-
-Do not trust a price sent from the browser. The backend always selects the package and amount from this server file.
-
-## One-time VIP Codes
-
-Use Node.js **22 or newer** and run `npm install`. VIP codes live in an independent SQLite file; registration records remain in Feishu. This requires one persistent conference server. Do not deploy the VIP feature to independent serverless instances or multiple hosts.
-
-For local development, run `npm run vip:init` once, then restart the server. It creates the missing encryption key and database path in the ignored `server/.env`, preserves existing credentials, and reuses the same key on subsequent runs. It never replaces an existing key or generates a new key for an existing database whose key is missing.
-
-For a manually configured deployment, set `server/.env` (do not commit it):
-
-```env
-VIP_CODE_ENCRYPTION_KEY=<base64-encoded 32-byte key>
-VIP_DB_PATH=/absolute/persistent/path/vip-codes.sqlite
-```
-
-Generate the key with `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"`. Keep it unchanged across restarts and store a protected copy separately from database backups. For local development, the database defaults to `data/vip-codes.sqlite` when `VIP_DB_PATH` is omitted. For production, use `/opt/lpclub/data/vip-codes.sqlite`. Missing or incorrect configuration disables VIP redemption; `/health` reports `vipReady: false`. Normal-price registrations remain available. The old reusable `VIP_CODES` whitelist is no longer accepted and is not imported.
-
-Restart with `npm run dev`. Open `/table?token=YOUR_ADMIN_TOKEN`, then choose the **VIP Codes** tab next to Active Registrations and Deleted, or open `/vip-codes?token=YOUR_ADMIN_TOKEN` directly. The page and all management APIs require the existing administrator token.
-
-1. Generate 1–200 codes by entering only the quantity.
-2. Select codes and copy or export CSV to share manually. No recipient registration is required; CSV contains only the eligible full codes.
-3. After a successful VIP registration, the code changes to Used and the list automatically shows the attendee name and business email. Search by code, attendee name or email.
-4. Revoke unused codes when withdrawing invitations. Revocation makes the code unusable. Internal records are retained for safe recovery; they are not shown as an activity log.
-5. A code in Review still offers Reconcile Registration or permanent revocation after investigation. Details show its registration reference and actual attendee, without editable distribution fields.
-
-Attendees select an identity and **Delegate Pass**, enter their code in the upper-right box and click **Apply** (above the cards on mobile). Applying previews a complimentary pass; it does not reserve the code. Final registration redeems it once. All five identities are eligible; speaking, panel and matchmaking packages retain their normal rates. Each business email still passes the registration duplicate check. Editing the code or changing identity/package clears the preview. If a code is entered but not applied, the page requires Apply or explicitly clearing it before continuing. Selecting a speaking, panel or matchmaking package shows that VIP redemption is unavailable for that package. The applied ticket price is shown as USD 0.
-
-`POST /api/vip` accepts `{ "packageId": "gp_ticket", "vipCode": "..." }`. VIP submissions to `POST /api/order` additionally require an `idempotencyKey` generated by the registration page. Unchanged retries return the original saved result without creating a second record or sending a second email. The backend calculates the amount and ignores browser price overrides.
-
-The code is atomically held before writing Feishu and marked used before sending mail. A confirmed rejection releases it; network timeouts, internal errors, missing record IDs or failed finalization keep it unavailable in **review**. [Feishu's create-record error documentation](https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/create) distinguishes validation failures from internal errors and timeouts. A service restart moves unfinished redemptions to review. Use **Reconcile Registration** to compare the registration reference, email, identity/package, zero amount and internal VIP association, including records in the recycle bin. A match marks the code used. A missing/mismatched record never makes the code reusable; after manual investigation, record a reason and revoke it permanently if necessary. Cancelling or deleting a registration does not release its code.
-
-Feishu and confirmation emails contain the complimentary pricing basis and internal code ID, not the full VIP code. No Feishu schema migration is needed. SQLite stores code hashes for lookup and AES-256-GCM encrypted codes for authorized copying/exporting. Exported CSVs contain full codes and should be shared only with intended recipients.
-
-Back up the live database with SQLite's backup API:
-
-```bash
-npm run vip:backup -- /secure/backup/vip-codes-20261014.sqlite
-```
-
-Do not copy just a live `.sqlite` file while its WAL is active. To restore, stop the service, preserve the current database and journals separately, restore the snapshot to `VIP_DB_PATH`, verify the same encryption key and file permissions, then start the service. Unfinished attempts will require review. Keep the persistent directory out of uploads and source control.
-
-Browser verification uses a temporary SQLite database and simulated Feishu/mail. With Playwright and Chrome available, run `node test/browser-vip.cjs` and `node test/browser-vip-admin.cjs`; neither test writes real registrations or sends mail.
-
-## Tests
+## 验证与备份
 
 ```bash
 npm test
+npm run test:mysql
 ```
 
-The tests cover business-email validation, server-owned package pricing, the default soft-delete flag, and Feishu record mapping.
+第一项运行单元测试，MySQL 测试默认跳过。第二项使用 `.env` 中的连接信息，逐项创建并删除随机 `lpclub_conference_test_*` 测试库，不清空业务库、不写飞书或旧 SQLite。测试账号须能创建测试库。覆盖并发核销、重试、事务回滚、文件边界、邮件失败和完整 HTTP 审核发布流程，不要求 Chrome。
 
-The public site supports English and Simplified Chinese. On first visit, the browser's preferred language selects Chinese for `zh` locales and English otherwise. The header language buttons save an explicit choice in `localStorage`; blocked storage does not prevent switching. Display translations preserve canonical registration values and server-owned prices. The navigation and footer use `images/lpclub-logo.png`; the browser icon uses `images/lpclub-icon.png`.
+生产使用单台持久 Node 服务，不支持独立 serverless 部署完整资料和邮件流程。部署和备份步骤见 `deploy/README.md`。
 
-With Playwright resolvable from Node (or `NODE_PATH`) and Chrome installed, run `node test/browser-i18n.cjs`. It starts its own temporary HTTP server and simulates registration APIs, covering browser defaults, saved preference, storage failure, subpath assets, desktop/mobile layout and Chinese registration. Existing English browser tests specify `en-US` explicitly so OS language does not affect their assertions.
+旧飞书／SQLite 工具仅保留作历史资料维护，不属于新系统的初始化、备份或恢复流程；不要用它们验证新库状态。

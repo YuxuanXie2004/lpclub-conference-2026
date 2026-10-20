@@ -31,7 +31,7 @@ test('LP CLUB members receive a complimentary pass and retain their organisation
   input.attendee.companyType = 'LP CLUB Member';
   const order = backend.normaliseOrder(input);
   assert.equal(order.total, 0);
-  assert.equal(backend.toFields(order)['Organization Type / 机构类型'], 'LP CLUB Member / LP CLUB会员');
+  assert.equal(backend.toRegistrationRow(order).company_type, 'LP CLUB Member');
 });
 
 test('GP Early cannot be used for new registrations', () => {
@@ -39,12 +39,7 @@ test('GP Early cannot be used for new registrations', () => {
 });
 
 test('historical registrations retain their original category, package and amount', () => {
-  const row = backend.fromFeishuRecord({ record_id: 'legacy', fields: {
-    'Package ID / 套餐ID': 'gp_early',
-    'Ticket / 票种': 'GP Early Delegate Pass',
-    'Amount / 金额': 1800,
-    'Pricing Basis / 计价说明': 'GP Early'
-  }});
+  const row = backend.fromRegistrationRow({ package_id:'gp_early',ticket_name:'GP Early Delegate Pass',amount:1800,pricing_basis:'GP Early' });
   assert.equal(row.packageId, 'gp_early');
   assert.equal(row.items, 'GP Early Delegate Pass');
   assert.equal(row.total, 1800);
@@ -53,23 +48,14 @@ test('historical registrations retain their original category, package and amoun
 
 test('new registrations are explicitly not deleted', () => {
   const order = backend.normaliseOrder(sample());
-  const fields = backend.toFields(order);
-  assert.equal(fields['Is Deleted / 已删除'], false);
-  assert.equal(fields['Deleted At / 删除时间'], '');
+  const fields = backend.toRegistrationRow(order);
+  assert.equal(fields.is_deleted, 0);
+  assert.equal(fields.deleted_at ?? null, null);
 });
 
-test('Feishu record mapping preserves soft-delete metadata', () => {
-  const row = backend.fromFeishuRecord({ record_id:'rec1', fields: {
-    'Registration Reference / 报名编号':'LPC26-TEST0001',
-    'Status / 状态':'Approved',
-    'Business Email / 企业邮箱':'jane@capital-example.com',
-    'Is Deleted / 已删除':true,
-    'Deleted At / 删除时间':'2026-10-06T10:00:00.000Z',
-    'Deletion Reason / 删除原因':'duplicate'
-  }});
-  assert.equal(row.isDeleted, true);
-  assert.equal(row.ref, 'LPC26-TEST0001');
-  assert.equal(row.deletionReason, 'duplicate');
+test('MySQL record mapping preserves soft-delete metadata', () => {
+  const row=backend.fromRegistrationRow({id:'reg1',ref:'LPC26-TEST0001',status:'Approved',email:'jane@capital-example.com',is_deleted:1,deleted_at:'2026-10-06 10:00:00.000',deletion_reason:'duplicate'});
+  assert.equal(row.isDeleted,true);assert.equal(row.ref,'LPC26-TEST0001');assert.equal(row.deletionReason,'duplicate');
 });
 
 const approvedPrices = {
@@ -99,11 +85,11 @@ test('all 20 packages use approved full prices and server-owned matchmaking', ()
       assert.equal(order.items.length, 1);
       assert.equal(order.items[0].qty, 1);
       assert.equal(order.attendee.matchmaking, option === 'matchmaking' ? 'Yes' : 'No');
-      const fields = backend.toFields(order);
-      assert.equal(fields['Amount / 金额'], prices[i]);
-      assert.equal(fields['Attendee Category / 报名身份'], order.package.name);
-      assert.equal(fields['Ticket / 票种'], order.package.ticketName);
-      assert.equal(fields['LP & GP 1-on-1 Matchmaking / 一对一洽谈'], option === 'matchmaking' ? 'Yes / 是' : 'No / 否');
+      const fields = backend.toRegistrationRow(order);
+      assert.equal(fields.amount, prices[i]);
+      assert.equal(fields.attendee_category, order.package.name);
+      assert.equal(fields.ticket_name, order.package.ticketName);
+      assert.equal(fields.matchmaking, option === 'matchmaking' ? 'Yes' : 'No');
     }
   }
 });

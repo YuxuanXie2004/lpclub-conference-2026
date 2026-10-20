@@ -10,14 +10,15 @@ if [ -n "$KEY" ]; then SSH_OPTS+=(-i "$KEY"); fi
 echo "==> preparing /opt/lpclub"
 ssh "${SSH_OPTS[@]}" "$HOST" 'mkdir -p /opt/lpclub/site /opt/lpclub/data'
 echo "==> uploading application"
-# Stage application files without local credentials or persistent VIP data.
+# Stage application files without local credentials, private originals or VIP data.
 STAGING=$(mktemp -d)
 trap 'rm -rf "$STAGING"' EXIT
 mkdir -p "$STAGING/server"
 cp -R "$ROOT/server/." "$STAGING/server/"
 rm -f "$STAGING/server/.env"
-scp "${SSH_OPTS[@]}" -r "$STAGING/server" "$ROOT/deploy" "$ROOT/package.json" "$HOST:/opt/lpclub/"
-# The existing local lockfile is not part of this change; install from package.json.
+scp "${SSH_OPTS[@]}" -r "$STAGING/server" "$ROOT/assets" "$ROOT/deploy" "$ROOT/package.json" "$ROOT/package-lock.json" "$HOST:/opt/lpclub/"
+# Install exact dependency versions from the uploaded lockfile.
 scp "${SSH_OPTS[@]}" "$ROOT/index.html" "$HOST:/opt/lpclub/site/"
 scp "${SSH_OPTS[@]}" -r "$ROOT/images" "$HOST:/opt/lpclub/site/"
+scp "${SSH_OPTS[@]}" -r "$ROOT/assets" "$HOST:/opt/lpclub/site/"
 echo "Uploaded. On the server, review /opt/lpclub/server/.env then run deploy/setup.sh."

@@ -8,6 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <title>The 3rd International Private Equity Conference 2026 | LP CLUB GROUP</title>
 <meta name="description" content="The 3rd International Private Equity Conference, hosted by LP CLUB GROUP — connecting LPs, GPs & global capital. Wednesday, 18 November 2026, Hong Kong Convention and Exhibition Centre, Hong Kong, China." />
+<link rel="stylesheet" href="assets/materials.css?v=46dd13acd8" />
 <link rel="icon" type="image/png" sizes="180x180" href="images/lpclub-icon.png" />
 <script>
 (function () {
@@ -1162,6 +1163,16 @@
   </div>
 </section>
 
+<!-- ============ APPROVED SPEAKERS ============ -->
+<section id="speakers" hidden>
+  <div class="wrap">
+    <span class="eyebrow" data-zh="大会嘉宾">Conference voices</span>
+    <h2 class="section-title" data-zh="与行业决策者&lt;em&gt;面对面&lt;/em&gt;">Meet the people <em>shaping private capital</em></h2>
+    <p class="showcase-lead" data-zh="本届大会已确认的演讲与圆桌嘉宾。">Confirmed speakers and roundtable participants at this year's conference.</p>
+    <div class="speaker-grid" data-showcase-grid></div>
+  </div>
+</section>
+
 <!-- ============ AGENDA ============ -->
 <section id="agenda">
   <div class="wrap">
@@ -1178,6 +1189,16 @@
       <div class="agenda-row t-close"><div class="agenda-time">17:05 – 17:20</div><div class="agenda-session"><b data-zh="闭幕致辞">Closing Remarks</b><span data-zh="主办方总结大会观点，展望私募资本的未来发展。">Closing summary by the host, reflecting on key takeaways and the road ahead for private capital.</span></div></div>
       <div class="agenda-row t-network"><div class="agenda-time">17:20 – 18:00</div><div class="agenda-session"><b data-zh="嘉宾交流与投资者对接">Networking &amp; Investor Exchange</b><span data-zh="通过精选投资者对接、募资洽谈与合作交流，为大会收官。">Closing reception with curated investor matchmaking, fundraising discussions and partnership building.</span></div></div>
     </div>
+  </div>
+</section>
+
+<!-- ============ PARTICIPATING ORGANISATIONS ============ -->
+<section id="organisations" class="bg-tint" hidden>
+  <div class="wrap">
+    <span class="eyebrow" data-zh="参会机构">Participating organisations</span>
+    <h2 class="section-title" data-zh="汇聚全球资本，&lt;em&gt;连接长期伙伴&lt;/em&gt;">Global capital. <em>Lasting connections.</em></h2>
+    <p class="showcase-lead" data-zh="与本届大会参会机构，共同探讨私募市场的下一步。">Join the organisations taking part in this year's private capital conversation.</p>
+    <div class="organisation-grid" data-showcase-grid></div>
   </div>
 </section>
 
@@ -1262,10 +1283,36 @@
             <div class="reg-field"><label data-zh="随行人数">Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
             <div class="reg-field full"><label class="reg-consent"><input name="consent" type="checkbox" required><span data-zh="本人确认所填信息准确，并同意 LP CLUB GROUP 使用这些信息处理本次大会报名及与本人联系大会相关事宜。">I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy" data-zh="&lt;b&gt;隐私说明。&lt;/b&gt;报名信息仅用于大会管理、参会资格审核、活动沟通、应申请提供的邀请函 / 签证支持及相关后续服务。信息访问应仅限获授权的 LP CLUB 工作人员及已配置的服务提供方。请勿提交敏感金融账户信息或密码。"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
           </div>
+          <div id="registrationMaterials" class="material-section" hidden>
+            <h4 class="reg-section-title" data-zh="资料上传">Conference materials</h4>
+            <p class="reg-section-lead" data-zh="现在上传或报名后通过邮件专属链接补交，均不影响您提交报名。每项一张 JPG、PNG 或 WebP 图片，最大 5 MiB。">Upload now or later using the private link in your confirmation email. Missing materials do not prevent registration. One JPG, PNG or WebP per item, up to 5 MiB.</p>
+            <div class="material-grid">
+              <div class="material-field">
+                <h5><label for="materialCard" data-zh="名片 · 可后补">Business card · Can be submitted later</label></h5>
+                <p data-zh="用于内部核验您的职业身份，不会在网站公开展示。">For internal verification of your professional identity. Never displayed publicly.</p>
+                <input id="materialCard" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="card">
+                <div class="material-preview" data-material-preview="card" aria-live="polite"></div>
+              </div>
+              <div class="material-field" id="portraitMaterial" hidden>
+                <h5><label for="materialPortrait" data-zh="商务照片 · 可后补">Professional portrait · Can be submitted later</label></h5>
+                <p data-zh="商务照片将在您授权并通过审核后，用于本次大会官网的嘉宾展示。您可以现在上传，也可以报名后点击发送至您邮箱的专属链接补交。">With your permission and after approval, your portrait will appear in the speakers section of this conference website. Upload it now or later using the private link sent to your email after registration.</p>
+                <input id="materialPortrait" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="portrait">
+                <div class="material-preview" data-material-preview="portrait" aria-live="polite"></div>
+                <label class="reg-consent"><input id="portraitConsent" type="checkbox"><span data-zh="我同意审核通过后，在本次大会官网公开展示我的照片、姓名、职位及机构信息。">I agree to the approved publication of my portrait, name, job title and organisation on this conference website.</span></label>
+              </div>
+              <div class="material-field">
+                <h5><label for="materialLogo" data-zh="公司 Logo · 自愿提供">Company logo · Optional</label></h5>
+                <p data-zh="经您授权及审核后，将在本次大会官网的参会机构区展示。可现在上传或通过确认邮件链接后补，建议使用透明背景 PNG。">With your permission and after approval, your logo will appear in the participating organisations section. Upload now or later via your confirmation email. Transparent PNG preferred.</p>
+                <input id="materialLogo" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="logo">
+                <div class="material-preview" data-material-preview="logo" aria-live="polite"></div>
+                <label class="reg-consent"><input id="logoConsent" type="checkbox"><span data-zh="我确认有权授权，并同意审核通过后在本次大会官网公开展示机构 Logo 及机构名称。">I confirm I am authorised to permit publication of the approved organisation logo and name on this conference website.</span></label>
+              </div>
+            </div>
+          </div>
         </form>
       </section>
       <section class="reg-screen" data-reg-step="3" hidden>
-        <div class="reg-success"><div class="reg-check">✓</div><h4 data-zh="已收到您的报名">Registration received</h4><p id="regSuccessText">Thank you. Your registration has been successfully submitted.</p><div class="reg-ref"><span data-zh="报名编号 · ">Registration reference · </span><b id="regRef">—</b></div><div class="reg-success-card" id="regSuccessCard"></div><p class="reg-note" id="regEmailStatus">A confirmation email will be sent to your business email when outgoing mail is configured on the server.</p></div>
+        <div class="reg-success"><div class="reg-check">✓</div><h4 data-zh="已收到您的报名">Registration received</h4><p id="regSuccessText">Thank you. Your registration has been successfully submitted.</p><div class="reg-ref"><span data-zh="报名编号 · ">Registration reference · </span><b id="regRef">—</b></div><div class="reg-success-card" id="regSuccessCard"></div><p class="material-note" id="materialSubmissionStatus" role="status" hidden></p><p class="reg-note" id="regEmailStatus">A confirmation email will be sent to your business email when outgoing mail is configured on the server.</p></div>
       </section>
     </div>
     <div class="reg-foot" id="regFoot">
@@ -1286,6 +1333,7 @@
   </div>
 </footer>
 
+<script src="assets/materials-client.js?v=7905028c9f"></script>
 <script>
 (function () {
   /* ---------- Language and presentation text ---------- */
@@ -1350,6 +1398,8 @@
     'Thank you, {name}. Your registration has been successfully submitted.':'感谢您，{name}。您的报名已成功提交。',
     'Thank you. Your registration has been successfully submitted.':'感谢您，报名已成功提交。',
     'Next step':'下一步',
+    'Your confirmation email is queued for delivery to {email}. Please check your inbox for the private materials link.':'确认邮件已加入发送队列，将发送至 {email}。请留意邮箱中的资料补交链接。',
+    'Your registration is saved. Please use the email link to submit materials later.':'报名已成功，请稍后通过邮件专属链接补交资料。',
     'Our team will review your registration and contact you within 2–3 business days.':'我们的团队将审核您的报名，并在2–3个工作日内与您联系。',
     'A confirmation email has been sent to {email}.':'确认邮件已发送至 {email}。',
     'Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at {email}.':'您的报名已保存。确认邮件暂未发送，LP CLUB 仍可通过 {email} 与您联系。',
@@ -1401,6 +1451,7 @@
     messages.forEach(function(message, el){el.textContent=t(message.key,message.values)});
     if(packageList && packageList.length){renderIdentities();renderPackages();updateSummary();}
     document.querySelectorAll('[data-multi] .reg-chip').forEach(function(label){label.querySelector('span').textContent=t(label.querySelector('input').value)});
+    if(window.LPClubMaterials)window.LPClubMaterials.update({language:language,optionId:selectedPackage?selectedPackage.optionId:''});
     if(registrationResult)renderSuccess();
     if(vipApply)updateVipControls();
     if(remember)try {localStorage.setItem('lpclub-language',language);} catch (_) {}
@@ -1528,7 +1579,7 @@
     }
   }
   function openReg(){
-    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
+    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
     regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
   }
   function closeReg(){regModal.classList.remove('open');regModal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
@@ -1539,13 +1590,14 @@
     showAlert(n===1?packageLoadError:'');
     if(n===2&&selectedPackage){
       updateSummary();
+      if(window.LPClubMaterials)window.LPClubMaterials.update({language:language,optionId:selectedPackage.optionId});
       regForm.elements.companyType.value=selectedPackage.organisationType;
     }
   }
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
-  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,vipCode:appliedVipCode||undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
+  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,vipCode:appliedVipCode||undefined,materials:window.LPClubMaterials?window.LPClubMaterials.payload(language):undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:fd.get('companyType'),department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
   function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){setMessage(hint,'Please use your business email address. Personal email addresses are not accepted.');hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
-  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();if(payload.vipCode){var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};renderSuccess();showStep(3)}catch(err){if(err.retryable||err.code==='VIP_RETRY_REQUIRED'){vipSubmissionKey='';vipSubmissionPayload=''}if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
+  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();{var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};if(window.LPClubMaterials){try{await window.LPClubMaterials.uploadRegistered(data)}catch(_){document.getElementById('materialSubmissionStatus').hidden=false;setMessage(document.getElementById('materialSubmissionStatus'),'Your registration is saved. Please use the email link to submit materials later.')}}renderSuccess();showStep(3)}catch(err){if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
 
   vipApply.addEventListener('click',applyVipCode);
   vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=regStep===1?!selectedPackage:false});
@@ -1564,7 +1616,7 @@
     document.getElementById('regRef').textContent=data.ref;
     setMessage(document.getElementById('regSuccessText'),'Thank you, {name}. Your registration has been successfully submitted.',{name:result.name});
     document.getElementById('regSuccessCard').innerHTML='<b>'+escHtml(t(data.package.identityName)+' — '+t(data.package.ticketName))+'</b><br>'+escHtml(money(data.package))+'<br><br><b>'+escHtml(t('Next step'))+'</b><br>'+escHtml(t('Our team will review your registration and contact you within 2–3 business days.'));
-    setMessage(document.getElementById('regEmailStatus'),data.email&&data.email.sent?'A confirmation email has been sent to {email}.':'Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at {email}.',{email:result.email});
+    setMessage(document.getElementById('regEmailStatus'),data.email&&data.email.sent?'A confirmation email has been sent to {email}.':data.email&&data.email.queued?'Your confirmation email is queued for delivery to {email}. Please check your inbox for the private materials link.':'Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at {email}.',{email:result.email});
   }
   setMessage(vipMessage,'Delegate Pass only. Enter your code and click Apply.');
   setMessage(regNext,'Continue');

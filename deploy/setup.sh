@@ -20,8 +20,11 @@ if [ "$(node -p "process.versions.node.split('.')[0]")" -lt 22 ]; then
   exit 1
 fi
 cd "$APP_DIR"
-npm install --omit=dev --no-audit --no-fund
+npm ci --omit=dev --no-audit --no-fund
 mkdir -p "$APP_DIR/data"
+# Persistent originals are separate from the public site and disposable cache.
+mkdir -p "$APP_DIR/data/material-originals"
+chmod 700 "$APP_DIR/data/material-originals"
 if [ ! -f "$APP_DIR/server/.env" ]; then
   cp "$APP_DIR/server/.env.example" "$APP_DIR/server/.env"
   echo "ERROR: created $APP_DIR/server/.env. Set a strong ADMIN_TOKEN and rerun this script."
@@ -31,6 +34,9 @@ if grep -q 'replace-with-a-long-random-secret' "$APP_DIR/server/.env"; then
   echo "ERROR: replace ADMIN_TOKEN in $APP_DIR/server/.env before starting production."
   exit 1
 fi
+
+# Initialize only the explicitly configured MySQL database before starting.
+npm run db:init
 
 cat >/etc/systemd/system/$SERVICE.service <<UNIT
 [Unit]
@@ -62,7 +68,16 @@ server {
   root $SITE_DIR;
   index index.html;
 
-  location ~ ^/(api/|table$|vip-codes$|export\.csv$|health$) {
+  location ~ ^/api/materials/upload/(card|portrait|logo)$ {
+    client_max_body_size 6m;
+    proxy_pass http://127.0.0.1:8787;
+    proxy_http_version 1.1;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+  }
+  location ~ ^/(api/|table$|vip-codes$|materials$|materials-admin$|export\.csv$|health$) {
     proxy_pass http://127.0.0.1:8787;
     proxy_http_version 1.1;
     proxy_set_header Host \$host;

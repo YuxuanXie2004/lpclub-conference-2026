@@ -12,6 +12,7 @@ for (const host of ['127.0.0.1', undefined]) {
     const realRequire = createRequire(filename), module = { exports: {} };
     let args;
     const requireStub = name => {
+      if (name === './env') return { loadEnv: env => env };
       if (name === 'http') return { createServer() { return { listen(...value) { args = value; } }; } };
       if (name === 'fs') return { ...fs, existsSync(file) { return String(file).endsWith('/server/.env') ? false : fs.existsSync(file); } };
       if (name === './vip-store') return { getStore() { throw Error('test storage disabled'); } };
@@ -20,7 +21,7 @@ for (const host of ['127.0.0.1', undefined]) {
     requireStub.main = module;
     vm.runInNewContext(fs.readFileSync(filename, 'utf8'), {
       module, require: requireStub, __dirname: path.dirname(filename),
-      process: { env: { PORT: '18877', ...(host ? { HOST: host } : {}) } },
+      process: { once() {}, env: { PORT: '18877', ...(host ? { HOST: host } : {}) } },
       console: { log() {} }, Buffer, URL, setTimeout, clearTimeout
     }, { filename });
     assert.equal(args[0], 18877);

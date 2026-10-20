@@ -11,3 +11,9 @@ data/*.db*
 
 # Atomic environment updates can contain private keys
 server/.env.*.tmp
+
+# Reconstructable conference image derivatives
+data/material-cache/
+
+# Durable private originals; back up separately from disposable derivatives
+data/material-originals/
