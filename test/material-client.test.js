@@ -135,3 +135,65 @@ test('initial registration keeps each permission inside its own image item',()=>
   assert.match(photo,/id="portraitConsent"/);assert.doesNotMatch(photo,/id="logoConsent"/);assert.match(logo,/id="logoConsent"/);
   assert.doesNotMatch(html,/class="material-permissions"/);
 });
+
+async function numberedShowcase({ speakers = [], organisations = [], fail = false } = {}) {
+  const fs = require('node:fs'), vm = require('node:vm');
+  const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
+  const sections = [], labels = [];
+  for (const [, attributes, content] of html.matchAll(/<section\b([^>]*)>([\s\S]*?)<\/section>/g)) {
+    const heading = content.match(/<span class="num"[^>]*data-zh="([^"]*)"[^>]*>([^<]*)<\/span>/);
+    if (!heading) continue;
+    const grid = { innerHTML: '', querySelectorAll: () => [] }, image = { closest: () => ({ remove() { grid.innerHTML = ''; } }) };
+    const section = { id: attributes.match(/id="([^"]*)"/)?.[1], hidden: /\bhidden\b/.test(attributes),
+      querySelector: selector => selector === '[data-showcase-grid]' ? grid : grid.innerHTML ? {} : null,
+      querySelectorAll: selector => selector === 'img' && grid.innerHTML ? [image] : [] };
+    sections.push(section);
+    labels.push({ textContent: heading[2], en: heading[2], zh: heading[1], closest: () => section });
+  }
+  const document = { documentElement: { lang: 'en' }, getElementById: id => sections.find(section => section.id === id),
+    querySelectorAll: selector => selector === 'section .num' ? labels : [] };
+  const module = { exports: {} };
+  vm.runInNewContext(fs.readFileSync(require.resolve('../assets/materials-client'), 'utf8'), {
+    module, document, location: { pathname: '/' }, fetch: async url => {
+      if (fail && url.endsWith('/showcase')) throw Error('Unavailable');
+      return { ok: true, json: async () => url.endsWith('/config') ? { enabled: true } : { speakers, organisations } };
+    }
+  });
+  module.exports.init();
+  await new Promise(resolve => setImmediate(resolve));
+  return { api: module.exports, sections, labels, visible: () => labels.filter(label => !label.closest().hidden).map(label => label.textContent) };
+}
+
+test('homepage numbers only visible sections for every showcase combination and language', async () => {
+  const item = { name: 'Test', imageUrl: '/api/public/media/test/1' };
+  for (const [speakers, organisations] of [[[], []], [[item], []], [[], [item]], [[item], [item]]]) {
+    const page = await numberedShowcase({ speakers, organisations });
+    assert.equal(page.labels.length, 11, 'Both showcase sections use the existing numbered heading style');
+    for (const language of ['en', 'zh-CN', 'en']) {
+      page.labels.forEach(label => { label.textContent = language === 'en' ? label.en : label.zh; });
+      page.api.update({ language });
+      const headings = page.visible();
+      assert.equal(headings.length, 9 + Number(!!speakers.length) + Number(!!organisations.length));
+      headings.forEach((heading, index) => assert.equal(heading.slice(0, 5), String(index + 1).padStart(2, '0') + ' — '));
+      assert.match(headings.at(-1), language === 'en' ? /WHY ATTEND$/ : /参会价值$/);
+      if (speakers.length) assert.match(headings[7], language === 'en' ? /CONFERENCE VOICES$/ : /大会嘉宾$/);
+      if (organisations.length) assert.match(headings.at(-2), language === 'en' ? /PARTICIPATING ORGANISATIONS$/ : /参会机构$/);
+    }
+  }
+});
+
+test('section numbers close the gap when the last speaker image fails', async () => {
+  const page = await numberedShowcase({ speakers: [{ name: 'Test', imageUrl: '/api/public/media/test/1' }] });
+  const section = page.sections.find(section => section.id === 'speakers');
+  section.querySelectorAll('img')[0].onerror();
+  assert.equal(section.hidden, true);
+  assert.match(page.visible().at(-2), /^08 — AGENDA$/);
+  assert.match(page.visible().at(-1), /^09 — WHY ATTEND$/);
+});
+
+test('unavailable showcase keeps the original nine section numbers', async () => {
+  const page = await numberedShowcase({ fail: true });
+  assert.equal(page.visible().length, 9);
+  assert.match(page.visible().at(-2), /^08 — AGENDA$/);
+  assert.match(page.visible().at(-1), /^09 — WHY ATTEND$/);
+});

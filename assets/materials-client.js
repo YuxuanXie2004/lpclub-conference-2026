@@ -100,8 +100,15 @@
     document.querySelectorAll('[data-material-error]').forEach(function (el) { el.hidden = true; el.textContent = ''; });
     status = { phase: '', failed: 0 }; optionId = ''; update();
   }
+  function updateSectionNumbers() {
+    var number = 0;
+    document.querySelectorAll('section .num').forEach(function (label) {
+      if (label.closest('section').hidden) return;
+      label.textContent = String(++number).padStart(2, '0') + ' — ' + label.textContent.replace(/^\d+\s*—\s*/, '');
+    });
+  }
   function renderShowcase() {
-    if (!data) return;
+    if (!data) return updateSectionNumbers();
     ['speakers', 'organisations'].forEach(function (kind) {
       var section = document.getElementById(kind === 'speakers' ? 'speakers' : 'organisations'); if (!section) return;
       if (kind === 'organisations') {
@@ -118,8 +125,9 @@
       var cards = (data.speakers || []).map(function (item) { return speakerCard(item, language); }).filter(Boolean);
       section.hidden = !cards.length;
       section.querySelector('[data-showcase-grid]').innerHTML = cards.join('');
-      section.querySelectorAll('img').forEach(function (img) { img.onerror = function () { this.closest('article').remove(); if (!section.querySelector('article')) section.hidden = true; }; });
+      section.querySelectorAll('img').forEach(function (img) { img.onerror = function () { this.closest('article').remove(); if (!section.querySelector('article')) section.hidden = true; updateSectionNumbers(); }; });
     });
+    updateSectionNumbers();
   }
   function init() {
     language = document.documentElement.lang;
