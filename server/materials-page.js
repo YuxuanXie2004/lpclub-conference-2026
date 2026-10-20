@@ -1,4 +1,12 @@
 'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
+
+function assetUrl(name) {
+  const content = fs.readFileSync(path.join(__dirname, '../assets', name));
+  return 'assets/' + name + '?v=' + crypto.createHash('sha256').update(content).digest('hex').slice(0, 12);
+}
 
 function renderMaterialsPage() {
   return `<!doctype html>
@@ -9,7 +17,7 @@ function renderMaterialsPage() {
 <meta name="referrer" content="no-referrer">
 <title>LP CLUB · Conference materials</title>
 <link rel="icon" href="images/lpclub-icon.png">
-<link rel="stylesheet" href="assets/materials-page.css">
+<link rel="stylesheet" href="${assetUrl('materials-page.css')}">
 <script>
 const fragment=new URLSearchParams(location.hash.slice(1));
 const REF=fragment.get('ref')||'';
@@ -52,7 +60,7 @@ history.replaceState(null,'',location.pathname);
   </section>
 </main>
 <footer class="site-footer"><div><span>LP CLUB GROUP</span><span data-copy="footer">Private materials · For conference use only</span></div></footer>
-<script src="assets/materials-page.js"></script>
+<script src="${assetUrl('materials-page.js')}"></script>
 <script>LPClubMaterialsPage.init({ref:REF,token:TOKEN});</script>
 </body>
 </html>`;

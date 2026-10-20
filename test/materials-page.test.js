@@ -108,3 +108,25 @@ test('publication permissions belong to the corresponding image item',()=>{
   assert.match(logo,/data-consent="logo" checked/);assert.doesNotMatch(logo,/data-consent="portrait"/);
   assert.match(portrait,/data-consent="portrait"/);assert.doesNotMatch(card,/data-consent=/);
 });
+
+test('materials page uses content revisions for its cached stylesheet and script', () => {
+  const fs=require('node:fs'),crypto=require('node:crypto');
+  const html=require('../server/materials-page').renderMaterialsPage();
+  for(const name of ['materials-page.css','materials-page.js']) {
+    const digest=crypto.createHash('sha256').update(fs.readFileSync(require.resolve('../assets/'+name))).digest('hex').slice(0,12);
+    assert.ok(html.includes('assets/'+name+'?v='+digest),name+' must change URL when its content changes');
+  }
+});
+
+test('materials asset revisions refresh without retaining an earlier render', t => {
+  const fs=require('node:fs'),path=require('node:path');
+  const {renderMaterialsPage}=require('../server/materials-page');
+  const script=html=>html.match(/<script src="([^"]+)"/)[1];
+  const before=script(renderMaterialsPage());
+  const original=fs.readFileSync;
+  t.mock.method(fs,'readFileSync',function(filename,...args){
+    const content=original.call(this,filename,...args);
+    return path.resolve(String(filename))===require.resolve('../assets/materials-page.js')?Buffer.concat([Buffer.from(content),Buffer.from('\n/* revision fixture */')]):content;
+  });
+  assert.notEqual(script(renderMaterialsPage()),before);
+});

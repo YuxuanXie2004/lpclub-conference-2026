@@ -1,23 +1,15 @@
-# Server notes
+# 服务端运行说明
 
-`server/index.js` runs the conference site and registration API. Feishu Base is the only registration database.
-
-## Commands
+`server/index.js` 提供大会官网、报名 API、资料补交及管理后台。需要 Node.js 22+、MySQL 8.0.17+ 和持久化私有磁盘；MySQL 是唯一业务数据源。
 
 ```bash
-npm run feishu:init   # one-time Base schema setup / migration
-npm run dev           # normal website + API server
-npm test              # local unit tests
+npm ci
+npm run db:init
+npm run dev
+npm test
+npm run test:mysql
 ```
 
-Do not run `feishu:init` for each registration. The website automatically writes a new record to Feishu through `/api/order`.
+生产配置、子路径代理、备份与恢复见根目录 `README.md` 及 `deploy/README.md`。历史飞书报名与 SQLite VIP 的一次性离线导入见 `deploy/legacy-migration.md`，运行时不再使用旧存储。
 
-## Soft delete
-
-Registrations are never hard-deleted by the website. `/api/admin/delete` marks `Is Deleted / 已删除 = true`; `/api/admin/restore` clears the flag. The admin UI and APIs filter records by that flag.
-
-## VIP code store
-
-VIP codes and redemption attempts use a separate persistent SQLite database; registration records remain in Feishu. Node.js >=22 and `npm install` are required. Run `npm run vip:init` once for local setup (then restart), or configure `VIP_CODE_ENCRYPTION_KEY` and optionally `VIP_DB_PATH` before enabling the management page at `/vip-codes?token=<ADMIN_TOKEN>`. See the root README for manual distribution, review-state recovery and backup instructions.
-
-`npm run vip:backup -- /secure/path/vip-backup.sqlite` uses SQLite's online backup API and does not recover or change redemption statuses.
+管理员令牌和加密密钥必须保持稳定。补交链接由真实 HTTPS `PUBLIC_BASE_URL` 生成，包含部署子路径；资料原件与缓存目录独立设置，不对外暴露私有目录。

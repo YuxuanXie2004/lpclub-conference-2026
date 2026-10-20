@@ -15,7 +15,7 @@
   },
   "scripts": {
     "api": "node server/index.js",
-    "dev": "node server/index.js",
+    "dev": "node --watch server/index.js",
     "test": "node --test test/*.test.js",
     "start": "node server/index.js",
     "db:init": "node server/init-db.js",
