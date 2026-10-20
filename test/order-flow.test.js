@@ -7,7 +7,7 @@ function input(){return{packageId:'gp_panel',idempotencyKey:crypto.randomUUID(),
 test('registration mail agrees with authoritative package and escapes attendee content',()=>{
  const order=normaliseOrder(input()),url='https://lp-club.cn/2026-pe-conference/materials#ref='+order.ref+'&token=private';
  const mail=createMailer({}).composeRegistration(order,url);
- assert.match(mail.text,/USD 3,000/);assert.match(mail.html,/&lt;script&gt;/);assert.equal(mail.html.includes('Jane <script>'),false);assert.ok(mail.text.includes(url));assert.match(mail.html,/已收到您的报名/);
+ assert.match(mail.text,/USD 3,000/);assert.match(mail.html,/&lt;script&gt;/);assert.equal(mail.html.includes('Jane <script>'),false);assert.ok(mail.text.includes(url));assert.match(mail.html,/Registration received/);assert.doesNotMatch(mail.html,/已收到您的报名/);
 });
 test('invalid/missing universal idempotency keys fail before touching any database',async()=>{
  let writes=0;const service=createRegistrationService({db:{transaction(){writes++;throw Error('unexpected')}},normaliseOrder});
