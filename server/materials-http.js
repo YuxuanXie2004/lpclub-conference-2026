@@ -73,8 +73,8 @@ function createMaterialsHandler({ service, showcase, json, readBody, setSecurity
       headers(res);
       if (req.method === 'GET' && path === '/api/materials/config') { json(res, 200, { ok: true, enabled: service.ready() }); return true; }
       if (req.method === 'GET' && path === '/api/public/showcase') { json(res, 200, await service.showcase()); return true; }
-      if (!service.ready()) throw error('Materials are not configured', 503);
       if (req.method === 'GET' && path === '/materials') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(renderMaterialsPage()); return true; }
+      if (!service.ready()) throw error('Materials are not configured', 503);
       const isAdmin = path === '/materials-admin' || path.startsWith('/api/admin/materials') || path.startsWith('/api/admin/showcase/');
       if (isAdmin && !adminAllowed(req, url, context.allowed)) throw error('Unauthorised', 401);
       if (req.method === 'GET' && path === '/materials-admin') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(renderMaterialsAdminPage(adminToken || url.searchParams.get('token') || '', url.searchParams.get('ref') || '')); return true; }

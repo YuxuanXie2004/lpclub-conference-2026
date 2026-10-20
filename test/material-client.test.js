@@ -98,3 +98,40 @@ test('all published speakers are shown immediately without a view-all step', asy
   for (const speaker of speakers) assert.ok(grid.innerHTML.includes(speaker.name));
   assert.equal(more.hidden,true);
 });
+
+test('registration confirmation and privacy follow the optional materials', () => {
+  const fs=require('node:fs');const html=fs.readFileSync(require.resolve('../index.html'),'utf8');
+  const material=html.indexOf('id="registrationMaterials"');
+  const permissions=html.indexOf('class="material-item-permission"');
+  const confirmation=html.indexOf('id="registrationConfirmation"');
+  const formEnd=html.indexOf('</form>',material);
+  assert.ok(material>0&&permissions>material&&confirmation>permissions&&confirmation<formEnd);
+  assert.match(html.slice(confirmation,formEnd),/name="consent" type="checkbox" required/);
+});
+
+test('cancelling a registration image chooser keeps the selected image and hidden portrait consent follows eligibility', () => {
+  const fs=require('node:fs'),vm=require('node:vm');
+  const file=new Blob(['image'],{type:'image/png'});file.name='example.png';
+  const input={dataset:{materialInput:'card'},files:[file],addEventListener(name,fn){this[name]=fn;}};
+  const preview={items:[],replaceChildren(){this.items=[];},append(...items){this.items.push(...items);}};
+  const filename={dataset:{materialFilename:'card'},textContent:''};
+  const portrait={hidden:true},portraitConsent={hidden:true};const module={exports:{}};
+  const document={documentElement:{lang:'zh-CN'},getElementById:id=>id==='portraitMaterial'?portrait:id==='portraitConsentField'?portraitConsent:null,
+    querySelectorAll:selector=>selector==='[data-material-input]'?[input]:selector==='[data-material-filename]'?[filename]:[],
+    querySelector:selector=>selector.startsWith('[data-material-preview=')?preview:selector.startsWith('[data-material-filename=')?filename:null,createElement:()=>({dataset:{}})};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../assets/materials-client'),'utf8'),{module,document,Blob,FormData,URL,location:{pathname:'/'},fetch:async()=>({ok:true,json:async()=>({enabled:true})})});
+  module.exports.init();module.exports.update({optionId:'speaking'});input.change();
+  input.files=[];input.change();
+  assert.equal(filename.textContent,'example.png');assert.equal(preview.items.length,1);
+  assert.equal(portrait.hidden,false);assert.equal(portraitConsent.hidden,false);
+  module.exports.update({optionId:'ticket'});assert.equal(portraitConsent.hidden,true);
+});
+
+
+test('initial registration keeps each permission inside its own image item',()=>{
+  const fs=require('node:fs'),html=fs.readFileSync(require.resolve('../index.html'),'utf8');
+  const photo=html.slice(html.indexOf('<article class="material-field" id="portraitMaterial"'),html.indexOf('<input id="materialLogo"'));
+  const logo=html.slice(html.indexOf('<input id="materialLogo"'),html.indexOf('id="registrationConfirmation"'));
+  assert.match(photo,/id="portraitConsent"/);assert.doesNotMatch(photo,/id="logoConsent"/);assert.match(logo,/id="logoConsent"/);
+  assert.doesNotMatch(html,/class="material-permissions"/);
+});

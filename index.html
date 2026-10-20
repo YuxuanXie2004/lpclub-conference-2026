@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0" />
 <title>The 3rd International Private Equity Conference 2026 | LP CLUB GROUP</title>
 <meta name="description" content="The 3rd International Private Equity Conference, hosted by LP CLUB GROUP — connecting LPs, GPs & global capital. Wednesday, 18 November 2026, Hong Kong Convention and Exhibition Centre, Hong Kong, China." />
-<link rel="stylesheet" href="assets/materials.css?v=d21bd517b2" />
+<link rel="stylesheet" href="assets/materials.css?v=26d8739bec" />
 <link rel="icon" type="image/png" sizes="180x180" href="images/lpclub-icon.png" />
 <script>
 (function () {
@@ -1281,46 +1281,36 @@
             <div class="reg-field"><label data-zh="是否需要签证邀请函？&lt;span&gt;*&lt;/span&gt;">Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="" data-zh="请选择">Select</option><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
             <div class="reg-field"><label data-zh="预计抵达日期">Expected arrival date</label><input name="arrivalDate" type="date"></div>
             <div class="reg-field"><label data-zh="随行人数">Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
-            <div class="reg-field full"><label class="reg-consent"><input name="consent" type="checkbox" required><span data-zh="本人确认所填信息准确，并同意 LP CLUB GROUP 使用这些信息处理本次大会报名及与本人联系大会相关事宜。">I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy" data-zh="&lt;b&gt;隐私说明。&lt;/b&gt;报名信息仅用于大会管理、参会资格审核、活动沟通、应申请提供的邀请函 / 签证支持及相关后续服务。信息访问应仅限获授权的 LP CLUB 工作人员及已配置的服务提供方。请勿提交敏感金融账户信息或密码。"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
+
           </div>
-          <div id="registrationMaterials" class="material-section" hidden>
-            <h4 class="reg-section-title" data-zh="资料上传">Conference materials</h4>
-            <p class="reg-section-lead" data-zh="现在上传或报名后通过邮件专属链接补交，均不影响您提交报名。每项一张 JPG、PNG 或 WebP 图片，最大 5 MiB。">Upload now or later using the private link in your confirmation email. Missing materials do not prevent registration. One JPG, PNG or WebP per item, up to 5 MiB.</p>
+          <section id="registrationMaterials" class="material-section" hidden aria-labelledby="registrationMaterialsTitle">
+            <div class="material-heading"><h4 class="reg-section-title" id="registrationMaterialsTitle" data-zh="参会资料">Conference materials</h4><span class="material-optional" data-zh="均可稍后补交">Can all be added later</span></div>
+            <p class="material-intro" data-zh="帮助我们核验参会身份，并在您授权后准备大会官网展示资料。选择图片后，可先预览；点击下方“提交报名”时，资料和授权会随报名一起提交。">Help us verify your professional identity and prepare your conference profile with your permission. Preview your images first; materials and permissions are submitted when you click Submit Registration.</p>
+            <div class="material-later"><b data-zh="暂时没有图片？">Don’t have your images ready?</b><span data-zh="可以先完成报名，不会影响提交。报名确认邮件中的专属链接可用于补交、替换图片和调整授权，链接有效期为 30 天。">You can register without them. The private link in your confirmation email lets you add or replace images and change permissions for 30 days.</span></div>
+            <p class="material-formats" data-zh="每项一张静态 JPG、PNG 或 WebP · 每张不超过 5 MiB、2500 万像素 · 不支持 PDF、SVG 或动图">One static JPG, PNG or WebP per item · Up to 5 MiB and 25 megapixels · No PDF, SVG or animated images</p>
+            <p class="material-permission-note" data-zh="上传图片不代表同意公开展示；请在照片或 Logo 下方分别选择是否授权，不授权也可以正常报名。">Uploading an image does not grant permission to publish it. Choose permissions below each image; registration is unaffected if you decline.</p>
             <div class="material-grid">
-              <div class="material-field">
-                <h5><label for="materialCard" data-zh="名片 · 可后补">Business card · Can be submitted later</label></h5>
-                <p data-zh="用于内部核验您的职业身份，不会在网站公开展示。">For internal verification of your professional identity. Never displayed publicly.</p>
-                <div class="material-file-picker">
-                  <input id="materialCard" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="card">
-                  <span class="material-file-button" aria-hidden="true" data-zh="选择文件">Choose file</span>
-                  <span class="material-file-name" aria-hidden="true" data-material-filename="card">No file chosen</span>
-                </div>
-                <div class="material-preview" data-material-preview="card" aria-live="polite"></div>
-              </div>
-              <div class="material-field" id="portraitMaterial" hidden>
-                <h5><label for="materialPortrait" data-zh="商务照片 · 可后补">Professional portrait · Can be submitted later</label></h5>
-                <p data-zh="商务照片将在您授权并通过审核后，用于本次大会官网的嘉宾展示。您可以现在上传，也可以报名后点击发送至您邮箱的专属链接补交。">With your permission and after approval, your portrait will appear in the speakers section of this conference website. Upload it now or later using the private link sent to your email after registration.</p>
-                <div class="material-file-picker">
-                  <input id="materialPortrait" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="portrait">
-                  <span class="material-file-button" aria-hidden="true" data-zh="选择文件">Choose file</span>
-                  <span class="material-file-name" aria-hidden="true" data-material-filename="portrait">No file chosen</span>
-                </div>
-                <div class="material-preview" data-material-preview="portrait" aria-live="polite"></div>
-                <label class="reg-consent"><input id="portraitConsent" type="checkbox"><span data-zh="我同意审核通过后，在本次大会官网公开展示我的照片、姓名、职位及机构信息。">I agree to the approved publication of my portrait, name, job title and organisation on this conference website.</span></label>
-              </div>
-              <div class="material-field">
-                <h5><label for="materialLogo" data-zh="公司 Logo · 自愿提供">Company logo · Optional</label></h5>
-                <p data-zh="经您授权及审核后，将在本次大会官网的参会机构区展示。可现在上传或通过确认邮件链接后补，建议使用透明背景 PNG。">With your permission and after approval, your logo will appear in the participating organisations section. Upload now or later via your confirmation email. Transparent PNG preferred.</p>
-                <div class="material-file-picker">
-                  <input id="materialLogo" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="logo">
-                  <span class="material-file-button" aria-hidden="true" data-zh="选择文件">Choose file</span>
-                  <span class="material-file-name" aria-hidden="true" data-material-filename="logo">No file chosen</span>
-                </div>
-                <div class="material-preview" data-material-preview="logo" aria-live="polite"></div>
-                <label class="reg-consent"><input id="logoConsent" type="checkbox"><span data-zh="我确认有权授权，并同意审核通过后在本次大会官网公开展示机构 Logo 及机构名称。">I confirm I am authorised to permit publication of the approved organisation logo and name on this conference website.</span></label>
-              </div>
+              <article class="material-field">
+                <div class="material-art" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="20" rx="3"/><circle cx="11" cy="13" r="3"/><path d="M6 22c0-5 10-5 10 0M20 12h5m-5 5h5"/></svg><div class="material-preview" data-material-preview="card"></div></div>
+                <div class="material-info"><h5><label for="materialCard" data-zh="名片">Business card</label><span data-zh="仅内部核验">Private</span></h5><p data-zh="用于核验您的职业身份，不会在大会官网公开展示。">Used to verify your professional identity. Never displayed on the conference website.</p><p class="material-tip" data-zh="请拍摄完整正面，确保姓名、职位和机构清晰可见，避免反光或遮挡。">Show the entire front of your card with your name, title and organisation clearly legible. Avoid glare and cropped edges.</p><span class="material-file-name" data-material-filename="card">No image selected</span><p class="material-input-error" data-material-error="card" role="alert" hidden></p></div>
+                <div class="material-select-actions"><label class="material-file-picker"><input id="materialCard" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="card"><span class="material-file-button" aria-hidden="true" data-material-choose="card">Choose image</span></label><button type="button" data-material-clear="card" hidden>Remove</button></div>
+              </article>
+              <article class="material-field" id="portraitMaterial" hidden>
+                <div class="material-art" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="5" y="2" width="22" height="28" rx="3"/><circle cx="16" cy="12" r="5"/><path d="M8 27c0-11 16-11 16 0"/></svg><div class="material-preview" data-material-preview="portrait"></div></div>
+                <div class="material-info"><h5><label for="materialPortrait" data-zh="嘉宾照片">Speaker portrait</label><span data-zh="授权后可展示">With permission</span></h5><p data-zh="用于大会官网嘉宾介绍，与您的姓名、职位和机构一同展示。只有获得您的授权并通过审核后，主办方才会安排展示。">Used for your speaker profile alongside your name, title and organisation. The organiser may display it only with your permission and after approval.</p><p class="material-tip" data-zh="建议使用清晰的单人正面商务照、竖版构图与干净背景；请勿上传合影、证件扫描件或截图。">Choose a clear, front-facing professional portrait with a clean background, preferably vertical. Avoid group photos, ID scans and screenshots.</p><span class="material-file-name" data-material-filename="portrait">No image selected</span><p class="material-input-error" data-material-error="portrait" role="alert" hidden></p></div>
+                <div class="material-select-actions"><label class="material-file-picker"><input id="materialPortrait" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="portrait"><span class="material-file-button" aria-hidden="true" data-material-choose="portrait">Choose image</span></label><button type="button" data-material-clear="portrait" hidden>Remove</button></div>
+                <div class="material-item-permission"><label class="reg-consent" id="portraitConsentField" hidden><input id="portraitConsent" type="checkbox"><span data-zh="我同意在审核通过后，由主办方在本次大会官网展示我的嘉宾照片、姓名、职位及机构。">I permit the organiser to display my approved portrait, name, title and organisation on this conference website.</span></label></div>
+              </article>
+              <article class="material-field">
+                <div class="material-art" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="4"/><path d="m9 23 7-14 7 14M12 18h8"/></svg><div class="material-preview" data-material-preview="logo"></div></div>
+                <div class="material-info"><h5><label for="materialLogo" data-zh="机构 Logo">Organisation logo</label><span data-zh="自愿提供">Optional</span></h5><p data-zh="用于大会官网参会机构区，与机构名称一同展示。须由有权代表机构的人授权，并经审核及主办方安排后展示。">Used with your organisation’s name in the conference website’s organisations section, subject to authorised permission, approval and the organiser’s selection.</p><p class="material-tip" data-zh="建议提供透明背景 PNG 或白底图片，图形完整、边缘清晰；避免大面积留白、模糊图片或网页截图。">A transparent PNG or a white-background image is recommended. Keep the full logo sharp and readable, without excessive margins, blur or website screenshots.</p><span class="material-file-name" data-material-filename="logo">No image selected</span><p class="material-input-error" data-material-error="logo" role="alert" hidden></p></div>
+                <div class="material-select-actions"><label class="material-file-picker"><input id="materialLogo" type="file" accept="image/jpeg,image/png,image/webp" data-material-input="logo"><span class="material-file-button" aria-hidden="true" data-material-choose="logo">Choose image</span></label><button type="button" data-material-clear="logo" hidden>Remove</button></div>
+                <div class="material-item-permission"><label class="reg-consent"><input id="logoConsent" type="checkbox"><span data-zh="我确认有权代表所属机构，授权主办方在审核通过后于本次大会官网展示机构 Logo 和名称。">I am authorised to permit the organiser to display my organisation’s approved logo and name on this conference website.</span></label></div>
+              </article>
             </div>
-          </div>
+
+          </section>
+            <div class="reg-final-confirmation" id="registrationConfirmation"><label class="reg-consent"><input id="regConsent" name="consent" type="checkbox" required><span data-zh="本人确认所填信息准确，并同意 LP CLUB GROUP 使用这些信息处理本次大会报名及与本人联系大会相关事宜。">I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy" data-zh="&lt;b&gt;隐私说明。&lt;/b&gt;报名信息仅用于大会管理、参会资格审核、活动沟通、应申请提供的邀请函 / 签证支持及相关后续服务。信息访问应仅限获授权的 LP CLUB 工作人员及已配置的服务提供方。请勿提交敏感金融账户信息或密码。"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
         </form>
       </section>
       <section class="reg-screen" data-reg-step="3" hidden>
@@ -1345,7 +1335,7 @@
   </div>
 </footer>
 
-<script src="assets/materials-client.js?v=5fd19b4dde"></script>
+<script src="assets/materials-client.js?v=e544202ded"></script>
 <script>
 (function () {
   /* ---------- Language and presentation text ---------- */

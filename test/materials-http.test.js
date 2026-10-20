@@ -26,6 +26,9 @@ async function serve(t, overrides = {}, showcase) {
 test('readiness remains available while disabled and private APIs fail closed', async t => {
   const { base } = await serve(t, { ready: () => false, showcase: async () => ({ ok: true, enabled: false, speakers: [], organisations: [] }) });
   assert.deepEqual(await (await fetch(base + '/api/materials/config')).json(), { ok: true, enabled: false });
+  const page = await fetch(base + '/materials');
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /assets\/materials-page\.js/);
   assert.equal((await fetch(base + '/api/materials/me')).status, 503);
   assert.equal((await fetch(base + '/api/public/showcase')).status, 200);
 });
@@ -53,9 +56,10 @@ test('multipart accepts exactly one file and authenticates upload-only before pa
 test('pages erase fragments and use blob previews; public media is no-store and fails closed', async t => {
   const { renderMaterialsPage, renderMaterialsAdminPage } = require('../server/materials-pages');
   const page = renderMaterialsPage();
+  const client = fs.readFileSync(path.join(__dirname, '../assets/materials-page.js'), 'utf8');
   assert.match(page, /history.replaceState/);
-  assert.match(page, /X-Registration-Ref/);
-  assert.match(page, /URL.createObjectURL/);
+  assert.match(client, /X-Registration-Ref/);
+  assert.match(client, /URL.createObjectURL/);
   assert.equal(page.includes('type="email"'), false);
   const admin = renderMaterialsAdminPage('</script><script>alert(1)</script>');
   assert.equal(admin.includes('</script><script>alert(1)</script>'), false);
