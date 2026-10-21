@@ -18,7 +18,7 @@ function cleanString(v, max = 300) { return String(v == null ? '' : v).trim().sl
 function validPhone(v) { const s = String(v || '').replace(/[\s().-]/g, ''); return /^\+?\d{6,18}$/.test(s); }
 function validDate(v) { if (!v) return true; return /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v+'T00:00:00Z')) && new Date(v+'T00:00:00Z').toISOString().slice(0,10) === v; }
 function requiredFields(a) {
-  const req = ['fullName','company','companyType','country','jobTitle','email','phone','visaLetter'];
+  const req = ['fullName','company','country','jobTitle','email','phone','visaLetter'];
   return req.filter(k => !cleanString(a[k]));
 }
 
@@ -59,7 +59,7 @@ function normaliseOrder(input, packageCatalogue = PACKAGES) {
     },
     attendee: {
       salutation: cleanString(a.salutation, 20), fullName: cleanString(a.fullName, 120), company: cleanString(a.company, 180),
-      companyType: cleanString(a.companyType, 120), department: cleanString(a.department, 120), jobTitle: cleanString(a.jobTitle, 120),
+      companyType: cleanString(p.organisationType, 120), department: cleanString(a.department, 120), jobTitle: cleanString(a.jobTitle, 120),
       country: cleanString(a.country, 100), city: cleanString(a.city, 100), dial: cleanString(a.dial, 10), phone: cleanString(a.phone, 40),
       whatsappSame: cleanString(a.whatsappSame, 10), whatsappNumber: cleanString(a.whatsappNumber, 60), email: cleanString(a.email, 180).toLowerCase(),
       focus: Array.isArray(a.focus) ? a.focus.map(x => cleanString(x, 80)).slice(0, 12) : [],
