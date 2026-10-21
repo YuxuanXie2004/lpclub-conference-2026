@@ -39,3 +39,22 @@ integration('stale administrator status saves fail instead of overwriting anothe
  await assert.rejects(service.lifecycle('status',{ref:reg.ref,status:'Rejected'}),e=>e.code==='VERSION_REQUIRED');
  assert.equal((await service.detail(reg.ref)).status,'Approved');
 });
+
+integration('purpose validation rejects invalid submissions and preserves other explanations through MySQL, retries and exports',async t=>{
+ const {db}=await mysqlFixture(t);const service=createRegistrationService({db,normaliseOrder});
+ for(const [purpose,purposeOther,code] of [[['Fundraising'],'','INVALID_PURPOSE'],[['Other'],'','PURPOSE_OTHER_REQUIRED'],[['Other','Networking'],'   ','PURPOSE_OTHER_REQUIRED'],[['Other'],42,'INVALID_PURPOSE_OTHER'],[['Other'],'目'.repeat(81),'INVALID_PURPOSE_OTHER']]){
+  const request=input();Object.assign(request.attendee,{purpose,purposeOther});
+  await assert.rejects(service.submit(request),e=>e.statusCode===400&&e.code===code);
+ }
+ assert.equal((await db.query('SELECT * FROM registrations')).length,0);
+ assert.equal((await db.query('SELECT * FROM submission_requests')).length,0);
+ const request=input();Object.assign(request.attendee,{focus:['半导体、新能源'],purpose:['Networking','Other'],purposeOther:'  寻找产业合作伙伴  '});
+ const saved=await service.submit(request),expected='Networking; Other; 寻找产业合作伙伴';
+ assert.equal((await service.detail(saved.ref)).purpose,expected);
+ assert.equal((await service.detail(saved.ref)).focus,'半导体、新能源');
+ assert.equal((await service.list()).rows[0].purpose,expected);
+ assert.equal((await service.exportRows()).at(0).purpose,expected);
+ assert.equal((await service.submit(request)).ref,saved.ref);
+ await assert.rejects(service.submit({...request,attendee:{...request.attendee,purposeOther:'新的参会目的'}}),e=>e.code==='IDEMPOTENCY_CONFLICT');
+ assert.equal((await db.query('SELECT * FROM registrations')).length,1);
+});

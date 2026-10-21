@@ -1,6 +1,7 @@
 'use strict';
 const crypto=require('node:crypto');
 const {PACKAGES,IDENTITIES}=require('./packages');
+const ATTENDANCE_PURPOSES = new Set(['Market Insights','Investment Opportunities','LP-GP Partnership','Networking','Other']);
 const PERSONAL_DOMAINS = new Set([
   'gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com',
   'yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com',
@@ -22,6 +23,22 @@ function requiredFields(a) {
   return req.filter(k => !cleanString(a[k]));
 }
 
+function normalisePurpose(a) {
+  const values = a.purpose == null ? [] : a.purpose;
+  if (!Array.isArray(values) || values.length > ATTENDANCE_PURPOSES.size || values.some(value => typeof value !== 'string' || !ATTENDANCE_PURPOSES.has(value))) {
+    throw Object.assign(new Error('Please select valid attendance purposes.'), { statusCode: 400, code: 'INVALID_PURPOSE' });
+  }
+  const purpose = [...new Set(values)];
+  if (!purpose.includes('Other')) return purpose;
+  if (a.purposeOther == null || (typeof a.purposeOther === 'string' && !a.purposeOther.trim())) {
+    throw Object.assign(new Error('Please specify your other purpose of attendance.'), { statusCode: 400, code: 'PURPOSE_OTHER_REQUIRED' });
+  }
+  if (typeof a.purposeOther !== 'string' || a.purposeOther.trim().length > 80) {
+    throw Object.assign(new Error('Please enter an other purpose of attendance of up to 80 characters.'), { statusCode: 400, code: 'INVALID_PURPOSE_OTHER' });
+  }
+  return [...purpose, a.purposeOther.trim()];
+}
+
 function registrationPackage(input, packageCatalogue = PACKAGES) {
   const requestedId = cleanString(input && input.packageId, 50);
   const packageId = Object.prototype.hasOwnProperty.call(IDENTITIES, requestedId) ? requestedId + '_ticket' : requestedId;
@@ -40,6 +57,7 @@ function normaliseOrder(input, packageCatalogue = PACKAGES) {
   if (!validPhone([a.dial, a.phone].filter(Boolean).join(''))) throw Object.assign(new Error('Please enter a valid mobile number.'), { statusCode: 400, code: 'INVALID_PHONE' });
   if (!validDate(a.arrivalDate)) throw Object.assign(new Error('Please enter a valid expected arrival date.'), { statusCode: 400, code: 'INVALID_DATE' });
   if (a.consent !== true) throw Object.assign(new Error('Privacy consent is required.'), { statusCode: 400, code: 'CONSENT_REQUIRED' });
+  const purpose = normalisePurpose(a);
   const ref = `LPC26-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
   return {
     ref,
@@ -63,7 +81,7 @@ function normaliseOrder(input, packageCatalogue = PACKAGES) {
       country: cleanString(a.country, 100), city: cleanString(a.city, 100), dial: cleanString(a.dial, 10), phone: cleanString(a.phone, 40),
       whatsappSame: cleanString(a.whatsappSame, 10), whatsappNumber: cleanString(a.whatsappNumber, 60), email: cleanString(a.email, 180).toLowerCase(),
       focus: Array.isArray(a.focus) ? a.focus.map(x => cleanString(x, 80)).slice(0, 12) : [],
-      purpose: Array.isArray(a.purpose) ? a.purpose.map(x => cleanString(x, 80)).slice(0, 12) : [],
+      purpose,
       matchmaking: p.optionId === 'matchmaking' ? 'Yes' : 'No', visaLetter: cleanString(a.visaLetter, 10), arrivalDate: cleanString(a.arrivalDate, 20),
       guests: a.guests === '' || a.guests == null ? '' : Math.max(0, Math.min(20, Number(a.guests) || 0)), consent: Boolean(a.consent)
     }

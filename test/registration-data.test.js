@@ -25,3 +25,48 @@ test('organization type is derived from the selected package for every identity 
   }
  }
 });
+
+test('attendance purposes allow approved options and remain optional',()=>{
+ for(const purpose of [undefined,null,[],['Market Insights','Investment Opportunities','LP-GP Partnership','Networking']]){
+  const request=input();request.attendee.purpose=purpose;
+  assert.deepEqual(normaliseOrder(request).attendee.purpose,purpose||[]);
+ }
+});
+test('attendance purposes reject removed, unknown, malformed and excessive options',()=>{
+ for(const purpose of [['Fundraising'],['募资'],['Unknown'],['Other','自定义说明'],['Other','Networking','Fundraising'],['Other',{}],['Other',null],['Other',42],'Networking',{},42,Array(6).fill('Networking')]){
+  const request=input();Object.assign(request.attendee,{purpose,purposeOther:'有效说明'});
+  assert.throws(()=>normaliseOrder(request),e=>e.statusCode===400&&e.code==='INVALID_PURPOSE',JSON.stringify(purpose));
+ }
+});
+test('other purpose requires a separate nonblank string and cannot use another option as its explanation',()=>{
+ for(const purpose of [['Other'],['Networking','Other'],['Other','Other']]){
+  for(const purposeOther of [undefined,null,'','   ','\t\n','\u3000']){
+   const request=input();Object.assign(request.attendee,{purpose,purposeOther});
+   assert.throws(()=>normaliseOrder(request),e=>e.statusCode===400&&e.code==='PURPOSE_OTHER_REQUIRED');
+  }
+ }
+ for(const purposeOther of [42,true,{},['说明'],'目'.repeat(81)]){
+  const request=input();Object.assign(request.attendee,{purpose:['Other'],purposeOther});
+  assert.throws(()=>normaliseOrder(request),e=>e.statusCode===400&&e.code==='INVALID_PURPOSE_OTHER');
+ }
+});
+test('other purpose preserves trimmed text and the 80-character boundary through storage and exports',()=>{
+ const {toCsv}=require('../server/sheet');
+ for(const text of ['寻找产业合作伙伴 / Partnerships','目'.repeat(80),'Fundraising','Networking']){
+  const request=input();Object.assign(request.attendee,{purpose:['Networking','Other'],purposeOther:'  '+text+'  '});
+  const order=normaliseOrder(request),row=toRegistrationRow(order),view=fromRegistrationRow(row);
+  assert.deepEqual(order.attendee.purpose,['Networking','Other',text]);
+  assert.deepEqual(JSON.parse(row.attendance_purpose),['Networking','Other',text]);
+  assert.deepEqual(JSON.parse(row.attendee_snapshot).purpose,['Networking','Other',text]);
+  assert.equal(view.purpose,'Networking; Other; '+text);
+  assert.ok(toCsv([view]).includes(text));
+ }
+});
+test('unselected other explanations are ignored and repeated selections are normalized',()=>{
+ const request=input();Object.assign(request.attendee,{purpose:['Networking','Networking'],purposeOther:'残留内容'});
+ assert.deepEqual(normaliseOrder(request).attendee.purpose,['Networking']);
+});
+test('historical purpose records remain readable without new submission validation',()=>{
+ const row=toRegistrationRow(normaliseOrder(input()));row.attendance_purpose=JSON.stringify(['Fundraising','Other']);
+ assert.equal(fromRegistrationRow(row).purpose,'Fundraising; Other');
+});

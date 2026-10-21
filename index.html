@@ -1276,8 +1276,9 @@
             <div class="reg-field"><label data-zh="手机号码 &lt;span&gt;*&lt;/span&gt;">Mobile number <span>*</span></label><div style="display:grid;grid-template-columns:90px 1fr;gap:8px"><input name="dial" value="+86" aria-label="Country code" data-zh-aria-label="国际区号"><input name="phone" type="tel" autocomplete="tel" required></div></div>
             <div class="reg-field"><label data-zh="是否与 WhatsApp / 微信号码相同？">Same as WhatsApp / WeChat?</label><select name="whatsappSame"><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
             <div class="reg-field"><label data-zh="WhatsApp / 微信号码">WhatsApp / WeChat number</label><input name="whatsappNumber"></div>
-            <div class="reg-field full"><div class="reg-group-label" data-zh="投资方向">Investment focus</div><div class="reg-choice-grid" data-multi="focus"></div></div>
+            <div class="reg-field full"><label for="investmentFocus" data-zh="投资方向">Investment focus</label><input id="investmentFocus" name="focus" type="text" maxlength="80"></div>
             <div class="reg-field full"><div class="reg-group-label" data-zh="参会目的">Purpose of attendance</div><div class="reg-choice-grid" data-multi="purpose"></div></div>
+            <div class="reg-field full" id="purposeOtherField" hidden><label for="purposeOther" data-zh="请说明其他参会目的 &lt;span&gt;*&lt;/span&gt;">Please specify your other purpose <span>*</span></label><input id="purposeOther" name="purposeOther" type="text" maxlength="80" pattern=".*\S.*" disabled></div>
             <div class="reg-field"><label data-zh="是否需要签证邀请函？&lt;span&gt;*&lt;/span&gt;">Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="" data-zh="请选择">Select</option><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
             <div class="reg-field"><label data-zh="预计抵达日期">Expected arrival date</label><input name="arrivalDate" type="date"></div>
             <div class="reg-field"><label data-zh="随行人数">Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
@@ -1366,6 +1367,9 @@
     'Includes 1 delegate pass + curated LP matchmaking.':'包含一张参会通行证及精选 LP 对接。',
     'Private Equity':'私募股权', 'Private Credit':'私募信贷', 'Secondaries':'私募二级市场', 'Co-Investment':'联合投资',
     'AI & Technology':'人工智能与科技', 'Healthcare':'医疗健康', 'Cross-Border Investment':'跨境投资', 'Real Assets':'实物资产', 'Other':'其他',
+    'Please select valid attendance purposes.':'请选择有效的参会目的。',
+    'Please specify your other purpose of attendance.':'请说明其他参会目的。',
+    'Please enter an other purpose of attendance of up to 80 characters.':'其他参会目的请填写不超过 80 个字符的文字。',
     'Market Insights':'市场洞见', 'Investment Opportunities':'投资机会', 'Fundraising':'募资', 'LP-GP Partnership':'LP–GP 合作', 'Networking':'人脉交流',
     'Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.':'请使用企业邮箱。不接受 Gmail、Outlook、Yahoo、iCloud、QQ、163 等个人邮箱。',
     'Please use your business email address. Personal email addresses are not accepted.':'请使用企业邮箱，不接受个人邮箱。',
@@ -1416,6 +1420,7 @@
     IDEMPOTENCY_CONFLICT:'This submission has changed. Please start a new registration.',
     VIP_TICKET_ONLY:'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.',
     BUSINESS_EMAIL_REQUIRED:'Please use your business email address. Personal email addresses are not accepted.',
+    INVALID_PURPOSE:'Please select valid attendance purposes.', PURPOSE_OTHER_REQUIRED:'Please specify your other purpose of attendance.', INVALID_PURPOSE_OTHER:'Please enter an other purpose of attendance of up to 80 characters.',
     INVALID_PHONE:'Please enter a valid mobile number.', INVALID_DATE:'Please enter a valid expected arrival date.', CONSENT_REQUIRED:'Privacy consent is required.',
     DATABASE_UNAVAILABLE:'Registration database is unavailable. Please try again shortly.', RATE_LIMITED:'Too many attempts were submitted from this connection. Please try again later.',
     DUPLICATE_REGISTRATION:'A registration already exists for this business email. Please contact LP CLUB if you need to update it.'
@@ -1476,8 +1481,7 @@
   var vipSubmissionKey='', vipSubmissionPayload='', registrationResult=null;
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
-    focus:['Private Equity','Private Credit','Secondaries','Co-Investment','AI & Technology','Healthcare','Cross-Border Investment','Real Assets','Other'],
-    purpose:['Market Insights','Investment Opportunities','Fundraising','LP-GP Partnership','Networking','Other']
+    purpose:['Market Insights','Investment Opportunities','LP-GP Partnership','Networking','Other']
   };
 
   function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]})}
@@ -1582,7 +1586,7 @@
     }
   }
   function openReg(){
-    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
+    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();updatePurposeOther();if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
     loadPackages();
     regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
   }
@@ -1599,7 +1603,8 @@
     }
   }
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
-  function formPayload(){var fd=new FormData(regForm);return {packageId:selectedPackage.id,expectedPrice:Number(effectivePackage(selectedPackage).price),vipCode:appliedVipCode||undefined,materials:window.LPClubMaterials?window.LPClubMaterials.payload(language):undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:selectedPackage.organisationType,department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:getMulti('focus'),purpose:getMulti('purpose'),visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
+  function updatePurposeOther(){var selected=getMulti('purpose').indexOf('Other')!==-1,input=regForm.elements.purposeOther;document.getElementById('purposeOtherField').hidden=!selected;input.disabled=!selected;input.required=selected}
+  function formPayload(){var fd=new FormData(regForm),focus=String(fd.get('focus')||'').trim(),purpose=getMulti('purpose'),purposeOther=String(fd.get('purposeOther')||'').trim();return {packageId:selectedPackage.id,expectedPrice:Number(effectivePackage(selectedPackage).price),vipCode:appliedVipCode||undefined,materials:window.LPClubMaterials?window.LPClubMaterials.payload(language):undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:selectedPackage.organisationType,department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:focus?[focus]:[],purpose:purpose,purposeOther:purpose.indexOf('Other')!==-1?purposeOther:'',visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
   function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){setMessage(hint,'Please use your business email address. Personal email addresses are not accepted.');hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
   async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();{var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;er.currentPrice=data.currentPrice;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};if(window.LPClubMaterials){try{await window.LPClubMaterials.uploadRegistered(data)}catch(_){document.getElementById('materialSubmissionStatus').hidden=false;setMessage(document.getElementById('materialSubmissionStatus'),'Your registration is saved. Please use the email link to submit materials later.')}}renderSuccess();showStep(3)}catch(err){if(err.code==='PRICE_CHANGED'){await loadPackages();showStep(1);showAlert('The registration price has changed to USD {price}. Please review the updated price and submit again.',{price:Number(err.currentPrice||0).toLocaleString('en-US')})}else if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
 
@@ -1609,6 +1614,7 @@
   document.querySelectorAll('[data-open-form]').forEach(function(btn){btn.addEventListener('click',openReg)});
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
   regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage){if(vipCode.value.trim()&&!appliedVipCode){showAlert(selectedPackage.optionId==='ticket'?'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}if(appliedVipCode&&selectedPackage.optionId!=='ticket'){showAlert('VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}showAlert('');showStep(2)}else if(regStep===2)submitRegistration()});
+  regForm.addEventListener('change',function(e){if(e.target.matches('[data-multi="purpose"] input'))updatePurposeOther()});
   regForm.elements.email.addEventListener('blur',function(){var hint=document.getElementById('emailHint');hint.classList.toggle('error',this.value&&!businessEmail(this.value))});
   function updateSummary(){
     if(!selectedPackage)return;

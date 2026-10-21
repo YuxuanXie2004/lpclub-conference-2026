@@ -10,7 +10,16 @@ test('HTTP MySQL workflow preserves subpath, authorization, idempotency and priv
  const base='http://127.0.0.1:'+backend.server.address().port+'/2026-pe-conference';const headers={'Content-Type':'application/json','X-Admin-Token':'test-admin'};
  const post=(route,body,extra={})=>fetch(base+route,{method:'POST',headers:{...headers,...extra},body:JSON.stringify(body)});
  const payload={packageId:'gp_speaking',expectedPrice:4000,idempotencyKey:crypto.randomUUID(),materials:{portraitConsent:true,logoConsent:true,language:'zh'},attendee:{fullName:'Test',company:'Capital',jobTitle:'Partner',country:'China',companyType:'General Partner (GP)',email:'guest@example.com',phone:'13800138000',visaLetter:'No',consent:true}};
+ for(const [purpose,purposeOther,code] of [[['Fundraising'],'','INVALID_PURPOSE'],[['Other'],'  ','PURPOSE_OTHER_REQUIRED'],[['Other'],{},'INVALID_PURPOSE_OTHER']]){
+  const rejected=await post('/api/order',{...payload,attendee:{...payload.attendee,purpose,purposeOther}});
+  assert.equal(rejected.status,400,await rejected.clone().text());assert.equal((await rejected.json()).code,code);
+ }
+ assert.equal((await db.query('SELECT * FROM registrations')).length,0);
+ Object.assign(payload.attendee,{focus:['半导体、新能源'],purpose:['Networking','Other'],purposeOther:'寻找产业合作伙伴'});
  const r=await post('/api/order',payload);assert.equal(r.status,200,await r.clone().text());const data=await r.json();assert.ok(data.materials.uploadToken);assert.equal(data.email.queued,true);assert.equal(messages.length,0);
+ const listed=await fetch(base+'/api/registrations',{headers}).then(r=>r.json());
+ assert.equal(listed.rows[0].purpose,'Networking; Other; 寻找产业合作伙伴');assert.equal(listed.rows[0].focus,'半导体、新能源');
+ const exported=await fetch(base+'/export.csv',{headers}).then(r=>r.text());assert.ok(exported.includes('寻找产业合作伙伴'));
  const stale=await post('/api/order',{...payload,expectedPrice:3000,idempotencyKey:crypto.randomUUID(),attendee:{...payload.attendee,email:'stale@example.com'}});assert.equal(stale.status,409,await stale.clone().text());const staleData=await stale.json();assert.equal(staleData.code,'PRICE_CHANGED');assert.equal(staleData.currentPrice,4000);assert.equal((await db.query('SELECT * FROM registrations')).length,1);
  const replay=await post('/api/order',payload).then(r=>r.json());assert.equal(replay.ref,data.ref);assert.equal((await db.query('SELECT * FROM mail_jobs')).length,1);
  await backend.outbox.runOnce();assert.equal(messages.length,1);assert.match(messages[0].text,/\/2026-pe-conference\/materials#/);
