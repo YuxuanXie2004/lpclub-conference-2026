@@ -316,9 +316,12 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
     WHERE s.event_key=? AND r.event_key=s.event_key AND s.enabled=1 AND r.is_deleted=0 AND r.deleted_at IS NULL
     AND r.status='Approved' AND c.granted=1 AND v.status='approved'
     AND (s.kind='logo' OR (s.kind='portrait' AND r.option_id IN ('speaking','panel')))`;
+  const manualPublicSelect = `SELECT s.id,s.kind,s.file_id AS published_version_id,s.config_json,s.id AS org_key,s.sort_order,
+    1 AS version_no,f.storage_key,'speaking' AS option_id,'en' AS language,'' AS full_name,'' AS job_title,'' AS company
+    FROM showcase_manual_entries s JOIN material_files f ON f.id=s.file_id WHERE s.event_key=? AND s.enabled=1`;
   async function showcase() {
     if (!ready()) return { ok: true, enabled: false, speakers: [], organisations: [] };
-    const rows = await db.query(publicSelect + ' ORDER BY s.sort_order,s.id', [EVENT]);
+    const rows = await db.query('SELECT * FROM (' + publicSelect + ' UNION ALL ' + manualPublicSelect + ') published ORDER BY sort_order,id', [EVENT,EVENT]);
     const speakers = [], organisations = [];
     for (const row of rows) {
       const published = objectJSON(row.config_json).published;
@@ -330,7 +333,7 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
     return { ok: true, enabled: true, speakers, organisations };
   }
   async function publishedRow(id, version) {
-    const row = (await db.query(publicSelect + ' AND s.id=? AND v.version_no=?', [EVENT, id, version]))[0];
+    const row = (await db.query(publicSelect + ' AND s.id=? AND v.version_no=? UNION ALL ' + manualPublicSelect + ' AND s.id=? AND ?=1', [EVENT,id,version,EVENT,id,version]))[0];
     if (!row || !objectJSON(row.config_json).published) throw imageMissing();
     return row;
   }
@@ -338,7 +341,7 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
     requireReady();
     if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) || !Number.isInteger(version) || version < 1) throw imageMissing();
     const row = await publishedRow(id, version), published = objectJSON(row.config_json).published;
-    const result = await imageCache(JSON.stringify({ renderer: 5, source: row.storage_key, kind: row.kind, version, crop: published.crop?.[row.kind] }), async () => derivative(await fileStore.read({ storage: 'local', key: row.storage_key }), row.kind, published.crop?.[row.kind]));
+    const result = await imageCache(JSON.stringify({ renderer: 7, source: row.storage_key, kind: row.kind, version, crop: published.crop?.[row.kind] }), async () => derivative(await fileStore.read({ storage: 'local', key: row.storage_key }), row.kind, published.crop?.[row.kind]));
     // The byte cache is never an authority. Repeat the indexed rights query after every asynchronous image read.
     const latest = await publishedRow(id, version);
     if (latest.published_version_id !== row.published_version_id || latest.storage_key !== row.storage_key || JSON.stringify(objectJSON(latest.config_json).published) !== JSON.stringify(published)) throw imageMissing();

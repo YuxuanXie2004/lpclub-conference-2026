@@ -37,27 +37,22 @@
     portrait:['A clear, professional portrait.','请提供清晰的正面商务照片。'],
     logo:['A transparent PNG or a white-background image is recommended. Keep the logo clear and complete.','建议提供透明背景 PNG 或白底图片，确保 Logo 清晰、完整。']
   };
-  const icons = {
-    card:'<rect x="3" y="6" width="26" height="20" rx="3"/><circle cx="11" cy="13" r="3"/><path d="M6 22c0-5 10-5 10 0M20 12h5m-5 5h5"/>',
-    portrait:'<rect x="5" y="2" width="22" height="28" rx="3"/><circle cx="16" cy="12" r="5"/><path d="M8 27c0-11 16-11 16 0"/>',
-    logo:'<rect x="3" y="3" width="26" height="26" rx="4"/><path d="m9 23 7-14 7 14M12 18h8"/>'
-  };
-  const icon = kind => '<svg viewBox="0 0 32 32" aria-hidden="true">'+icons[kind]+'</svg>';
+  const uploadIcon = '<svg class="upload-plus" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 6v20M6 16h20"/></svg>';
   function assetState(kind, asset, lang) {
     const status = asset.status;
-    if (status === 'rejected') return {label:text(lang,'Please resubmit','需要重交'),tone:'warning',action:text(lang,'Upload again','重新上传')};
-    if (status === 'missing' || status === 'not_applicable' || !status) return {label:text(lang,'To upload','待上传'),tone:'',action:text(lang,'Upload image','上传图片')};
+    if (status === 'rejected') return {label:text(lang,'Please resubmit','需要重交'),tone:'warning',action:text(lang,'Re-upload','重新上传')};
+    if (status === 'missing' || status === 'not_applicable' || !status) return {label:text(lang,'To upload','待上传'),tone:'',action:text(lang,'Upload','上传')};
     const state = status === 'approved' ? ['Approved','已通过','success'] : kind !== 'card' && status === 'pending' ? ['In review','审核中','review'] : ['Submitted','已提交','success'];
-    return {label:text(lang,state[0],state[1]),tone:state[2],action:text(lang,'Replace image','更换图片')};
+    return {label:text(lang,state[0],state[1]),tone:state[2],action:text(lang,'Replace','更换')};
   }
   function assetMarkup(kind, asset, lang, selected, consents={}) {
-    const state = selected?{label:text(lang,'Ready to save','待保存'),tone:'review',action:text(lang,'Choose another','重新选择')}:assetState(kind, asset, lang), name = text(lang, ...labels[kind]);
+    const state = selected?{label:text(lang,'Ready to save','待保存'),tone:'review',action:text(lang,'Replace','重新选择')}:assetState(kind, asset, lang), name = text(lang, ...labels[kind]);
     return '<article class="material-row'+(asset.status==='rejected'?' needs-action':'')+'" data-kind="'+kind+'">'+
-      '<div class="material-thumbnail" data-thumbnail="'+kind+'">'+icon(kind)+(asset.preview||selected?'<img data-preview="'+kind+'" alt="'+esc(name)+'" hidden>':'')+'</div>'+
       '<div class="material-content"><h3 class="material-name">'+esc(name)+'</h3><p class="material-description">'+esc(text(lang,...descriptions[kind]))+'</p><span class="material-state '+state.tone+'">'+esc(state.label)+'</span>'+
       (selected?'<p class="selected-filename">'+esc(selected.name)+'</p>':asset.status==='rejected'&&asset.reason?'<p class="material-reason">'+esc(asset.reason)+'</p>':'')+'</div>'+
-      '<div class="material-controls"><label class="button upload-picker"><span data-picker-label="'+kind+'">'+esc(state.action)+'</span><input type="file" data-file="'+kind+'" accept="image/jpeg,image/png,image/webp" aria-label="'+esc(state.action+' · '+name)+'"></label>'+
+      '<div class="material-controls"><label class="button upload-picker"><span class="upload-visual">'+uploadIcon+(asset.preview||selected?'<img data-preview="'+kind+'" alt="'+esc(name)+'" hidden>':'')+'</span><span data-picker-label="'+kind+'">'+esc(state.action)+'</span><input type="file" data-file="'+kind+'" accept="image/jpeg,image/png,image/webp" aria-label="'+esc(state.action+' · '+name)+'"></label>'+
       (selected?'<button type="button" class="delete-button" data-cancel="'+kind+'">'+text(lang,'Cancel selection','取消选择')+'</button>':asset.preview?'<button type="button" class="delete-button" data-remove="'+kind+'" aria-label="'+esc(text(lang,'Delete ','删除')+name)+'">'+text(lang,'Delete','删除')+'</button>':'')+'</div>'+
+      '<div class="material-thumbnail" data-thumbnail="'+kind+'"><div class="material-example"><img src="images/material-examples/'+kind+'.png" alt="'+esc(text(lang,'Fictional example: ','虚构示例：')+name)+'" width="448" height="'+(kind==='portrait'?'672':'448')+'"><span>'+text(lang,'Example','示例')+'</span></div></div>'+
       (kind!=='card'?'<div class="material-consent">'+consentMarkup({portraitEligible:kind==='portrait',consents},lang,kind)+'</div>':'')+
       '<p class="material-error" data-error="'+kind+'" role="alert" hidden></p></article>';
   }

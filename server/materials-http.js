@@ -80,6 +80,17 @@ function createMaterialsHandler({ service, showcase, json, readBody, setSecurity
       if (req.method === 'GET' && path === '/materials-admin') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(renderMaterialsAdminPage(adminToken || url.searchParams.get('token') || '', url.searchParams.get('ref') || '')); return true; }
       let match;
       if (path.startsWith('/api/admin/showcase/')) {
+        match = path.match(/^\/api\/admin\/showcase\/(portrait|logo)\/uploads(?:\/([0-9a-f-]{36})\/preview)?$/i);
+        if (match && showcase) {
+          if (req.method === 'POST' && !match[2]) {
+            throttle(req, 'showcase-' + match[1], 'upload');
+            json(res, 200, { ok: true, ...await showcase.upload(match[1], await readImage(req)) });
+          } else if (req.method === 'GET' && match[2]) {
+            const data = await showcase.preview(match[1], match[2]);
+            res.writeHead(200, { 'Content-Type': data.mimeType, 'Content-Length': data.buffer.length }); res.end(data.buffer);
+          } else throw error('Method not allowed', 405);
+          return true;
+        }
         match = path.match(/^\/api\/admin\/showcase\/(portrait|logo)(?:\/(candidates))?$/);
         if (!match || !showcase) throw error('Route not found', 404);
         const kind = match[1];
@@ -117,7 +128,7 @@ function createMaterialsHandler({ service, showcase, json, readBody, setSecurity
       if (path === '/api/materials/me' && req.method === 'GET') json(res, 200, { ok: true, ...await service.me(ref, authContext) });
       else if (path === '/api/materials/consents' && req.method === 'PUT') json(res, 200, { ok: true, ...await service.setConsents(ref, await body(req), authContext) });
       else if (req.method === 'DELETE' && (match = path.match(/^\/api\/materials\/(card|portrait|logo)$/))) json(res, 200, { ok: true, ...await service.remove(ref, match[1], authContext) });
-      else if (req.method === 'GET' && (match = path.match(/^\/api\/materials\/preview\/(card|portrait|logo)$/))) { const data = await service.preview(ref, match[1], {authContext}); res.writeHead(200, { 'Content-Type': data.mimeType }); res.end(data.buffer); }
+      else if (req.method === 'GET' && (match = path.match(/^\/api\/materials\/preview\/(card|portrait|logo)$/))) { const data = await service.preview(ref, match[1], {authContext, fit: 'contain'}); res.writeHead(200, { 'Content-Type': data.mimeType }); res.end(data.buffer); }
       else throw error('Route not found', 404);
     } catch (problem) {
       const storageError = ['MATERIALS_STORAGE_PERMISSION_REQUIRED', 'MATERIALS_STORAGE_UNAVAILABLE'].includes(problem.code);

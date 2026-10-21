@@ -22,6 +22,62 @@ async function fixture(t) {
   }
   return { db, env, materials, file, registration, approve, showcase: () => require('../server/showcase').createShowcaseService({ db, env, materials }) };
 }
+for (const kind of ['portrait', 'logo']) integration('MySQL manual '+kind+' uploads publish only on save and share ordering with registrations', async t => {
+  const f=await fixture(t),s=f.showcase(),before=await s.board(kind);
+  const {item}=await s.upload(kind,f.file);
+  assert.equal(item.source,'manual');assert.equal(item.ref,'');assert.equal(item.eligible,true);
+  assert.equal((await s.candidates(kind)).total,0,'Manual uploads never enter the candidate library');
+  assert.equal((await f.db.query('SELECT id FROM registrations')).length,0);
+  assert.equal((await s.board(kind)).revision,before.revision);assert.equal((await s.board(kind)).items.length,0);
+  const section=kind==='portrait'?'speakers':'organisations';assert.equal((await f.materials.showcase())[section].length,0);
+  await assert.rejects(f.materials.publicMedia(item.entryId,1),e=>e.statusCode===404);
+  const preview=await s.preview(kind,item.entryId);assert.equal(preview.mimeType,'image/webp');
+  assert.equal((await sharp(preview.buffer).metadata()).width,40);
+  await assert.rejects(s.preview(kind==='portrait'?'logo':'portrait',item.entryId),e=>e.statusCode===404);
+  await assert.rejects(s.save(kind,{revision:before.revision,items:[item]}),e=>e.statusCode===400);
+  const row=await f.registration();await f.approve(row,kind);
+  const registered=(await s.candidates(kind,{q:row.ref})).rows[0];
+  const input={...item,name:'Manual Guest',company:'Manual Fund',title:'Partner',crop:{x:.3,y:.6,zoom:1.5}};
+  let board=await s.save(kind,{revision:before.revision,items:[input,registered]});
+  assert.deepEqual(board.items.map(x=>x.entryId),[item.entryId,registered.entryId]);
+  assert.deepEqual((await f.materials.showcase())[section].map(x=>x.id),[item.entryId,registered.entryId]);
+  const media=await f.materials.publicMedia(item.entryId,1),dimensions=await sharp(media.buffer).metadata();
+  assert.equal(dimensions.width,kind==='portrait'?500:840);assert.equal(dimensions.height,kind==='portrait'?600:504);
+  await assert.rejects(s.save(kind,{revision:before.revision,items:[input]}),e=>e.statusCode===409);
+  await assert.rejects(s.save(kind,{revision:board.revision,items:[{...input,materialRevision:999}]}),e=>e.statusCode===409);
+  assert.equal((await s.board(kind)).items.length,2);
+  board=await s.save(kind,{revision:board.revision,items:[...board.items].reverse()});
+  assert.deepEqual((await f.materials.showcase())[section].map(x=>x.id),[registered.entryId,item.entryId]);
+  assert.equal((await s.candidates(kind,{q:'Manual Fund'})).total,0);
+  const pages=await Promise.all([1,2].map(page=>s.candidates(kind,{page,pageSize:1})));
+  assert.equal(pages[0].total,1);assert.deepEqual(pages.flatMap(p=>p.rows.map(x=>x.entryId)),[registered.entryId]);
+  await s.save(kind,{revision:board.revision,items:board.items.filter(x=>x.entryId!==item.entryId)});
+  await assert.rejects(f.materials.publicMedia(item.entryId,1),e=>e.statusCode===404);
+  assert.equal((await s.candidates(kind,{q:'Manual Fund'})).total,0);
+});
+integration('MySQL manual uploads reject invalid images and a failed mixed save rolls back both sources',async t=>{
+ const f=await fixture(t),s=f.showcase();
+ for(const file of [{...f.file,buffer:Buffer.from('bad')},{...f.file,mimeType:'image/svg+xml'},{...f.file,buffer:Buffer.alloc(5*1024*1024+1)}])await assert.rejects(s.upload('portrait',file),e=>[400,413].includes(e.statusCode));
+ assert.equal((await f.db.query('SELECT id FROM material_files')).length,0);
+ const {item}=await s.upload('portrait',f.file),row=await f.registration();await f.approve(row);
+ const candidate=(await s.candidates('portrait',{q:row.ref})).rows[0];
+ const brokenDb={query:f.db.query,transaction:work=>f.db.transaction(tx=>work({query:async(sql,args)=>{if(sql.startsWith('UPDATE showcase_entries SET enabled=1'))throw Error('Injected failure');return tx.query(sql,args);}}))};
+ const broken=require('../server/showcase').createShowcaseService({db:brokenDb,env:f.env,materials:f.materials});
+ await assert.rejects(broken.save('portrait',{revision:1,items:[{...item,name:'Manual',company:'',title:''},candidate]}),/Injected failure/);
+ assert.equal((await s.board('portrait')).revision,1);assert.equal((await s.board('portrait')).items.length,0);
+ assert.equal((await f.materials.showcase()).speakers.length,0);
+});
+integration('MySQL manual saves have one concurrent winner and public images recheck removal after reading',async t=>{
+ const f=await fixture(t),s=f.showcase(),{item}=await s.upload('portrait',f.file);
+ const items=[{...item,name:'Manual',title:'',company:''}];
+ const outcomes=await Promise.allSettled([s.save('portrait',{revision:1,items}),s.save('portrait',{revision:1,items})]);
+ assert.equal(outcomes.filter(x=>x.status==='fulfilled').length,1);assert.equal(outcomes.find(x=>x.status==='rejected').reason.statusCode,409);
+ await f.materials.publicMedia(item.entryId,1);
+ let reads=0;const board=await s.board('portrait');
+ const concurrentDb={transaction:f.db.transaction,query:async(sql,args)=>{const result=await f.db.query(sql,args);if(sql.includes('AND s.id=?')&&++reads===1)await s.save('portrait',{revision:board.revision,items:[]});return result;}};
+ const concurrent=createMaterialService({db:concurrentDb,env:f.env});
+ await assert.rejects(concurrent.publicMedia(item.entryId,1),e=>e.statusCode===404);assert.equal(reads,2);
+});
 integration('MySQL quality approval never publishes and admission or consent do not block review', async t => {
   const f = await fixture(t), row = await f.registration('Received');
   await f.materials.setConsents(row.ref, { portrait: false });
@@ -113,7 +169,7 @@ integration('MySQL portrait and logo crops retain zoom, keep draft edits private
   assert.deepEqual(board.items[0].crop,edit);
   assert.deepEqual((await f.showcase().board(kind)).items[0].crop,edit,'A fresh service reads the saved crop');
   const rendered=await f.materials.publicMedia(candidate.entryId,1),raw=await sharp(rendered.buffer).raw().toBuffer({resolveWithObject:true});
-  assert.equal(raw.info.width,kind==='portrait'?500:840);assert.equal(raw.info.height,kind==='portrait'?600:420);
+  assert.equal(raw.info.width,kind==='portrait'?500:840);assert.equal(raw.info.height,kind==='portrait'?600:504);
   for(let i=0;i<raw.data.length;i+=raw.info.channels)assert(raw.data[i+2]>raw.data[i]+100);
   await assert.rejects(s.save(kind,{revision:board.revision,items:[{...board.items[0],crop:{...edit,zoom:9}}]}),error=>error.statusCode===400);
  }

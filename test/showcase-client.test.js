@@ -5,6 +5,29 @@ const fs = require('node:fs');
 const file = require('node:path').join(__dirname, '../assets/showcase-admin.js');
 function client() { assert.ok(fs.existsSync(file), 'showcase client exists'); return require(file); }
 const card = id => ({ entryId: id, versionId: 'version-'+id, ref:id, materialRevision: 3, name:id, title:'Partner', company:'Fund', crop:{x:.5,y:.5}, eligible:true });
+test('manual uploads without registration references can coexist in the same draft',()=>{
+ const m=client(),state=m.createDrafts();m.acceptBoard(state,'portrait',{revision:1,items:[]});
+ for(const id of ['manual-a','manual-b'])assert.equal(m.addCard(state,'portrait',{...card(id),ref:'',source:'manual'}),true);
+ assert.equal(m.addCard(state,'portrait',{...card('manual-a'),ref:'',source:'manual'}),false);
+ assert.equal(m.payload(state,'portrait').items.length,2);assert.equal(state.portrait.dirty,true);assert.equal(state.logo.dirty,false);
+ m.discard(state,'portrait');assert.equal(state.portrait.items.length,0);
+});
+test('manual preview URLs are scoped to authenticated showcase image endpoints',()=>{
+ const m=client(),id='11111111-1111-4111-8111-111111111111';
+ const url='/event/api/admin/showcase/portrait/uploads/'+id+'/preview';assert.equal(m.safePreviewUrl(url,'/event/'),url);
+ for(const raw of [url+'?token=secret',url+'#hidden',url.replace('/portrait/','/card/'),url.replace(id,'../secret'),url.replace('/event/','/other/')])assert.throws(()=>m.safePreviewUrl(raw,'/event/'));
+});
+test('upload control adds a manual file to the draft without saving the website and failures preserve edits',async()=>{
+ const m=client(),nodes=new Map(),messages=[],requests=[],file=new Blob(['image'],{type:'image/png'});let failUpload=false;
+ const element={innerHTML:'',querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{value:'',dataset:{},innerHTML:'',files:[file]});return nodes.get(selector);},querySelectorAll(){return[];}};
+ const app=m.init({element,document:{},window:{location:{pathname:'/table'},URL:{},FormData,addEventListener(){}},message:(...args)=>messages.push(args),request:async(path,options)=>{requests.push({path,options});if(path.endsWith('/uploads')){if(failUpload)throw Error('Upload failed');return{json:async()=>({item:{...card('manual'),ref:'',source:'manual'}})};}return{json:async()=>({rows:[],items:[],total:0})};}});
+ m.acceptBoard(app.state,'portrait',{revision:1,items:[card('original')]});m.editCard(app.state,'portrait','original',{name:'Keep my edit'});
+ assert.match(element.innerHTML,/data-upload/);assert.match(element.innerHTML,/accept="image\/jpeg,image\/png,image\/webp"/);
+ assert.equal(typeof nodes.get('[data-upload-file]').onchange,'function');await nodes.get('[data-upload-file]').onchange();
+ assert.deepEqual(app.state.portrait.items.map(x=>x.entryId),['original','manual']);assert.equal(app.state.portrait.items[0].name,'Keep my edit');assert.equal(app.state.portrait.dirty,true);
+ assert.equal(requests[0].path,'/api/admin/showcase/portrait/uploads');assert.equal(requests[0].options.body.get('file').size,5);assert.equal(requests.some(x=>x.options?.method==='PUT'),false);
+ failUpload=true;await nodes.get('[data-upload-file]').onchange();assert.equal(app.state.portrait.items.length,2);assert.deepEqual(messages.at(-1),['Upload failed',true]);
+});
 test('organisation cards render without the More disclosure and keep their editing and ordering controls',()=>{
  const m=client(),nodes=new Map(),kinds=['portrait','logo'].map(kind=>({dataset:{kind}}));
  const element={innerHTML:'',querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{value:'',dataset:{},innerHTML:''});return nodes.get(selector);},querySelectorAll(selector){return selector==='[data-kind]'?kinds:[];}};

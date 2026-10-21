@@ -5,7 +5,7 @@ test('crop rectangles keep the published aspect and remain inside the image at e
  const {cropRect}=crop();
  for(const kind of ['portrait','logo'])for(const [width,height]of [[1200,800],[400,1400],[800,400]])for(const x of [0,.5,1])for(const y of [0,1])for(const zoom of [1,2,8]){
   const r=cropRect(width,height,kind,{x,y,zoom});
-  assert(Math.abs(r.width/r.height-(kind==='portrait'?5/6:2))<1e-9);
+  assert(Math.abs(r.width/r.height-(kind==='portrait'?5/6:5/3))<1e-9);
   assert(r.left>=-1e-8&&r.top>=-1e-8&&r.left+r.width<=width+1e-8&&r.top+r.height<=height+1e-8);
  }
 });
@@ -30,7 +30,7 @@ test('portrait and logo derivatives use the selected zoomed region instead of th
  const source=await sharp({create:{width:420,height:180,channels:3,background:'#ff0000'}}).composite([{input:await sharp({create:{width:210,height:180,channels:3,background:'#0000ff'}}).png().toBuffer(),left:210,top:0}]).png().toBuffer();
  for(const kind of ['portrait','logo']){
   const result=await derivative(source,kind,{x:1,y:.5,zoom:3});const {data,info}=await sharp(result.buffer).raw().toBuffer({resolveWithObject:true});
-  assert(Math.abs(info.width/info.height-(kind==='portrait'?5/6:2))<.025);
+  assert.equal(info.width,kind==='portrait'?500:840);assert.equal(info.height,kind==='portrait'?600:504);
   for(let p=0;p<data.length;p+=info.channels)assert(data[p+2]>data[p]+100,'The selected right-hand blue region fills the result');
  }
 });

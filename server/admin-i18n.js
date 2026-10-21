@@ -2,9 +2,19 @@
 
 // Only interface labels are translated. Registration data and API values remain unchanged.
 const translations = {
+  "手动上传嘉宾肖像": ["Upload speaker portrait","手动上传嘉宾肖像"],
+  "手动上传机构标识": ["Upload organisation logo","手动上传机构标识"],
+  "正在上传…": ["Uploading…","正在上传…"],
+  "管理员手动上传": ["Uploaded by administrator","管理员手动上传"],
+  "未填写展示信息": ["Display details not filled in","未填写展示信息"],
+  "可从左侧选择已审核资料，或手动上传图片加入右侧展示草稿。填写展示信息并调整顺序后，保存才更新官网。": ["Select approved materials on the left or upload images to the showcase draft on the right. Fill in display details and arrange the cards, then save to update the website.","可从左侧选择已审核资料，或手动上传图片加入右侧展示草稿。填写展示信息并调整顺序后，保存才更新官网。"],
+  "图片已加入展示草稿，请填写展示信息并保存后更新官网。": ["Image added to the draft. Fill in display details and save to update the website.","图片已加入展示草稿，请填写展示信息并保存后更新官网。"],
+  "图片未能加入展示草稿，请重试上传": ["Unable to add the image to the draft. Please upload it again.","图片未能加入展示草稿，请重试上传"],
+  "A public name is required for manual portraits": ["A public name is required for manual portraits","请填写手动上传嘉宾的公开姓名"],
+  "A public company name is required for manual logos": ["A public company name is required for manual logos","请填写手动上传标识的公开机构名称"],
   "调整图片": ["Adjust image","调整图片"],
   "头像 · 固定 5:6": ["Portrait · Fixed 5:6","头像 · 固定 5:6"],
-  "Logo · 固定 2:1": ["Logo · Fixed 2:1","Logo · 固定 2:1"],
+  "Logo · 固定 5:3": ["Logo · Fixed 5:3","Logo · 固定 5:3"],
   "拖动矩形框调整位置，拖动四角等比例缩放；框内就是官网展示范围。": ["Drag the frame to reposition it and drag its corners to resize at a fixed ratio. The frame defines the website image.","拖动矩形框调整位置，拖动四角等比例缩放；框内就是官网展示范围。"],
   "裁剪框，方向键移动，缩放滑块调整大小": ["Crop frame: use arrow keys to move and the zoom slider to resize","裁剪框，方向键移动，缩放滑块调整大小"],
   "官网展示预览": ["Website preview","官网展示预览"],

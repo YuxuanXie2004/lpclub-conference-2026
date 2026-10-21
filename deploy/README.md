@@ -14,7 +14,7 @@
 
 原件目录位于 web root 外，目录权限 0700、文件 0600，运行用户须可读写。不要把原件目录和缓存目录设为同一个目录。部署上传不复制或删除持久化数据、`.env`。
 
-人工确认目标 MySQL 后执行 `npm run db:init`，只建指定数据库及缺失的版本结构，不导入旧数据。建库账号和日常运行账号可分开。展示柜升级使用新增的 `002-showcase.sql`，保留原迁移及数据，不重跑清库脚本。随后重启单个大会 Node 进程，检查 `/health` 中 `database=mysql`、`schemaReady=true`、`ok=true`，核对后台分页、邮件配置和公开空列表。健康检查实际连接数据库。
+人工确认目标 MySQL 后执行 `npm run db:init`，只建指定数据库及缺失的版本结构，不导入旧数据。建库账号和日常运行账号可分开。展示柜升级使用 `002-showcase.sql`，管理员手动上传使用新增的 `003-manual-showcase.sql`，保留原迁移及数据，不重跑清库脚本。随后重启单个大会 Node 进程，检查 `/health` 中 `database=mysql`、`schemaReady=true`、`ok=true`，核对后台分页、邮件配置和公开空列表。健康检查实际连接数据库。
 
 `deploy/setup.sh` 用于新机器根域名安装，必须预先配置 MySQL。已有官网服务器不要直接套用其 Nginx 或 systemd 配置。
 

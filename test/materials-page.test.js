@@ -130,3 +130,17 @@ test('materials asset revisions refresh without retaining an earlier render', t 
   });
   assert.notEqual(script(renderMaterialsPage()),before);
 });
+
+test('materials user previews stay inside upload controls while reference examples remain separate', () => {
+  for(const kind of ['card','portrait','logo']) for(const language of ['en','zh']) {
+    for(const [asset,selected] of [[{status:'missing'},null],[{status:'pending',preview:true},null],[{status:'pending',preview:true},{name:'replacement.png'}]]) {
+      const html=page().assetMarkup(kind,asset,language,selected);
+      const control=html.match(/<label class="button upload-picker">[\s\S]*?<\/label>/)?.[0]||'';
+      assert.ok(html.includes('images/material-examples/'+kind+'.png'));
+      assert.ok(html.includes(language==='en'?'>Example<':'>示例<'));
+      const preview='data-preview="'+kind+'"';
+      assert.equal(control.includes(preview),Boolean(asset.preview||selected),'The personal preview belongs to the upload control');
+      assert.equal(html.slice(html.indexOf('class="material-thumbnail"')).includes(preview),false,'The reference stays independent');
+    }
+  }
+});

@@ -18,7 +18,7 @@
   }
   function organisationCard(item, lang, duplicate) {
     if (!safeImage(item.imageUrl)) return '';
-    return '<article class="organisation-card" role="listitem"' + (duplicate ? ' aria-hidden="true"' : '') + '><div class="organisation-mark"><img src="' + esc(item.imageUrl) + '" alt="" loading="lazy" width="420" height="210"></div><p>' + esc(localised(item.name, lang)) + '</p></article>';
+    return '<article class="organisation-card" role="listitem"' + (duplicate ? ' aria-hidden="true"' : '') + '><div class="organisation-mark"><img src="' + esc(item.imageUrl) + '" alt="" loading="lazy" width="420" height="252"></div><p>' + esc(localised(item.name, lang)) + '</p></article>';
   }
   function organisationWall(items, lang) {
     var valid = items.filter(function (item) { return safeImage(item.imageUrl); });
@@ -56,12 +56,14 @@
       label.textContent = file ? file.name : text('No image selected', '尚未选择图片');
     });
     document.querySelectorAll('[data-material-input]').forEach(function (input) {
-      var file = selected[input.dataset.materialInput];
+      var kind = input.dataset.materialInput, file = selected[kind];
       input.title = file ? file.name : text('Choose file', '选择文件');
+      var name = { card: text('Business card', '名片'), portrait: text('Speaker portrait', '嘉宾照片'), logo: text('Organisation logo', '机构 Logo') }[kind];
+      input.ariaLabel = (file ? text('Replace', '更换') : text('Upload', '上传')) + ' · ' + name;
     });
     document.querySelectorAll('[data-material-clear]').forEach(function (button) { button.textContent = text('Remove', '移除'); });
     document.querySelectorAll('[data-material-clear]').forEach(function (button) { button.hidden = !selected[button.dataset.materialClear]; });
-    document.querySelectorAll('[data-material-choose]').forEach(function (label) { label.textContent = selected[label.dataset.materialChoose] ? text('Change image', '更换图片') : text('Choose image', '选择图片'); });
+    document.querySelectorAll('[data-material-choose]').forEach(function (label) { label.textContent = selected[label.dataset.materialChoose] ? text('Replace', '更换') : text('Upload', '上传'); });
     renderShowcase(); renderStatus();
   }
   function payload(lang) {

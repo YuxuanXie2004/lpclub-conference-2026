@@ -2,7 +2,7 @@
   'use strict';
   const MAX_ZOOM=8;
   const bound=(v,min,max)=>Math.max(min,Math.min(max,v));
-  const ratio=kind=>kind==='portrait'?5/6:2;
+  const ratio=kind=>kind==='portrait'?5/6:5/3;
   function validateCrop(value){
     if(!value||Array.isArray(value)||!['x','y'].every(key=>Number.isFinite(value[key])&&value[key]>=0&&value[key]<=1)||value.zoom!==undefined&&(!Number.isFinite(value.zoom)||value.zoom<1||value.zoom>MAX_ZOOM))throw Object.assign(Error('Invalid crop position or zoom'),{statusCode:400});
     return {x:value.x,y:value.y,...(value.zoom===undefined?{}:{zoom:value.zoom})};

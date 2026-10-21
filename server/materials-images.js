@@ -34,7 +34,7 @@ async function derivative(buffer, kind, crop) {
     const oriented = await image.toBuffer({ resolveWithObject: true });
     const area = cropRect(oriented.info.width, oriented.info.height, kind, crop);
     const width = Math.max(1, Math.min(oriented.info.width, Math.round(area.width))), height = Math.max(1, Math.min(oriented.info.height, Math.round(area.height)));
-    image = sharp(oriented.data).extract({ left: Math.max(0, Math.min(oriented.info.width-width, Math.round(area.left))), top: Math.max(0, Math.min(oriented.info.height-height, Math.round(area.top))), width, height }).resize(kind === 'portrait' ? 500 : 840, kind === 'portrait' ? 600 : 420, { fit: 'fill' });
+    image = sharp(oriented.data).extract({ left: Math.max(0, Math.min(oriented.info.width-width, Math.round(area.left))), top: Math.max(0, Math.min(oriented.info.height-height, Math.round(area.top))), width, height }).resize(kind === 'portrait' ? 500 : 840, kind === 'portrait' ? 600 : 504, { fit: 'fill' });
   } else image = image.resize({ width: kind === 'card' ? 1200 : 640, height: kind === 'card' ? 1200 : 360, fit: 'inside', withoutEnlargement: true });
   return { buffer: await image.webp({ quality: 85 }).toBuffer(), mimeType: 'image/webp' };
 }

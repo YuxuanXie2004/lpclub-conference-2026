@@ -23,6 +23,18 @@ async function serve(t, overrides = {}, showcase) {
   return { base: 'http://127.0.0.1:' + server.address().port, calls, logs };
 }
 
+test('manual showcase uploads and previews require admin auth and one multipart file',async t=>{
+ const calls=[],showcase={upload:async(kind,file)=>{calls.push([kind,file.buffer.toString()]);return{item:{entryId:'manual'}};},preview:async(kind,id)=>{calls.push([kind,id]);return{buffer:Buffer.from('private'),mimeType:'image/webp'};}};
+ const {base}=await serve(t,{},showcase),route='/api/admin/showcase/logo/uploads',headers={'X-Admin-Token':'admin'};
+ const form=()=>{const data=new FormData();data.append('file',new Blob(['image'],{type:'image/png'}),'logo.png');return data;};
+ assert.equal((await fetch(base+route,{method:'POST',body:form()})).status,401);assert.equal(calls.length,0);
+ const uploaded=await fetch(base+route,{method:'POST',headers,body:form()});assert.equal(uploaded.status,200);assert.equal((await uploaded.json()).item.entryId,'manual');assert.deepEqual(calls[0],['logo','image']);
+ const multiple=form();multiple.append('file',new Blob(['second']),'b.png');assert.equal((await fetch(base+route,{method:'POST',headers,body:multiple})).status,400);
+ const preview=route+'/11111111-1111-4111-8111-111111111111/preview';assert.equal((await fetch(base+preview)).status,401);
+ const image=await fetch(base+preview,{headers});assert.equal(image.status,200);assert.equal(image.headers.get('cache-control'),'no-store');assert.equal(await image.text(),'private');
+ assert.equal((await fetch(base+'/api/admin/showcase/card/uploads',{method:'POST',headers,body:form()})).status,404);
+});
+
 test('readiness remains available while disabled and private APIs fail closed', async t => {
   const { base } = await serve(t, { ready: () => false, showcase: async () => ({ ok: true, enabled: false, speakers: [], organisations: [] }) });
   assert.deepEqual(await (await fetch(base + '/api/materials/config')).json(), { ok: true, enabled: false });
@@ -126,4 +138,33 @@ test('follow-up and historic private preview forward complete data without expos
  const headers={'X-Admin-Token':'admin','Content-Type':'application/json'};
  const update=await fetch(base+'/api/admin/materials/REF/owner',{method:'PUT',headers,body:JSON.stringify({owner:'负责人',note:'等待回复',rowVersion:4})});assert.equal(update.status,200);assert.deepEqual(received[0].input,{owner:'负责人',note:'等待回复',rowVersion:4});
  const image=await fetch(base+'/api/admin/materials/REF/preview/portrait?versionId=version-id&fit=contain',{headers});assert.equal(image.status,200);assert.equal(image.headers.get('cache-control'),'no-store');assert.equal(received[1].options.versionId,'version-id');assert.equal(received[1].options.fit,'contain');
+});
+
+test('attendee previews preserve the full original image despite website crop settings',async t=>{
+ const fsp=require('node:fs/promises'),os=require('node:os'),crypto=require('node:crypto'),sharp=require('sharp');
+ const {createFileStore}=require('../server/materials-file-store'),{createMaterialService}=require('../server/materials');
+ const root=await fsp.mkdtemp(path.join(os.tmpdir(),'lpclub-preview-'));
+ t.after(()=>fsp.rm(root,{recursive:true,force:true}));
+ const files=createFileStore(root),sources={},dimensions={card:[160,100],portrait:[80,120],logo:[160,160]};
+ for(const [kind,[width,height]] of Object.entries(dimensions)) {
+  const stripe=await sharp({create:{width,height:8,channels:3,background:'#ff0000'}}).png().toBuffer();
+  const source=await sharp({create:{width,height,channels:3,background:'#0000ff'}}).composite([{input:stripe,left:0,top:0}]).png().toBuffer();
+  sources[kind]=await files.write(source,kind+'.png','image/png');
+ }
+ const db={async transaction(work){return work(db);},async query(sql,params){
+  if(sql.startsWith('SELECT * FROM registrations'))return[{id:'registration',ref:'REF',option_id:'speaking'}];
+  if(sql.startsWith('SELECT digest FROM supplement_tokens'))return[{digest:crypto.createHash('sha256').update('valid').digest('hex')}];
+  if(sql.startsWith('SELECT f.storage_key')){const kind=params.at(-1);return[{storage_key:sources[kind].key,config_json:{draft:{crop:{[kind]:{x:.5,y:.5,zoom:2}}}}}];}
+  throw Error('Unexpected query');
+ }};
+ const service=createMaterialService({db,env:{MATERIALS_ENABLED:'true',PUBLIC_BASE_URL:'https://conference.example/',MATERIALS_SIGNING_KEY:'test-key-which-is-at-least-32-bytes-long',MATERIALS_STORAGE_DIR:root}});
+ const {base}=await serve(t,service),headers={Authorization:'Bearer valid','X-Registration-Ref':'REF'};
+ assert.equal((await fetch(base+'/api/materials/preview/logo')).status,401);
+ for(const [kind,[width,height]] of Object.entries(dimensions)) {
+  const response=await fetch(base+'/api/materials/preview/'+kind,{headers});assert.equal(response.status,200);
+  const {data,info}=await sharp(Buffer.from(await response.arrayBuffer())).removeAlpha().raw().toBuffer({resolveWithObject:true});
+  assert.equal(info.width,width);assert.equal(info.height,height,'The complete source keeps its original aspect');
+  assert(data[0]>200&&data[2]<40,'The top edge of the original remains visible');
+  const last=(height-1)*width*info.channels;assert(data[last+2]>200&&data[last]<40,'The bottom edge remains visible');
+ }
 });

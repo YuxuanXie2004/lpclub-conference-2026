@@ -86,7 +86,10 @@ test('manual cabinet and independent review controls translate without publishin
  assert.equal(app.api.text('资料审核通过'),'Approve material');
  assert.equal(app.api.text('官网展示柜'),'Website showcase');
  assert.equal(app.api.text('保存并更新官网'),'Save and update website');
+ assert.equal(app.api.text('手动上传嘉宾肖像'),'Upload speaker portrait');
+ assert.equal(app.api.text('手动上传机构标识'),'Upload organisation logo');
  app.api.setLanguage('zh');assert.equal(app.api.text('保存跟进'),'保存跟进');
+ assert.equal(app.api.text('A public name is required for manual portraits'),'请填写手动上传嘉宾的公开姓名');
 });
 
 test('candidate pagination keeps parameter bindings across language switches',()=>{

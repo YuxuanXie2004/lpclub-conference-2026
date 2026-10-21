@@ -197,3 +197,44 @@ test('unavailable showcase keeps the original nine section numbers', async () =>
   assert.match(page.visible().at(-2), /^08 — AGENDA$/);
   assert.match(page.visible().at(-1), /^09 — WHY ATTEND$/);
 });
+
+test('registration keeps examples visible while selecting, replacing, removing and resetting images', async () => {
+  const fs=require('node:fs'),vm=require('node:vm');
+  for(const kind of ['card','portrait','logo']) {
+    const example={dataset:{materialExample:kind},hidden:false};
+    const preview={items:[],replaceChildren(){this.items=[];},append(image){this.items.push(image);}};
+    const input={dataset:{materialInput:kind},files:[],value:'',addEventListener(name,fn){this[name]=fn;}};
+    const clear={dataset:{materialClear:kind},hidden:true},choose={dataset:{materialChoose:kind}};
+    const error={hidden:true,textContent:''},module={exports:{}};
+    const nodes={'[data-material-input]':[input],'[data-material-clear]':[clear],'[data-material-choose]':[choose],'[data-material-example]':[example],'[data-material-preview]':[preview],'[data-material-error]':[error]};
+    const document={documentElement:{lang:'en'},getElementById:()=>null,querySelectorAll:selector=>nodes[selector]||[],
+      querySelector:selector=>selector.startsWith('[data-material-preview=')?preview:selector.startsWith('[data-material-input=')?input:error,createElement:()=>({})};
+    vm.runInNewContext(fs.readFileSync(require.resolve('../assets/materials-client'),'utf8'),{module,document,Blob,FormData,URL,location:{pathname:'/'},fetch:async()=>({ok:true,json:async()=>({enabled:true})})});
+    const api=module.exports;api.init();await new Promise(resolve=>setImmediate(resolve));
+    for(const language of ['en','zh-CN']) {
+      api.update({language});
+      for(const name of ['first.png','replacement.png']) {
+        const file=new Blob(['image'],{type:'image/png'});file.name=name;input.files=[file];input.change();
+        assert.equal(example.hidden,false,'The reference example stays visible');
+        assert.equal(preview.items.length,1);assert.equal(preview.items[0].alt,name);
+        assert.equal(choose.textContent,language==='en'?'Replace':'更换');
+      }
+      input.files=[new Blob(['invalid'],{type:'image/svg+xml'})];input.change();
+      assert.equal(preview.items[0].alt,'replacement.png');assert.equal(example.hidden,false);
+      clear.onclick();assert.equal(preview.items.length,0);assert.equal(example.hidden,false);
+      assert.equal(choose.textContent,language==='en'?'Upload':'上传');
+    }
+    const file=new Blob(['image'],{type:'image/png'});file.name='last.png';input.files=[file];input.change();
+    api.reset();assert.equal(preview.items.length,0);assert.equal(example.hidden,false);
+  }
+});
+
+test('registration renders user previews in the upload controls, separate from reference examples', () => {
+  const html=require('node:fs').readFileSync(require.resolve('../index.html'),'utf8');
+  for(const kind of ['card','portrait','logo']) {
+    const control=html.match(new RegExp('<label class="material-file-picker">[^\\n]*data-material-input="'+kind+'"[^\\n]*?</label>'))?.[0]||'';
+    assert.ok(control.includes('data-material-preview="'+kind+'"'),'The selected image belongs to its upload control');
+    const example=html.match(new RegExp('<div class="material-art"[^\\n]*images/material-examples/'+kind+'\\.png[^\\n]*'))?.[0]||'';
+    assert.ok(example);assert.doesNotMatch(example,/data-material-preview=/);
+  }
+});
