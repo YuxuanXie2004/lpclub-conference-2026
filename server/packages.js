@@ -23,11 +23,11 @@ const IDENTITIES = {
     note: 'For fund managers and general partners.'
   },
   investment_company: {
-    id: 'investment_company', name: 'Asset Management', organisationType: 'Investment Company',
+    id: 'investment_company', name: 'Asset Management', organisationType: 'Asset Management',
     note: 'For asset management institutions, including but not limited to private credit firms and trust companies.'
   },
   standard: {
-    id: 'standard', name: 'Standard', organisationType: 'Other',
+    id: 'standard', name: 'Standard', organisationType: 'Standard',
     note: 'For third-party service providers, including fund administrators, securities firms, investment banks, law firms and accounting firms, as well as corporate attendees.'
   }
 };
