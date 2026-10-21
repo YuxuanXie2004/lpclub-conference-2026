@@ -4,12 +4,12 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const { renderTablePage } = require('../server/sheet');
 
-test('all four admin tabs are buttons in one document with isolated content panels', () => {
+test('all five admin tabs are buttons in one document with isolated content panels', () => {
   const html = renderTablePage('admin-test');
   const tabs = html.match(/<div class="tabs"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.equal((tabs.match(/<button\b/g) || []).length, 4);
+  assert.equal((tabs.match(/<button\b/g) || []).length, 5);
   assert.equal((tabs.match(/<a\b/g) || []).length, 0);
-  for (const id of ['registrationPanel', 'vipPanel', 'materialsPanel']) assert.ok(html.includes('id="' + id + '"'));
+  for (const id of ['registrationPanel', 'vipPanel', 'materialsPanel', 'pricingPanel']) assert.ok(html.includes('id="' + id + '"'));
   assert.equal((html.match(/<!doctype html>/gi) || []).length, 1);
   assert.equal(html.includes('<iframe'), false);
   const markup = html.replace(/<script>[\s\S]*?<\/script>/g, '');
@@ -40,7 +40,7 @@ function operations(responder) {
       getAttribute(name) { return this[name] ?? null; },
       addEventListener(name, handler) { events[name] = handler; },
       focus() { document.activeElement = this; },
-      querySelector(selector) { const match = selector.match(/^\[id="([^"]+)"\]$/); if (match) { const node = elements.get(match[1]); return node && (node.panel === id || node.id.startsWith(id === 'vipPanel' ? 'vip-' : 'materials-')) ? node : null; } const data=selector.match(/^\[data-([\w-]+)="([^"]+)"\]$/);if(data)return [...elements.values()].find(node=>node.dataset[data[1].replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]===data[2])||null;if(selector==='textarea')return [...elements.values()].find(node=>node.dataset.reason===el.dataset.rejection)||null;return null; },
+      querySelector(selector) { const match = selector.match(/^\[id="([^"]+)"\]$/); if (match) { const node = elements.get(match[1]); return node && (node.panel === id || node.id.startsWith(id === 'vipPanel' ? 'vip-' : id === 'pricingPanel' ? 'pricing-' : 'materials-')) ? node : null; } const data=selector.match(/^\[data-([\w-]+)="([^"]+)"\]$/);if(data)return [...elements.values()].find(node=>node.dataset[data[1].replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]===data[2])||null;if(selector==='textarea')return [...elements.values()].find(node=>node.dataset.reason===el.dataset.rejection)||null;return null; },
       querySelectorAll(selector) { if (id !== 'materialsPanel') return []; if(selector==='[data-text]')return [...elements.values()].filter(node=>node.dataset.text);if(selector==='[data-review-status]')return [...elements.values()].filter(node=>node.dataset.reviewStatus);if(['.approve','.confirm-reject','.reject','.cancel-reject'].includes(selector))return [...elements.values()].filter(node=>node.classes?.split(' ').includes(selector.slice(1)));return []; },
       getClientRects() { return [1]; }
     };
@@ -48,7 +48,7 @@ function operations(responder) {
     Object.defineProperty(el, 'innerHTML', { get: () => markup, set(value) { markup = value; for (const [, child] of value.matchAll(/\bid="([^"\s]+)"/g)) element(child, panel || id);if(id==='materials-editor'){for(const node of [...elements.values()])if(node.dynamicMaterial)elements.delete(node.id);let index=0;for(const match of value.matchAll(/<(input|textarea|button|select|div)\b([^>]*)>/g)){const content=value.slice(match.index+match[0].length).split('</'+match[1]+'>')[0];const attrs=Object.fromEntries([...match[2].matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1],m[2]]));if(!attrs.id&&!Object.keys(attrs).some(key=>key.startsWith('data-'))&&!attrs.class)continue;const key=attrs.id||(attrs['data-text']?'material-text-'+attrs['data-text']:'material-control-'+index++),node=element(key,'materialsPanel');node.dynamicMaterial=true;node.value=attrs.value??(match[1]==='textarea'?content||'':match[1]==='select'?(content.match(/<option value="([^"]+)"[^>]*selected/)?.[1]||''):'');node.hidden=/\bhidden\b/.test(match[2]);node.classes=attrs.class||'';node.dataset={};for(const [key,val]of Object.entries(attrs))if(key.startsWith('data-'))node.dataset[key.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=val;}} } });
     elements.set(id, el); return el;
   }
-  for (const [, id] of html.replace(/<script>[\s\S]*?<\/script>/g, '').matchAll(/\bid="([^"\s]+)"/g)) element(id, id.startsWith('vip-') ? 'vipPanel' : id.startsWith('materials-') ? 'materialsPanel' : '');
+  for (const [, id] of html.replace(/<script>[\s\S]*?<\/script>/g, '').matchAll(/\bid="([^"\s]+)"/g)) element(id, id.startsWith('vip-') ? 'vipPanel' : id.startsWith('materials-') ? 'materialsPanel' : id.startsWith('pricing-') ? 'pricingPanel' : '');
   const tabs = element('tabs');
   document.getElementById = id => elements.get(id);
   document.querySelector = selector => selector === '.tabs' ? tabs : null;
@@ -65,12 +65,13 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 
 test('tab controllers preserve page location and only activate the selected panel', async () => {
   const app = operations(); await flush();
-  for (const tab of ['vip', 'materials', 'deleted', 'active']) {
+  for (const tab of ['vip', 'materials', 'pricing', 'deleted', 'active']) {
     vm.runInContext(`setTab('${tab}')`, app.context); await flush();
     assert.equal(app.elements.get('vipPanel').hidden, tab !== 'vip');
     assert.equal(app.elements.get('materialsPanel').hidden, tab !== 'materials');
+    assert.equal(app.elements.get('pricingPanel').hidden, tab !== 'pricing');
     assert.equal(app.elements.get('registrationPanel').hidden, !['active', 'deleted'].includes(tab));
-    for (const name of ['vip', 'materials', 'active', 'deleted']) assert.equal(app.elements.get(name + 'Tab')['aria-selected'], String(name === tab));
+    for (const name of ['vip', 'materials', 'pricing', 'active', 'deleted']) assert.equal(app.elements.get(name + 'Tab')['aria-selected'], String(name === tab));
   }
   assert.equal(vm.runInContext('location.href', app.context), '/table?token=test-admin');
   assert.ok(app.requests.some(r => r.url.startsWith('/api/admin/vip-codes')));

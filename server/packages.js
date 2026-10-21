@@ -23,12 +23,12 @@ const IDENTITIES = {
     note: 'For fund managers and general partners.'
   },
   investment_company: {
-    id: 'investment_company', name: 'Investment Firm', organisationType: 'Investment Company',
-    note: 'For investment firms, institutional investors and related investment organisations.'
+    id: 'investment_company', name: 'Asset Management', organisationType: 'Investment Company',
+    note: 'For asset management institutions, including but not limited to private credit firms and trust companies.'
   },
   standard: {
     id: 'standard', name: 'Standard', organisationType: 'Other',
-    note: 'Standard conference registration.'
+    note: 'For third-party service providers, including fund administrators, securities firms, investment banks, law firms and accounting firms, as well as corporate attendees.'
   }
 };
 
@@ -39,20 +39,77 @@ const OPTION_LABELS = {
   matchmaking: ['1-on-1 LP Matchmaking Package', 'Includes 1 delegate pass + curated LP matchmaking.']
 };
 
-const PACKAGES = {};
-for (const identity of Object.values(IDENTITIES)) {
-  for (const [optionId, [ticketName, optionNote]] of Object.entries(OPTION_LABELS)) {
-    const id = identity.id + '_' + optionId;
-    const price = BASE_PRICES[identity.id][optionId];
-    PACKAGES[id] = {
-      id, identityId: identity.id, identityName: identity.name,
-      organisationType: identity.organisationType, optionId,
-      name: identity.name, ticketName, price,
-      displayPrice: price === 0 ? 'Complimentary / By invitation' : 'USD ' + price.toLocaleString('en-US'),
-      note: optionId === 'ticket' ? identity.note : optionNote,
-      available: true, needsVerification: false
-    };
+function clonePrices(source = BASE_PRICES) {
+  const result = {};
+  for (const [identityId, options] of Object.entries(source)) {
+    result[identityId] = { ...options };
   }
+  return result;
 }
 
-module.exports = { PACKAGES, IDENTITIES, BASE_PRICES };
+function normalisePrices(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw Object.assign(new Error('Invalid pricing configuration payload.'), { statusCode: 400 });
+  }
+  const result = {};
+  for (const identityId of Object.keys(IDENTITIES)) {
+    const values = input[identityId];
+    if (!values || typeof values !== 'object' || Array.isArray(values)) {
+      throw Object.assign(new Error(`Missing pricing for identity: ${identityId}`), { statusCode: 400 });
+    }
+    result[identityId] = {};
+    for (const optionId of Object.keys(OPTION_LABELS)) {
+      const raw = values[optionId];
+      if (raw === undefined || raw === null || (typeof raw === 'string' && raw.trim() === '')) {
+        throw Object.assign(new Error(`Missing price for ${identityId}.${optionId}`), { statusCode: 400 });
+      }
+      if (typeof raw !== 'number' && typeof raw !== 'string') {
+        throw Object.assign(
+          new Error(`Price for ${identityId}.${optionId} must be a non-negative integer.`),
+          { statusCode: 400 }
+        );
+      }
+      const price = Number(raw);
+      if (!Number.isFinite(price) || price < 0 || !Number.isInteger(price)) {
+        throw Object.assign(
+          new Error(`Price for ${identityId}.${optionId} must be a non-negative integer.`),
+          { statusCode: 400 }
+        );
+      }
+      result[identityId][optionId] = price;
+    }
+  }
+  return result;
+}
+
+function buildPackages(input = BASE_PRICES) {
+  const prices = normalisePrices(input);
+  const packages = {};
+  for (const identity of Object.values(IDENTITIES)) {
+    for (const [optionId, [ticketName, optionNote]] of Object.entries(OPTION_LABELS)) {
+      const id = identity.id + '_' + optionId;
+      const price = prices[identity.id][optionId];
+      packages[id] = {
+        id, identityId: identity.id, identityName: identity.name,
+        organisationType: identity.organisationType, optionId,
+        name: identity.name, ticketName, price,
+        displayPrice: price === 0 ? 'Complimentary / By invitation' : 'USD ' + price.toLocaleString('en-US'),
+        note: optionId === 'ticket' ? identity.note : optionNote,
+        available: true, needsVerification: false
+      };
+    }
+  }
+  return packages;
+}
+
+const PACKAGES = Object.freeze(buildPackages(BASE_PRICES));
+
+module.exports = {
+  PACKAGES,
+  IDENTITIES,
+  BASE_PRICES,
+  OPTION_LABELS,
+  clonePrices,
+  normalisePrices,
+  buildPackages
+};

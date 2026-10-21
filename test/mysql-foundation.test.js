@@ -14,7 +14,7 @@ test('MySQL database and VIP repository modules expose the asynchronous contract
 test('MySQL migration is repeatable and active emails are unique per event', { skip: !integration }, async t => {
   const { db } = await mysqlFixture(t);
   await db.migrate();
-  assert.equal((await db.query('SELECT * FROM schema_migrations')).length, 3);
+  assert.equal((await db.query('SELECT * FROM schema_migrations')).length, 4);
   assert.equal((await db.health()).ok, true);
   const a = await insertRegistration(db, { email: 'SAME@example.com' });
   await assert.rejects(insertRegistration(db, { email: 'same@example.com' }), e => e.code === 'ER_DUP_ENTRY');
@@ -23,7 +23,7 @@ test('MySQL migration is repeatable and active emails are unique per event', { s
   await insertRegistration(db, { email: 'same@example.com' });
   await assert.rejects(db.query("UPDATE registrations SET status='Approved' WHERE id=?", [a.id]), e => e.code === 'ER_DUP_ENTRY');
   const rows = await db.query('SHOW TABLES');
-  assert.equal(rows.length, 16);
+  assert.equal(rows.length, 17);
 });
 
 test('MySQL transaction rolls back inserts and retries only confirmed deadlocks', { skip: !integration }, async t => {
@@ -114,7 +114,7 @@ test('MySQL migration restarts partial DDL and rejects changed checksums', { ski
   const { db } = await mysqlFixture(t);
   await db.query('DELETE FROM schema_migrations');
   await db.migrate();
-  assert.equal((await db.query('SELECT * FROM schema_migrations')).length, 3);
+  assert.equal((await db.query('SELECT * FROM schema_migrations')).length, 4);
   await db.query("UPDATE schema_migrations SET checksum=REPEAT('0',64)");
   await assert.rejects(db.migrate(), /checksum mismatch/);
 });

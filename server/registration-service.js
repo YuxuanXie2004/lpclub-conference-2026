@@ -5,7 +5,7 @@ const {toRegistrationRow,fromRegistrationRow,parseJSON}=require('./order');
 const STATUSES=['Received','Under Review','Approved','Waitlisted','Rejected','Cancelled'];
 const fail=(code,message,statusCode=400,extra={})=>Object.assign(new Error(message),{code,statusCode,...extra});
 async function audit(tx,id,action,detail={}) {await tx.query('INSERT INTO audit_events(registration_id,action,actor,detail) VALUES (?,?,?,?)',[id,action,'administrator',JSON.stringify(detail)]);}
-function createRegistrationService({db,normaliseOrder,vip,materials,mail,composeMail=order=>({order})}) {
+function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail,composeMail=order=>({order})}) {
   async function duplicate(email) {
     const rows=await db.query("SELECT ref FROM registrations WHERE event_key='conference-2026' AND active_email=LOWER(TRIM(?))",[email]);
     return fail('DUPLICATE_REGISTRATION','A registration already exists for this business email. Please contact LP CLUB if you need to update it.',409,{ref:rows[0]?.ref});
@@ -13,12 +13,14 @@ function createRegistrationService({db,normaliseOrder,vip,materials,mail,compose
   async function submit(input) {
     const key=input?.idempotencyKey;
     if(typeof key!=='string'||!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw fail('INVALID_IDEMPOTENCY_KEY','Please retry this registration from the website.');
-    const normalized=normaliseOrder(input);
     const vipRaw=typeof input.vipCode==='string'?input.vipCode.trim().toUpperCase():'';
-    const requestHash=crypto.createHash('sha256').update(JSON.stringify({packageId:normalized.package.id,attendee:normalized.attendee,materials:normalized.materialPreferences,vipCode:vipRaw})).digest('hex');
+    let normalized;
     let result;
     try {
       result=await db.transaction(async tx=>{
+        const catalogue=pricing?await pricing.packages(tx,{lock:true}):null;
+        normalized=normaliseOrder(input,catalogue?.packages);
+        const requestHash=crypto.createHash('sha256').update(JSON.stringify({packageId:normalized.package.id,attendee:normalized.attendee,materials:normalized.materialPreferences,vipCode:vipRaw})).digest('hex');
         await tx.query('INSERT INTO submission_requests(idempotency_key,request_hash) VALUES (?,?) ON DUPLICATE KEY UPDATE idempotency_key=idempotency_key',[key,requestHash]);
         const previous=(await tx.query('SELECT * FROM submission_requests WHERE idempotency_key=? FOR UPDATE',[key]))[0];
         if(previous.request_hash!==requestHash)throw fail('IDEMPOTENCY_CONFLICT','This submission has changed. Please start a new registration.',409);
@@ -35,6 +37,11 @@ function createRegistrationService({db,normaliseOrder,vip,materials,mail,compose
           const p={...order.package,originalPrice:order.package.price,price:0,displayPrice:'Complimentary / VIP Code',vipApplied:true};
           order={...order,package:p,total:0,subtotal:0,items:[{name:p.ticketName,qty:1,lineTotal:0}],pricingBasis:p.name+' — VIP Code complimentary delegate pass (standard USD '+p.originalPrice.toLocaleString('en-US')+') [VIP:'+code.id+']'};
         }
+        if(input.expectedPrice!==undefined&&input.expectedPrice!==null&&input.expectedPrice!==''){
+          const expectedPrice=Number(input.expectedPrice);
+          if(!Number.isFinite(expectedPrice)||expectedPrice<0||!Number.isInteger(expectedPrice))throw fail('INVALID_EXPECTED_PRICE','The confirmed registration price is invalid.',400);
+          if(expectedPrice!==order.total)throw fail('PRICE_CHANGED','Registration pricing changed. Please review the updated price and submit again.',409,{currentPrice:order.total,currentRevision:catalogue?.revision});
+        }
         const row=toRegistrationRow(order);
         const enabled=materials?.ready()===true;
         row.email_status=mail?.configured()?'Queued':'Not configured';
@@ -49,7 +56,7 @@ function createRegistrationService({db,normaliseOrder,vip,materials,mail,compose
         return response;
       });
     } catch(error) {
-      if(error.code==='ER_DUP_ENTRY')throw await duplicate(normalized.attendee.email);
+      if(error.code==='ER_DUP_ENTRY')throw await duplicate(normalized?.attendee.email);
       if(error.statusCode)throw error;
       throw fail('DATABASE_UNAVAILABLE','Registration could not be confirmed. Please retry the same submission.',503,{retryable:true});
     }

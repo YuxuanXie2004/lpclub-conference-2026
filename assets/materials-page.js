@@ -62,7 +62,7 @@
       (!kind||kind==='logo'?row('logo','I am authorised to allow my organisation’s logo and name on the conference website','我有权授权在大会官网展示机构 Logo 和名称','Optional. Withdrawal immediately stops the display.','自愿选择，撤回授权后将立即停止展示。'):'');
   }
   function packageLabel(id, lang) {
-    const identities = {lp:['Limited Partner','有限合伙人（LP）'],lpclub_member:['LP CLUB Member','LP CLUB 会员'],gp:['General Partner','普通合伙人（GP）'],investment_company:['Investment Firm','投资机构'],standard:['Standard','标准参会']};
+    const identities = {lp:['Limited Partner','有限合伙人（LP）'],lpclub_member:['LP CLUB Member','LP CLUB 会员'],gp:['General Partner','普通合伙人（GP）'],investment_company:['Asset Management','资产管理'],standard:['Standard','标准参会']};
     const options = {ticket:['Delegate Pass','普通参会'],speaking:['Speaking Package','演讲套餐'],panel:['Panel / Roundtable','圆桌套餐'],matchmaking:['1-on-1 Matchmaking','一对一配对']};
     const match = /^(lp|lpclub_member|gp|investment_company|standard)_(ticket|speaking|panel|matchmaking)$/.exec(id || '');
     return match?text(lang,...identities[match[1]])+' · '+text(lang,...options[match[2]]):text(lang,'Conference registration','大会报名');

@@ -46,7 +46,7 @@ async function fillDetails(page) {
       await page.locator('[data-identity="investment_company"]').click();
       await page.locator('[data-package="investment_company_matchmaking"] input').check();
       await page.locator('#regNext').click();
-      assert.match(await page.locator('#regSummaryName').textContent(), /Investment Firm/);
+      assert.match(await page.locator('#regSummaryName').textContent(), /Asset Management/);
       assert.equal(await page.locator('#regSummaryPrice').textContent(), 'USD 7,000');
       assert.equal(await page.locator('[name="matchmaking"]').count(), 0);
       await fillDetails(page);
@@ -54,7 +54,7 @@ async function fillDetails(page) {
       await page.locator('#regNext').click();
       await page.locator('[data-reg-step="3"]').waitFor({ state: 'visible' });
       assert.equal(payload.packageId, 'investment_company_matchmaking');
-      assert.match(await page.locator('#regSuccessCard').textContent(), /Investment Firm/);
+      assert.match(await page.locator('#regSuccessCard').textContent(), /Asset Management/);
       assert.match(await page.locator('#regSuccessCard').textContent(), /7,000/);
       await page.locator('#regClose').click();
       await page.locator('[data-open-form]').first().click();

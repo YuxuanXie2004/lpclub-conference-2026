@@ -13,9 +13,9 @@ function browser(html, pageUrl) {
     const classes = new Set(), element = {
       id, panel, value: '', textContent: '', disabled: false, checked: false, hidden: false, dataset: {}, style: {},
       classList: { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)), contains: name => classes.has(name), toggle(name, force) { const enabled = force === undefined ? !classes.has(name) : force; enabled ? classes.add(name) : classes.delete(name); return enabled; } },
-      addEventListener() {}, setAttribute(name, value) { this[name] = value; }, getAttribute(name) { return this[name] ?? null; },
+      addEventListener() {}, setAttribute(name, value) { this[name] = value; }, getAttribute(name) { return this[name] ?? null; }, removeAttribute(name) { delete this[name]; },
       focus() { document.activeElement = this; }, getClientRects() { return [1]; },
-      querySelector(selector) { const match = selector.match(/^\[id="([^\"]+)"\]$/); if (!match) return null; const child = elements.get(match[1]); return child && (child.panel === id || child.id.startsWith(id === 'vipPanel' ? 'vip-' : 'materials-')) ? child : null; },
+      querySelector(selector) { const match = selector.match(/^\[id="([^\"]+)"\]$/); if (match) { const child = elements.get(match[1]); return child && (child.panel === id || child.id.startsWith(id === 'vipPanel' ? 'vip-' : id === 'pricingPanel' ? 'pricing-' : 'materials-')) ? child : null; }const data=selector.match(/^\[data-([\w-]+)="([^"]+)"\]$/);if(data)return [...elements.values()].find(node=>node.dataset[data[1].replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]===data[2])||null;return null; },
       querySelectorAll() { return []; }
     };
     let markup = '';
@@ -23,7 +23,7 @@ function browser(html, pageUrl) {
     elements.set(id, element);
     return element;
   };
-  for (const [, id] of html.replace(/<script>[\s\S]*?<\/script>/g, '').matchAll(/\bid="([^"\s]+)"/g)) get(id, id.startsWith('vip-') ? 'vipPanel' : id.startsWith('materials-') ? 'materialsPanel' : '');
+  for (const [, id] of html.replace(/<script>[\s\S]*?<\/script>/g, '').matchAll(/\bid="([^"\s]+)"/g)) get(id, id.startsWith('vip-') ? 'vipPanel' : id.startsWith('materials-') ? 'materialsPanel' : id.startsWith('pricing-') ? 'pricingPanel' : '');
   document.getElementById = get;
   document.querySelector = selector => selector === '.tabs' ? get('tabs') : null;
   document.querySelectorAll = () => [];

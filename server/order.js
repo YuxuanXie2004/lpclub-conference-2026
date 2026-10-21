@@ -22,17 +22,17 @@ function requiredFields(a) {
   return req.filter(k => !cleanString(a[k]));
 }
 
-function registrationPackage(input) {
+function registrationPackage(input, packageCatalogue = PACKAGES) {
   const requestedId = cleanString(input && input.packageId, 50);
   const packageId = Object.prototype.hasOwnProperty.call(IDENTITIES, requestedId) ? requestedId + '_ticket' : requestedId;
-  const p = Object.prototype.hasOwnProperty.call(PACKAGES, packageId) ? PACKAGES[packageId] : null;
+  const p = Object.prototype.hasOwnProperty.call(packageCatalogue, packageId) ? packageCatalogue[packageId] : null;
   if (!p) throw Object.assign(new Error('Please select a valid registration category.'), { statusCode: 400 });
   return p;
 }
 
-function normaliseOrder(input) {
+function normaliseOrder(input, packageCatalogue = PACKAGES) {
   const a = input && input.attendee ? input.attendee : {};
-  const basePackage = registrationPackage(input);
+  const basePackage = registrationPackage(input, packageCatalogue);
   const p = { ...basePackage, vipApplied: false };
   const missing = requiredFields(a);
   if (missing.length) throw Object.assign(new Error('Please complete all required fields: ' + missing.join(', ')), { statusCode: 400 });

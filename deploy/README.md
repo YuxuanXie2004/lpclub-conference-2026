@@ -14,7 +14,7 @@
 
 原件目录位于 web root 外，目录权限 0700、文件 0600，运行用户须可读写。不要把原件目录和缓存目录设为同一个目录。部署上传不复制或删除持久化数据、`.env`。
 
-人工确认目标 MySQL 后执行 `npm run db:init`，只建指定数据库及缺失的版本结构，不导入旧数据。建库账号和日常运行账号可分开。展示柜升级使用 `002-showcase.sql`，管理员手动上传使用新增的 `003-manual-showcase.sql`，保留原迁移及数据，不重跑清库脚本。随后重启单个大会 Node 进程，检查 `/health` 中 `database=mysql`、`schemaReady=true`、`ok=true`，核对后台分页、邮件配置和公开空列表。健康检查实际连接数据库。
+人工确认目标 MySQL 后执行 `npm run db:init`，只建指定数据库及缺失的版本结构，不导入旧数据。建库账号和日常运行账号可分开。展示柜升级使用 `002-showcase.sql`，管理员手动上传使用 `003-manual-showcase.sql`，报名价格使用新增的 `004-registration-pricing.sql`，保留原迁移及数据，不重跑清库脚本。随后重启单个大会 Node 进程，检查 `/health` 中 `database=mysql`、`schemaReady=true`、`packagesReady=true`、`ok=true`，核对后台分页、价格设置、邮件配置和公开空列表。健康检查实际连接数据库并确认价格配置存在。
 
 `deploy/setup.sh` 用于新机器根域名安装，必须预先配置 MySQL。已有官网服务器不要直接套用其 Nginx 或 systemd 配置。
 
@@ -38,7 +38,7 @@ location ~ ^/2026-pe-conference/api/materials/upload/(card|portrait|logo)$ {
 
 ## 备份与恢复
 
-MySQL 和原件必须作为一套备份，签名及加密密钥另外安全保管。新系统不要再用 SQLite 的 `vip:backup` 备份新数据。
+MySQL 和原件必须作为一套备份，签名及加密密钥另外安全保管。报名价格及恢复默认操作记录保存在 MySQL，随数据库一起备份。新系统不要再用 SQLite 的 `vip:backup` 备份新数据，也不需要备份本地价格文件。
 
 一致备份建议进入维护窗口：停止大会服务，使用 MySQL 官方工具 `mysqldump --single-transaction` 导出目标业务库，再复制完整私有原件目录与配置备份，完成后启动服务。凭据使用受保护的 MySQL option file 或交互输入，不放命令行密码。缓存目录无需备份。
 

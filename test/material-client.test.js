@@ -109,6 +109,15 @@ test('registration confirmation and privacy follow the optional materials', () =
   assert.match(html.slice(confirmation,formEnd),/name="consent" type="checkbox" required/);
 });
 
+test('registration submits the displayed price and requires confirmation when it changes', () => {
+  const fs = require('node:fs');
+  const html = fs.readFileSync(require.resolve('../index.html'), 'utf8');
+  assert.match(html, /expectedPrice:Number\(effectivePackage\(selectedPackage\)\.price\)/);
+  assert.match(html, /err\.code==='PRICE_CHANGED'/);
+  assert.match(html, /await loadPackages\(\);showStep\(1\)/);
+  assert.match(html, /Please review the updated price and submit again/);
+});
+
 test('cancelling a registration image chooser keeps the selected image and hidden portrait consent follows eligibility', () => {
   const fs=require('node:fs'),vm=require('node:vm');
   const file=new Blob(['image'],{type:'image/png'});file.name='example.png';

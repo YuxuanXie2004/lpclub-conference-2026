@@ -6,7 +6,7 @@
 
 MySQL 是报名、VIP、授权、审核、发布和邮件状态的唯一业务数据源。原件保存在私有磁盘目录，数据库保存不可变文件引用；展示图可以重新生成。运行时不读写飞书或 SQLite，也不在 MySQL 故障时回退到旧存储。
 
-`server/migrations/` 使用版本化 SQL 定义报名原有 38 项信息及资料、VIP、幂等、审计、邮件和展示柜状态，共 16 张表（含迁移和密钥校验表）。第二个迁移仅新增跟进备注、通过版本引用及展示柜修订号，第三个迁移新增独立的管理员上传素材表，保留已有报名、文件和发布状态。金额使用 DECIMAL，日期使用 DATE，时间统一 UTC，多选与快照使用 JSON。历史报名与 VIP 可通过离线迁移工具一次性导入，运行时不再同步飞书或 SQLite；原始导出、旧库及密钥须保留。具体边界见 `deploy/legacy-migration.md`。
+`server/migrations/` 使用版本化 SQL 定义报名原有 38 项信息及资料、VIP、报名价格、幂等、审计、邮件和展示柜状态，共 17 张表（含迁移和密钥校验表）。第二个迁移仅新增跟进备注、通过版本引用及展示柜修订号，第三个迁移新增独立的管理员上传素材表，第四个迁移新增 MySQL 报名价格配置，保留已有报名、文件和发布状态。金额使用 DECIMAL，日期使用 DATE，时间统一 UTC，多选、价格快照与展示配置使用 JSON。历史报名与 VIP 可通过离线迁移工具一次性导入，运行时不再同步飞书或 SQLite；原始导出、旧库及密钥须保留。具体边界见 `deploy/legacy-migration.md`。
 
 报名、幂等记录、VIP 核销、初始授权、补交凭证和邮件任务在同一个事务提交。每个报名请求必须有 `idempotencyKey`：原请求重试返回原结果，改内容复用同一个键返回 409；同一有效邮箱或已使用 VIP 的真实冲突仍返回 409。超时后继续用原键重试。取消、拒绝或软删除报名不释放已兑换的 VIP。
 
@@ -18,7 +18,7 @@ MySQL 是报名、VIP、授权、审核、发布和邮件状态的唯一业务�
 4. `npm run db:init` 创建指定数据库和版本化表结构；重复运行不会清空数据。初始化账号须具备建库、建表权限，日常运行账号可单独配置。
 5. `npm run dev`
 
-默认访问 `http://localhost:8787/`，健康检查 `/health`，后台 `/table?token=<ADMIN_TOKEN>`。后台四个 Tab 在同一页面切换，资料审核使用弹窗，右上角切换语言。
+默认访问 `http://localhost:8787/`，健康检查 `/health`，后台 `/table?token=<ADMIN_TOKEN>`。后台五个 Tab 在同一页面切换，资料审核使用弹窗，右上角切换语言。价格设置直接读写 MySQL；保存时校验配置修订号，数据库不可用时不会回退到本地文件或静态价格。
 
 `PUBLIC_BASE_URL` 是邮件链接的固定来源，不使用请求 Host。部署到子路径时必须包含完整目录，例如 `https://lp-club.cn/2026-pe-conference/`。Node 支持直接接收此前缀和由 Nginx 去掉前缀后的请求。
 
@@ -55,7 +55,9 @@ MySQL 是报名、VIP、授权、审核、发布和邮件状态的唯一业务�
 ## 接口
 
 - `POST /api/order`：统一幂等报名，返回编号、套餐、邮件排队状态和短时上传凭证。
+- `GET /api/packages`：从 MySQL 读取当前 20 个报名套餐及修订号；新报名提交可携带 `expectedPrice`，价格已变化时返回 409 `PRICE_CHANGED`，要求确认后重新提交。
 - `POST /api/vip`：预览兑换资格与服务端价格，不核销。
+- `GET|POST /api/admin/pricing`：管理员读取、保存或恢复完整价格矩阵；写入需携带当前 `revision`。
 - `GET /api/registrations`：后台按 `mode/q/status/package/page/pageSize` 筛选分页；`ref` 获取详情。
 - `POST /api/admin/status|delete|restore`：携带 `ref`、`rowVersion`；软删除、恢复和状态变更。
 - `GET /export.csv`：导出全部匹配记录，按批次读取，不只导出当前页。
