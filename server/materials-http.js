@@ -122,7 +122,7 @@ function createMaterialsHandler({ service, showcase, json, readBody, setSecurity
       }
       if (req.method === 'POST' && (match = path.match(/^\/api\/materials\/upload\/(card|portrait|logo)$/))) {
         const { ref, authContext } = await auth(req, true), file = await readImage(req);
-        json(res, 200, { ok: true, ...await service.upload(ref, match[1], file, authContext) }); return true;
+        json(res, 200, { ok: true, ...await service.upload(ref, match[1], {...file,...(req.headers['idempotency-key']?{idempotencyKey:req.headers['idempotency-key']}:{})}, authContext) }); return true;
       }
       const { ref, authContext } = await auth(req);
       if (path === '/api/materials/me' && req.method === 'GET') json(res, 200, { ok: true, ...await service.me(ref, authContext) });

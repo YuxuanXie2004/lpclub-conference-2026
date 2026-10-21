@@ -26,7 +26,7 @@ function kindCheck(kind) { if (!KINDS.includes(kind)) throw fail('Invalid materi
 const portraitEligible = row => ['speaking', 'panel'].includes(row.option_id);
 const imageMissing = () => fail('Image not found', 404);
 
-function createMaterialService({ db, packages = {}, env = process.env, mail, composeSupplement = data => data } = {}) {
+function createMaterialService({ db, packages = {}, env = process.env, mail, integrations, composeSupplement = data => data } = {}) {
   const storageMode = 'local';
   const fileStore = createFileStore(env.MATERIALS_STORAGE_DIR || path.join(__dirname, '../data/material-originals'));
   const imageCache = createImageCache(env.MATERIALS_CACHE_DIR || path.join(__dirname, '../data/material-cache'));
@@ -42,6 +42,7 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
   }
   async function audit(tx, id, action, actor, detail = {}) {
     await tx.query('INSERT INTO audit_events(registration_id,action,actor,detail) VALUES (?,?,?,?)', [id, action, actor, JSON.stringify(detail)]);
+    if(!detail.initial)await integrations?.capture(tx,id,action==='upload'?'material_uploaded':'changed',detail);
   }
   async function newToken(tx, row) {
     const token = crypto.randomBytes(32).toString('base64url');
@@ -153,19 +154,29 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
     if (authContext) return withRow(ref, (tx, row) => view(tx, row), authContext);
     return view(db, await find(ref));
   }
-  async function upload(ref, kind, { buffer, filename, mimeType }, authContext) {
+  async function upload(ref, kind, { buffer, filename, mimeType, idempotencyKey }, authContext) {
     kindCheck(kind); requireReady();
     const metadata = await decodeImage(buffer, mimeType);
-    // Immutable durable bytes are written before SQL. A rolled-back transaction can leave only an unreachable original.
+    if(idempotencyKey!==undefined&&(typeof idempotencyKey!=='string'||!/^[A-Za-z0-9_-]{16,128}$/.test(idempotencyKey)))throw fail('Invalid upload idempotency key',400,'INVALID_IDEMPOTENCY_KEY');
     const extension = metadata.format === 'jpeg' ? 'jpg' : metadata.format;
-    const source = await fileStore.write(buffer, kind + '.' + extension, mimeType);
     return withRow(ref, async (tx, row) => {
       if (kind === 'portrait' && !portraitEligible(row)) throw fail('Portrait is only available for speaking or panel packages');
+      if(idempotencyKey){
+        const previous=(await tx.query('SELECT * FROM material_upload_requests WHERE registration_id=? AND request_key=?',[row.id,idempotencyKey]))[0];
+        if(previous){
+          if(previous.kind!==kind||previous.file_hash!==hash(buffer))throw fail('Upload request has changed',409,'IDEMPOTENCY_CONFLICT');
+          return view(tx,row);
+        }
+      }
+      // Durable immutable bytes precede their SQL references; rollback may leave an unreachable file.
+      const source=await fileStore.write(buffer,kind+'.'+extension,mimeType);
+
       const item = await itemForUpdate(tx, row, kind), fileId = crypto.randomUUID(), versionId = crypto.randomUUID();
       const version = item.version_no + 1;
       await tx.query('INSERT INTO material_files(id,storage_key,filename,mime_type,byte_size,width,height,sha256) VALUES (?,?,?,?,?,?,?,?)', [fileId, source.key, cleanText(filename, 255) || source.name, mimeType, buffer.length, metadata.width, metadata.height, hash(buffer)]);
       await tx.query("INSERT INTO material_versions(id,item_id,version_no,file_id,status) VALUES (?,?,?,?,'pending')", [versionId, item.id, version, fileId]);
       await tx.query('UPDATE material_items SET current_version_id=?,version_no=?,row_version=row_version+1 WHERE id=?', [versionId, version, item.id]);
+      if(idempotencyKey)await tx.query('INSERT INTO material_upload_requests(registration_id,request_key,kind,file_hash,version_id) VALUES (?,?,?,?,?)',[row.id,idempotencyKey,kind,hash(buffer),versionId]);
       await audit(tx, row.id, 'upload', 'registrant', { kind, version });
       return view(tx, row);
     }, authContext, true);
@@ -173,17 +184,20 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
   async function setConsents(ref, values, authContext) {
     if (!values || typeof values !== 'object' || Array.isArray(values) || Object.keys(values).some(key => !PUBLIC_KINDS.includes(key)) || Object.values(values).some(value => typeof value !== 'boolean')) throw fail('Consent values must be boolean');
     return withRow(ref, async (tx, row) => {
+      const savedConsents=await tx.query('SELECT kind,granted FROM publication_consents WHERE registration_id=?',[row.id]);
+      const changes=Object.fromEntries(Object.entries(values).filter(([kind,value])=>Boolean(savedConsents.find(c=>c.kind===kind)?.granted)!==value));
+      if(!Object.keys(changes).length)return view(tx,row);
       const lockedItems = await lockItems(tx, [row.id]);
-      const withdrawn = lockedItems.filter(item => Object.hasOwn(values, item.kind) && !values[item.kind]);
+      const withdrawn = lockedItems.filter(item => Object.hasOwn(changes, item.kind) && !changes[item.kind]);
       await takeDown(tx, withdrawn, row.event_key);
-      for (const kind of PUBLIC_KINDS) if (Object.hasOwn(values, kind)) {
-        if (kind === 'portrait' && values[kind] && !portraitEligible(row)) throw fail('Portrait is only available for speaking or panel packages');
+      for (const kind of PUBLIC_KINDS) if (Object.hasOwn(changes, kind)) {
+        if (kind === 'portrait' && changes[kind] && !portraitEligible(row)) throw fail('Portrait is only available for speaking or panel packages');
         const item = await itemForUpdate(tx, row, kind);
         await tx.query('UPDATE material_items SET row_version=row_version+1 WHERE id=?', [item.id]);
-        await tx.query('UPDATE publication_consents SET granted=?,granted_at=IF(?,UTC_TIMESTAMP(3),granted_at),revoked_at=IF(?,NULL,UTC_TIMESTAMP(3)),text_version=? WHERE registration_id=? AND kind=?', [values[kind], values[kind], values[kind], CONSENT_VERSION, row.id, kind]);
+        await tx.query('UPDATE publication_consents SET granted=?,granted_at=IF(?,UTC_TIMESTAMP(3),granted_at),revoked_at=IF(?,NULL,UTC_TIMESTAMP(3)),text_version=? WHERE registration_id=? AND kind=?', [changes[kind], changes[kind], changes[kind], CONSENT_VERSION, row.id, kind]);
 
       }
-      await audit(tx, row.id, 'consent', 'registrant', { values, docVersion: CONSENT_VERSION });
+      await audit(tx, row.id, 'consent', 'registrant', { values:changes, docVersion: CONSENT_VERSION });
       return view(tx, row);
     }, authContext);
   }
@@ -263,6 +277,7 @@ function createMaterialService({ db, packages = {}, env = process.env, mail, com
     if (!values || typeof values !== 'object' || typeof values.owner !== 'string' || values.owner.length > 120 || typeof values.note !== 'string' || values.note.length > 5000) throw fail('Invalid owner or follow-up note');
     return withRow(ref, async (tx, row) => {
       if (!Number.isInteger(values.rowVersion) || values.rowVersion !== row.row_version) throw fail('Registration changed; refresh before saving', 409, 'VERSION_CONFLICT');
+      if(values.owner.trim()===String(row.owner||'')&&values.note.trim()===String(row.follow_up_note||''))return view(tx,row,true);
       row.owner = values.owner.trim(); row.follow_up_note = values.note.trim();
       await tx.query('UPDATE registrations SET owner=?,follow_up_note=?,row_version=row_version+1 WHERE id=?', [row.owner, row.follow_up_note, row.id]); row.row_version++;
       await audit(tx, row.id, 'owner', 'administrator', { owner: row.owner, note: row.follow_up_note });

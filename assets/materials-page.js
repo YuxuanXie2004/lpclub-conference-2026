@@ -218,7 +218,9 @@
       try {
         const result=await submitChanges({files:Object.fromEntries(Object.entries(selected).map(([kind,item])=>[kind,item.file])),consents},async(kind,file)=>{
           const form=new FormData();form.append('file',file);
-          return (await request('/api/materials/upload/'+kind,{method:'POST',body:form})).json();
+          const selectedFile=selected[kind];
+          if(!selectedFile.requestKey)selectedFile.requestKey=globalThis.crypto?.randomUUID?.()||('upload_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2));
+          return (await request('/api/materials/upload/'+kind,{method:'POST',headers:{'Idempotency-Key':selectedFile.requestKey},body:form})).json();
         },async values=>(await request('/api/materials/consents',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(values)})).json());
         let updated=current, failed=0;
         for(const item of result.files){if(item.error){failed++;fieldErrors.set(item.kind,{error:item.error});if([401,403,404].includes(item.error.status))lastError=item.error;}else{updated=item.data;cancelSelection(item.kind);}}

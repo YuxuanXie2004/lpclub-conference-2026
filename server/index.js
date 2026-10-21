@@ -19,14 +19,15 @@ const ROOT=path.join(__dirname,'..');
 function createBackend({env=loadEnv({...process.env}),db:providedDatabase,pricingStore:providedPricingStore,sendMail,logger=console}={}) {
   let actualDatabase=providedDatabase,vipStore;
   const database=()=>actualDatabase||(actualDatabase=createDatabase(env));
-  const db={query:(...args)=>database().query(...args),transaction:(...args)=>database().transaction(...args),health:(...args)=>database().health(...args),close:()=>actualDatabase?.close()};
+  const db={query:(...args)=>database().query(...args),transaction:(...args)=>database().transaction(...args),withNamedLock:(...args)=>database().withNamedLock(...args),health:(...args)=>database().health(...args),close:()=>actualDatabase?.close()};
   const vip=()=>vipStore||(vipStore=createMysqlVipStore(db,env));
   const pricingStore=providedPricingStore||createMysqlPricingStore(db);
   const ADMIN_TOKEN=env.ADMIN_TOKEN||'',ALLOW_ORIGIN=env.ALLOW_ORIGIN||'';
-  const mailer=createMailer(env),outbox=createMailOutbox({db,env,send:sendMail||mailer.send,logger});
-  const materials=createMaterialService({db,packages:PACKAGES,env,mail:outbox,composeSupplement:mailer.composeSupplement});
+  const integrations=require('./feishu-integration').createFeishuIntegration({db,env,logger});
+  const mailer=createMailer(env),outbox=createMailOutbox({db,env,send:sendMail||mailer.send,integrations,logger});
+  const materials=createMaterialService({db,packages:PACKAGES,env,mail:outbox,integrations,composeSupplement:mailer.composeSupplement});
   const showcaseAdmin=createShowcaseService({db,env,materials});
-  const registrations=createRegistrationService({db,pricing:pricingStore,normaliseOrder:orderData.normaliseOrder,vip:{previewCode:(...a)=>vip().previewCode(...a),redeem:(...a)=>vip().redeem(...a)},materials,mail:outbox,composeMail:mailer.composeRegistration});
+  const registrations=createRegistrationService({db,pricing:pricingStore,normaliseOrder:orderData.normaliseOrder,vip:{previewCode:(...a)=>vip().previewCode(...a),redeem:(...a)=>vip().redeem(...a)},materials,mail:outbox,integrations,composeMail:mailer.composeRegistration});
   const rateBuckets=new Map();
   function rateAllowed(ip) {
     const now=Date.now(),windowMs=Number(env.RATE_LIMIT_WINDOW_MS||600000),max=Number(env.RATE_LIMIT_MAX||8);
@@ -53,7 +54,7 @@ function setSecurityHeaders(res) {
   res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 }
 function json(res, code, payload) {
-  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token, Authorization, X-Registration-Ref', 'Access-Control-Allow-Methods': 'POST,GET,PUT,DELETE,PATCH,OPTIONS' };
+  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token, Authorization, X-Registration-Ref, Idempotency-Key', 'Access-Control-Allow-Methods': 'POST,GET,PUT,DELETE,PATCH,OPTIONS' };
   if (ALLOW_ORIGIN) headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN;
   if (typeof res.setHeader === 'function') { Object.entries(headers).forEach(([k,v]) => res.setHeader(k,v)); setSecurityHeaders(res); }
   if (typeof res.status === 'function' && typeof res.json === 'function') return res.status(code).json(payload);
@@ -81,7 +82,7 @@ function secureEquals(a, b) {
     const code=error.statusCode||503;
     return json(res,code,{ok:false,code:error.code&&error.statusCode?error.code:'DATABASE_UNAVAILABLE',error:error.statusCode?error.message:fallback,ref:error.ref||undefined,retryable:error.retryable||undefined,currentPrice:error.currentPrice,currentRevision:error.currentRevision});
   }
-  async function health(){let state;try{state=await db.health()}catch(_){state={ok:false,schemaReady:false}}let vipReady=false,pricingReady=false;try{vip();vipReady=true}catch(_){}try{await pricingStore.get();pricingReady=true}catch(_){}return{...state,ok:Boolean(state.ok&&pricingReady),service:'lpclub-conference',database:'mysql',email:outbox.configured(),admin:Boolean(ADMIN_TOKEN),vipReady,pricingReady,materialsReady:materials.ready(),materialsStorage:'local',packagesReady:pricingReady};}
+  async function health(){let state;try{state=await db.health()}catch(_){state={ok:false,schemaReady:false}}let vipReady=false,pricingReady=false;try{vip();vipReady=true}catch(_){}try{await pricingStore.get();pricingReady=true}catch(_){}return{...state,ok:Boolean(state.ok&&pricingReady),service:'lpclub-conference',database:'mysql',email:outbox.configured(),admin:Boolean(ADMIN_TOKEN),vipReady,pricingReady,materialsReady:materials.ready(),materialsStorage:'local',packagesReady:pricingReady,feishu:integrations.configured()};}
   const materialHandler=require('./materials-http').createMaterialsHandler({service:materials,showcase:showcaseAdmin,json,readBody,setSecurityHeaders,adminToken:ADMIN_TOKEN,logger});
   const server=http.createServer(async(req,res)=>{
     try {
@@ -96,6 +97,14 @@ function secureEquals(a, b) {
       }
       if(await materialHandler(req,res,url,{allowed}))return;
       if(req.method==='GET'&&['/health','/api/health'].includes(pathname)){const result=await health();return json(res,result.ok?200:503,result);}
+      if(pathname==='/api/admin/integrations/feishu'||pathname.startsWith('/api/admin/integrations/feishu/')){
+        if(!allowed())return json(res,401,{ok:false,error:'unauthorised'});
+        const base='/api/admin/integrations/feishu';
+        if(req.method==='GET'&&pathname===base)return json(res,200,{ok:true,...await integrations.status()});
+        if(req.method==='POST'&&pathname===base+'/retry')return json(res,200,{ok:true,...await integrations.retry(await readBody(req))});
+        if(req.method==='POST'&&pathname===base+'/reconcile')return json(res,200,{ok:true,...await integrations.requestReconcile()});
+        return json(res,405,{ok:false,error:'Method not allowed'});
+      }
       if(req.method==='GET'&&pathname==='/api/packages'){const catalogue=await pricingStore.packages();return json(res,200,{ok:true,packages:Object.values(catalogue.packages),revision:catalogue.revision});}
       if(pathname==='/api/admin/pricing'||pathname==='/api/pricing'){
         if(!allowed())return json(res,401,{ok:false,error:'unauthorised'});
@@ -144,15 +153,15 @@ function secureEquals(a, b) {
       return json(res,404,{ok:false,error:'not found'});
     }catch(error){if(!res.headersSent)return failure(res,error,'Service temporarily unavailable');if(!res.writableEnded)res.end();}
   });
-  return {server,db,pricingStore,materials,showcaseAdmin,registrations,outbox,health,processOrder,validateVip,json,rateAllowed};
+  return {server,db,pricingStore,materials,showcaseAdmin,registrations,outbox,integrations,health,processOrder,validateVip,json,rateAllowed};
 }
 const backend=createBackend();
 if(require.main===module){
   const PORT=Number(process.env.PORT||8787),HOST=process.env.HOST||'0.0.0.0';
   // .env settings are loaded into the isolated backend environment, including host/port.
   const env=loadEnv({...process.env});
-  backend.server.listen(Number(env.PORT||PORT),env.HOST||HOST,()=>{console.log('LP CLUB conference listening on port '+(env.PORT||PORT));console.log('database: MySQL; admin: '+(env.ADMIN_TOKEN?'enabled':'disabled'));backend.outbox.start();});
-  const shutdown=()=>{backend.outbox.stop();backend.server.close(()=>backend.db.close().then(()=>process.exit(0)));setTimeout(()=>process.exit(1),10000).unref();};
+  backend.server.listen(Number(env.PORT||PORT),env.HOST||HOST,()=>{console.log('LP CLUB conference listening on port '+(env.PORT||PORT));console.log('database: MySQL; admin: '+(env.ADMIN_TOKEN?'enabled':'disabled'));backend.outbox.start();backend.integrations.start();});
+  const shutdown=()=>{backend.outbox.stop();backend.integrations.stop();backend.server.close(()=>backend.db.close().then(()=>process.exit(0)));setTimeout(()=>process.exit(1),10000).unref();};
   process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
 }
 module.exports={...orderData,...backend,createBackend,sheet};

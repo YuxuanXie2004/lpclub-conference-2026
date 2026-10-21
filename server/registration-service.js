@@ -5,7 +5,7 @@ const {toRegistrationRow,fromRegistrationRow,parseJSON}=require('./order');
 const STATUSES=['Received','Under Review','Approved','Waitlisted','Rejected','Cancelled'];
 const fail=(code,message,statusCode=400,extra={})=>Object.assign(new Error(message),{code,statusCode,...extra});
 async function audit(tx,id,action,detail={}) {await tx.query('INSERT INTO audit_events(registration_id,action,actor,detail) VALUES (?,?,?,?)',[id,action,'administrator',JSON.stringify(detail)]);}
-function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail,composeMail=order=>({order})}) {
+function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail,integrations,composeMail=order=>({order})}) {
   async function duplicate(email) {
     const rows=await db.query("SELECT ref FROM registrations WHERE event_key='conference-2026' AND active_email=LOWER(TRIM(?))",[email]);
     return fail('DUPLICATE_REGISTRATION','A registration already exists for this business email. Please contact LP CLUB if you need to update it.',409,{ref:rows[0]?.ref});
@@ -50,6 +50,7 @@ function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail
         if(vipRaw)await vip.redeem(tx,vipRaw,{id:row.id,ref:row.ref,email:row.email,fullName:row.full_name},key);
         const preparation=enabled?await materials.initialize(tx,order,row):null;
         const email=mail?await mail.enqueue(tx,row.id,'registration',composeMail(order,preparation?.supplementUrl),'registration:'+row.id):{skipped:true,reason:'SMTP not configured'};
+        await integrations?.capture(tx,row.id,'registration_created');
         const response={registrationId:row.id,ref:order.ref,package:order.package,saved:true,email};
         await tx.query('UPDATE submission_requests SET registration_id=?,result_json=? WHERE idempotency_key=?',[row.id,JSON.stringify(response),key]);
         await tx.query('INSERT INTO audit_events(registration_id,action,actor,detail) VALUES (?,?,?,?)',[row.id,'registration_created','registrant',JSON.stringify({packageId:order.package.id,vipApplied:!!vipRaw})]);
@@ -103,6 +104,7 @@ function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail
         if(body.rowVersion!==r.row_version)throw fail('VERSION_CONFLICT','Registration changed; refresh before saving.',409);
         if(action==='status'){
           if(!STATUSES.includes(body.status))throw fail('INVALID_STATUS','Invalid status');
+          if(body.status===r.status&&String(body.note||'').trim().slice(0,500)===String(r.status_note||''))return {ref:r.ref,status:r.status,deleted:false,restored:false};
           await tx.query('UPDATE registrations SET status=?,status_note=?,status_updated_at=UTC_TIMESTAMP(3),row_version=row_version+1 WHERE id=?',[body.status,String(body.note||'').trim().slice(0,500),r.id]);
         }else if(action==='delete')await tx.query("UPDATE registrations SET is_deleted=1,deleted_at=UTC_TIMESTAMP(3),deleted_by='administrator',deletion_reason=?,row_version=row_version+1 WHERE id=?",[String(body.reason||'').trim().slice(0,500),r.id]);
         else if(action==='restore')await tx.query("UPDATE registrations SET is_deleted=0,deleted_at=NULL,deleted_by='',deletion_reason='',row_version=row_version+1 WHERE id=?",[r.id]);
@@ -110,6 +112,7 @@ function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail
         const items=await lockItems(tx,[r.id]);
         if(action!=='status'||body.status!=='Approved')await takeDown(tx,items,r.event_key);
         await tx.query('UPDATE material_items SET row_version=row_version+1 WHERE registration_id=?',[r.id]);
+        await integrations?.capture(tx,r.id);
         await audit(tx,r.id,action,{status:body.status,reason:body.reason,note:body.note});
         return {ref:r.ref,status:body.status,deleted:action==='delete',restored:action==='restore'};
       });

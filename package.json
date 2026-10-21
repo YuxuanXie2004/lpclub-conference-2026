@@ -22,6 +22,7 @@
     "test:mysql": "RUN_MYSQL_TESTS=1 node --test test/*mysql*.test.js",
     "legacy:feishu:init": "node server/init-feishu.js",
     "legacy:vip:init": "node server/init-vip.js",
-    "legacy:vip:backup": "node server/backup-vip.js"
+    "legacy:vip:backup": "node server/backup-vip.js",
+    "feishu:manage": "node server/feishu-manage.js"
   }
 }

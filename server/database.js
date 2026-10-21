@@ -53,6 +53,24 @@ function createDatabase(env = process.env) {
       } finally { connection.release(); }
     }
   }
+  async function withNamedLock(name, work) {
+    const connection=await acquire();
+    const lockName='lpclub:'+crypto.createHash('sha256').update(config.database+':'+name).digest('hex').slice(0,48);
+    let locked=false,lost=false;
+    const onError=()=>{lost=true;};
+    connection.on('error',onError);
+    const guard=async()=>{if(lost)throw unavailable(new Error('Worker lock connection lost'));const [rows]=await connection.query('SELECT IS_USED_LOCK(?)=CONNECTION_ID() AS held',[lockName]);if(!Number(rows[0].held))throw unavailable(new Error('Worker lock lost'));};
+    try {
+      const [rows]=await connection.query('SELECT GET_LOCK(?,0) AS acquired',[lockName]);
+      if(Number(rows[0].acquired)!==1)return false;
+      locked=true;
+      return await work(guard);
+    } finally {
+      if(locked&&!lost)await connection.query('SELECT RELEASE_LOCK(?)',[lockName]).catch(()=>{lost=true;});
+      connection.removeListener('error',onError);
+      if(lost)connection.destroy();else connection.release();
+    }
+  }
   async function migrate() {
     const connection = await acquire();
     const lockName = 'lpclub:migrations:' + crypto.createHash('sha256').update(config.database).digest('hex').slice(0, 40);
@@ -101,6 +119,6 @@ function createDatabase(env = process.env) {
       return { ok: rows.length > 0, schemaReady: rows.length > 0, schemaVersion: rows[0]?.version || null };
     } catch (cause) { throw unavailable(cause); }
   }
-  return { pool, query, transaction, migrate, health, close: () => pool.end() };
+  return { pool, query, transaction, withNamedLock, migrate, health, close: () => pool.end() };
 }
 module.exports = { createDatabase, configuration, unavailable };

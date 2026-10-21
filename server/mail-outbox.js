@@ -16,7 +16,7 @@ function decryptPayload(payload, rawKey) {
   return JSON.parse(Buffer.concat([decipher.update(buffer.subarray(28)),decipher.final()]).toString('utf8'));
 }
 const retryDelay = attempts => [60000,300000,900000,3600000][Math.min(3,Math.max(0,attempts-1))];
-function createMailOutbox({ db, env = process.env, send, logger = console }) {
+function createMailOutbox({ db, env = process.env, send, integrations, logger = console }) {
   const key = env.MAIL_PAYLOAD_KEY;
   const configured = () => Boolean(env.SMTP_PASS && key);
   let timer, running = false, stopped = false;
@@ -30,8 +30,10 @@ function createMailOutbox({ db, env = process.env, send, logger = console }) {
   async function claim() {
     return db.transaction(async tx => {
       // A final attempt interrupted during delivery is ambiguous, not endlessly retryable.
+      const interrupted=integrations?await tx.query("SELECT DISTINCT registration_id FROM mail_jobs WHERE status='processing' AND lease_until<UTC_TIMESTAMP(3) AND attempts>=5"):[];
       await tx.query("UPDATE registrations r JOIN mail_jobs j ON j.registration_id=r.id SET r.email_status='Failed' WHERE j.kind='registration' AND j.status='processing' AND j.lease_until<UTC_TIMESTAMP(3) AND j.attempts>=5 AND r.email_status='Queued'");
       await tx.query("UPDATE mail_jobs SET status='failed',last_error='Delivery interrupted; check delivery before resending',lease_until=NULL,lease_token=NULL WHERE status='processing' AND lease_until<UTC_TIMESTAMP(3) AND attempts>=5");
+      for(const row of interrupted)await integrations.capture(tx,row.registration_id);
       const rows = await tx.query("SELECT * FROM mail_jobs WHERE attempts<5 AND ((status='pending' AND next_attempt_at<=UTC_TIMESTAMP(3)) OR (status='processing' AND lease_until<UTC_TIMESTAMP(3))) ORDER BY next_attempt_at,id LIMIT 1 FOR UPDATE SKIP LOCKED");
       if (!rows.length) return null;
       const job=rows[0], leaseToken=crypto.randomUUID();
@@ -59,6 +61,7 @@ function createMailOutbox({ db, env = process.env, send, logger = console }) {
           await tx.query('UPDATE mail_jobs SET status=?,next_attempt_at=DATE_ADD(UTC_TIMESTAMP(3),INTERVAL ? MICROSECOND),last_error=?,lease_until=NULL,lease_token=NULL WHERE id=?',[job.attempts>=5?'failed':'pending',retryDelay(job.attempts)*1000,reason,job.id]);
           if(job.kind==='registration')await tx.query('UPDATE registrations SET email_status=? WHERE id=?',[job.attempts>=5?'Failed':'Queued',job.registration_id]);
         }
+        await integrations?.capture(tx,job.registration_id);
       });
       return true;
     } finally { running=false; }

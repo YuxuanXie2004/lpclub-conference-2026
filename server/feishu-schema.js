@@ -1,8 +1,8 @@
 'use strict';
 
 /*
- * Canonical schema for the LP CLUB Conference registration Base.
- * Feishu Base is the ONLY source of truth for registrations.
+ * Historical schema retained for offline import tools.
+ * MySQL is authoritative; the read-only projection uses feishu-projection.js.
  */
 const FEISHU_FIELDS = [
   { name: 'Registration Reference / 报名编号', type: 1, primary: true },

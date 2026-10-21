@@ -69,6 +69,7 @@ header{display:flex;gap:18px;align-items:flex-end;justify-content:space-between;
 .kv b span{color:inherit}.admin-language{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}.admin-language button{border:0;padding:9px 12px;background:transparent;color:var(--ink);font:inherit;font-weight:700;cursor:pointer}.admin-language button[aria-pressed="true"]{background:var(--brand);color:#fff}.admin-language button:focus-visible{outline:2px solid var(--brand);outline-offset:-3px}
 ${panelStyles}
 </style></head><body><div class="wrap"><header><div><h1>Registration Operations · 报名管理</h1><div class="sub">MySQL is the source of truth · 删除采用软删除，可随时恢复</div></div><div class="actions"><a class="btn primary" id="export" href="export.csv${q}">Export CSV</a><button class="btn" id="registrationRefresh" onclick="load()">Refresh</button><div class="admin-language" role="group" aria-label="Language / 语言"><button type="button" id="adminLangZh" aria-pressed="false" lang="zh">中文</button><button type="button" id="adminLangEn" aria-pressed="false" lang="en">EN</button></div></div></header>
+${require('./feishu-admin').renderFeishuStatus()}
 <div class="tabs" role="tablist" aria-label="Operations sections"><button type="button" id="activeTab" class="tab" role="tab" aria-controls="registrationPanel" onclick="setTab('active')">Active Registrations</button><button type="button" id="deletedTab" class="tab" role="tab" aria-controls="registrationPanel" onclick="setTab('deleted')">Deleted / 回收站</button><button type="button" id="vipTab" class="tab" role="tab" aria-controls="vipPanel" onclick="setTab('vip')">VIP Codes</button><button type="button" id="materialsTab" class="tab" role="tab" aria-controls="materialsPanel" onclick="setTab('materials')">Materials / 资料审核</button><button type="button" id="pricingTab" class="tab" role="tab" aria-controls="pricingPanel" onclick="setTab('pricing')" data-admin-i18n="Pricing / 价格设置">Pricing / 价格设置</button></div>
 <div id="registrationPanel" role="tabpanel">
 <div class="stats" id="stats"></div><div class="filters"><input id="search" placeholder="Search name, company, email or reference"><select id="statusFilter"><option value="">All statuses</option>${statusOptions}</select><select id="packageFilter"><option value="">All packages</option></select></div>
@@ -95,6 +96,7 @@ $('registrationPrevious').onclick=()=>{if(registrationPage>1){registrationPage--
 <script>(function(document){${vip.script}})(panelDocument('vipPanel','vip-'));</script>
 <script>(function(document,history){${materials.script}})(panelDocument('materialsPanel','materials-'),{replaceState(){}});</script>
 <script>(function(document){${pricing.script}})(panelDocument('pricingPanel','pricing-'));</script>
+<script src="assets/feishu-admin.js"></script>
 <script>setTab(${JSON.stringify(initialTab)},${JSON.stringify(options.ref || '').replace(/</g, '\\u003c')});</script></body></html>`);
 }
 
