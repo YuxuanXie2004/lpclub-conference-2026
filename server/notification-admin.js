@@ -60,7 +60,7 @@ function createNotificationAdmin({ db, env = process.env, integrations, mailConf
     if (channel === 'mail') {
       const encrypted = row.encrypted_snapshot || row.encrypted_payload;
       if (encrypted) {
-        try { const payload = decryptPayload(encrypted, env.MAIL_PAYLOAD_KEY); content = { to: payload.to, cc: payload.cc, subject: payload.subject, text: payload.text || '' }; }
+        try { const payload = decryptPayload(encrypted, env.MAIL_PAYLOAD_KEY); content = { to: payload.to, cc: payload.cc, subject: payload.subject, text: payload.text || '', html: payload.html || '' }; }
         catch (_) { contentError = 'Unable to decrypt saved email content'; }
       }
     } else if (channel === 'feishu') {

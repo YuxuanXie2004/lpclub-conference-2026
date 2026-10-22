@@ -41,19 +41,20 @@ test('mail list filters are parameterized and pagination is bounded; payloads ne
 test('new mail jobs persist a separate encrypted content snapshot while excluding attachments', async () => {
   let write;
   const outbox = createMailOutbox({ db: {}, env });
-  await outbox.enqueue({ query: async (sql, args) => { write = { sql, args }; } }, id, 'registration', { to: 'original@example.com', subject: 'Original subject', text: 'Original body', attachments: [{ content: 'large-base64' }] });
+  await outbox.enqueue({ query: async (sql, args) => { write = { sql, args }; } }, id, 'registration', { to: 'original@example.com', subject: 'Original subject', text: 'Original body', html: '<h1>Original body</h1>', attachments: [{ content: 'large-base64' }] });
   assert.match(write.sql, /encrypted_snapshot/);
   const snapshot = write.args.map(value => { try { return decryptPayload(value, env.MAIL_PAYLOAD_KEY); } catch (_) { return null; } }).find(value => value?.subject && !value.attachments);
-  assert.deepEqual(snapshot, { to: 'original@example.com', subject: 'Original subject', text: 'Original body' });
+  assert.deepEqual(snapshot, { to: 'original@example.com', subject: 'Original subject', text: 'Original body', html: '<h1>Original body</h1>' });
 });
 
 test('mail detail uses immutable snapshot and explains missing historical content', async () => {
-  let job = { id, ref: 'REF', status: 'sent', email: 'changed@example.com', encrypted_snapshot: encryptPayload({ to: 'original@example.com', subject: 'Historical subject', text: '<script>private</script>' }, env.MAIL_PAYLOAD_KEY) };
+  let job = { id, ref: 'REF', status: 'sent', email: 'changed@example.com', encrypted_snapshot: encryptPayload({ to: 'original@example.com', subject: 'Historical subject', text: '<script>private</script>', html: '<h1>Historical body</h1>' }, env.MAIL_PAYLOAD_KEY) };
   const api = service({ env, db: { query: async () => [job] }, integrations: {} });
   const detail = await api.detail('mail', id);
   assert.equal(detail.content.to, 'original@example.com');
   assert.equal(detail.content.subject, 'Historical subject');
   assert.equal(detail.content.text, '<script>private</script>');
+  assert.equal(detail.content.html, '<h1>Historical body</h1>');
   assert.equal(detail.encrypted_snapshot, undefined);
   job = { ...job, encrypted_snapshot: null };
   assert.equal((await api.detail('mail', id)).contentAvailable, false);
@@ -86,4 +87,13 @@ test('Feishu list and retry stay scoped to the active sync target', async () => 
   const api = service({ env, integrations: { target: 'current-target' }, db: { query: async (sql, args) => { calls.push({ sql, args }); return sql.includes('COUNT(*)') ? [] : []; } } });
   await api.list('sync', {});
   assert.ok(calls.every(c => c.sql.includes('target_key=?') && c.args.includes('current-target')));
+});
+
+test('mail detail supports older full payloads without exposing attachments', async () => {
+  const job = { id, encrypted_payload: encryptPayload({ to: 'guest@example.com', html: '<p>Saved HTML</p>', attachments: [{ content: 'private' }] }, env.MAIL_PAYLOAD_KEY) };
+  const api = service({ env, db: { query: async () => [job] }, integrations: {} });
+  const detail = await api.detail('mail', id);
+  assert.equal(detail.content.html, '<p>Saved HTML</p>');
+  assert.equal(detail.content.attachments, undefined);
+  assert.equal(detail.encrypted_payload, undefined);
 });

@@ -9,6 +9,13 @@
   const kindKeys = { registration: 'Registration email', supplement: 'Materials email', registration_created: 'New registration', material_uploaded: 'Materials uploaded', sync: 'Table sync' };
   const kindLabel = key => label(kindKeys[key] || key);
   const date = value => value ? new Date(value).toLocaleString(window.LPClubAdminI18n?.language === 'zh' ? 'zh-CN' : 'en-GB', { timeZone: 'Asia/Shanghai', hour12: false }) : '—';
+  function emailPreview(html) {
+    const logo = new URL('images/lpclub-logo.png', document.baseURI).href;
+    // Keep email markup isolated from the admin page and block active content.
+    const policy = "default-src 'none'; style-src 'unsafe-inline'; img-src " + logo + "; base-uri 'none'; form-action 'none'";
+    const source = '<!doctype html><meta http-equiv="Content-Security-Policy" content="' + escape(policy) + '"><meta name="referrer" content="no-referrer"><base target="_blank">' + html.replace(/cid:lpclub-logo@lp-club\.cn/gi, logo);
+    return '<iframe class="notification-email-preview" title="' + escape(t('Notification content')) + '" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" srcdoc="' + escape(source) + '"></iframe>';
+  }
   async function request(path, options) {
     const response = await fetch('api/admin/notifications/' + path, options);
     const data = await response.json();
@@ -70,7 +77,8 @@
       const card = detail.content?.card;
       const content = channel() === 'mail' ? detail.content?.text : card ? [card.header?.title?.content, ...(card.elements || []).map(item => item.text?.content)].filter(Boolean).join('\n\n') : '';
       const missing = channel() === 'sync' ? 'Sync records reflect the current sync state' : detail.contentError || 'Historical content is unavailable';
-      el('Detail').innerHTML = '<div class="kv">' + fields.map(([key, value]) => '<b>' + label(key) + '</b><span>' + escape(typeof value === 'object' ? JSON.stringify(value) : value ?? '—') + '</span>').join('') + '</div><h3>' + label('Notification content') + '</h3><pre>' + (content ? escape(content) : label(missing)) + '</pre><h3>' + label('Manual retry history') + '</h3>' + (detail.history?.length ? '<ul>' + detail.history.map(item => '<li>' + escape(date(item.at)) + ' · ' + label('Attempts before retry') + ': ' + escape(item.previousAttempts) + ' · ' + escape(item.previousError || '—') + '</li>').join('') + '</ul>' : '<p>' + label('No manual retries recorded') + '</p>') + '<button class="btn" data-registration="' + escape(detail.ref) + '">' + label('View registration') + '</button>';
+      const preview = channel() === 'mail' && detail.content?.html ? emailPreview(detail.content.html) : '<pre>' + (content ? escape(content) : label(missing)) + '</pre>';
+      el('Detail').innerHTML = '<div class="kv">' + fields.map(([key, value]) => '<b>' + label(key) + '</b><span>' + escape(typeof value === 'object' ? JSON.stringify(value) : value ?? '—') + '</span>').join('') + '</div><h3>' + label('Notification content') + '</h3>' + preview + '<h3>' + label('Manual retry history') + '</h3>' + (detail.history?.length ? '<ul>' + detail.history.map(item => '<li>' + escape(date(item.at)) + ' · ' + label('Attempts before retry') + ': ' + escape(item.previousAttempts) + ' · ' + escape(item.previousError || '—') + '</li>').join('') + '</ul>' : '<p>' + label('No manual retries recorded') + '</p>') + '<button class="btn" data-registration="' + escape(detail.ref) + '">' + label('View registration') + '</button>';
     }
     async function details(id, button) {
       const sequence = ++detailSequence, selectedChannel = channel();
@@ -104,7 +112,7 @@
     el('Drawer').addEventListener('keydown', event => {
       if (event.key === 'Escape') { event.stopPropagation(); close(); }
       if (event.key === 'Tab') {
-        const nodes = [el('Close'), ...el('Detail').querySelectorAll('button')], first = nodes[0], last = nodes.at(-1);
+        const nodes = [el('Close'), ...el('Detail').querySelectorAll('button, iframe')], first = nodes[0], last = nodes.at(-1);
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }

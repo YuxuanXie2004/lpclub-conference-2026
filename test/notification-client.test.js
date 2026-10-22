@@ -7,8 +7,8 @@ function client(respond) {
     if (!nodes.has(id)) nodes.set(id, { id, value: '', hidden: true, innerHTML: '', textContent: '', disabled: false, dataset: {}, events: {}, setAttribute(key, value) { this[key] = value; }, addEventListener(key, fn) { this.events[key] = fn; }, focus() { document.activeElement = this; }, querySelectorAll() { return []; } });
     return nodes.get(id);
   };
-  const document = { activeElement: null, getElementById: element, addEventListener() {} }, window = { LPClubAdminI18n: { text: key => key, label: key => key, language: 'en' }, LPClubFeishuStatus: { refresh() {} } };
-  vm.runInNewContext(fs.readFileSync(require.resolve('../assets/notification-admin.js'), 'utf8'), { document, window, URLSearchParams, console, setTimeout, clearTimeout, fetch: async (url, options) => { requests.push({ url, options }); const result = await respond(url, options); return { ok: result?.ok !== false, json: async () => result }; } });
+  const document = { baseURI: 'https://conference.example/event/table', activeElement: null, getElementById: element, addEventListener() {} }, window = { LPClubAdminI18n: { text: key => key, label: key => key, language: 'en' }, LPClubFeishuStatus: { refresh() {} } };
+  vm.runInNewContext(fs.readFileSync(require.resolve('../assets/notification-admin.js'), 'utf8'), { document, window, URL, URLSearchParams, console, setTimeout, clearTimeout, fetch: async (url, options) => { requests.push({ url, options }); const result = await respond(url, options); return { ok: result?.ok !== false, json: async () => result }; } });
   return { nodes, element, window, requests };
 }
 const empty = { rows: [], stats: {}, kinds: [], total: 0, page: 1, pageSize: 25 };
@@ -80,4 +80,36 @@ test('Feishu status summaries change language without reloading or translating e
   assert.match(nodes.get('feishuStatusText').textContent, /Notifications: Enabled/);
   assert.doesNotMatch(nodes.get('feishuErrors').textContent, /通知|排队|尚未/);
   assert.equal(requests, 1);
+});
+
+test('HTML email details render in an isolated preview and preserve formatting', async () => {
+  const html = '<h1 style="color:green">Hello</h1><img src="cid:lpclub-logo@lp-club.cn"><script>parent.alert(1)</script><p>Example</p>';
+  const app = client(async url => url.includes('/job') ? { id: 'job', ref: 'REF', content: { html, text: 'Plain fallback' } } : empty);
+  app.window.LPClubNotifications.activate('mail'); await flush();
+  const button = { dataset: { detail: 'job' }, closest() { return this; }, focus() {} };
+  await app.element('mailRows').events.click({ target: button });
+  const output = app.element('mailDetail').innerHTML;
+  assert.match(output, /<iframe[^>]*class="notification-email-preview"/);
+  assert.match(output, /sandbox="allow-popups allow-popups-to-escape-sandbox"/);
+  assert.doesNotMatch(output, /allow-scripts|allow-same-origin|<script>|<h1/);
+  const srcdoc = output.match(/srcdoc="([^"]*)"/)[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  assert.match(srcdoc, /<h1 style="color:green">Hello<\/h1>/);
+  assert.match(srcdoc, /http-equiv="Content-Security-Policy"/);
+  assert.match(srcdoc, /default-src &#39;none&#39;/);
+  assert.match(srcdoc, /<base target="_blank">/);
+  assert.match(srcdoc, /https:\/\/conference.example\/event\/images\/lpclub-logo.png/);
+  assert.doesNotMatch(srcdoc, /cid:lpclub-logo/);
+  assert.doesNotMatch(output, /<pre>Plain fallback/);
+});
+
+test('historical emails without HTML retain escaped text and missing-content messages', async () => {
+  for (const content of [{ text: '<b>Text only</b>' }, null]) {
+    const app = client(async url => url.includes('/job') ? { id: 'job', content } : empty);
+    app.window.LPClubNotifications.activate('mail'); await flush();
+    const button = { dataset: { detail: 'job' }, closest() { return this; }, focus() {} };
+    await app.element('mailRows').events.click({ target: button });
+    const output = app.element('mailDetail').innerHTML;
+    assert.doesNotMatch(output, /<iframe/);
+    assert.match(output, content ? /<pre>&lt;b&gt;Text only&lt;\/b&gt;<\/pre>/ : /Historical content is unavailable/);
+  }
 });

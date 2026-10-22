@@ -24,7 +24,7 @@ function createMailOutbox({ db, env = process.env, send, integrations, logger = 
     // Saving registration never depends on SMTP being configured.
     if (!configured()) return { skipped:true,reason:'SMTP not configured',status:'Not configured' };
     const id = crypto.randomUUID();
-    const snapshot = {to:payload.to,...(payload.cc?{cc:payload.cc}:{}),subject:payload.subject,text:payload.text||''};
+    const snapshot = {to:payload.to,...(payload.cc?{cc:payload.cc}:{}),subject:payload.subject,text:payload.text||'',...(payload.html?{html:payload.html}:{})};
     const recipient = String(typeof payload.to==='object'?payload.to.address:payload.to||'').slice(0,320);
     await tx.query("INSERT INTO mail_jobs(id,registration_id,kind,dedupe_key,encrypted_payload,encrypted_snapshot,recipient,subject,status,attempts,next_attempt_at) VALUES (?,?,?,?,?,?,?,?,'pending',0,UTC_TIMESTAMP(3))", [id,registrationId,kind,dedupeKey,encryptPayload(payload,key),encryptPayload(snapshot,key),recipient,String(payload.subject||'').slice(0,998)]);
     return { queued:true,status:'Queued',jobId:id };
