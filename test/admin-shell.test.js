@@ -5,19 +5,19 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const { renderTablePage } = require('../server/sheet');
 
-test('management shell keeps all seven sections and loads authentication before controllers', () => {
+test('management shell keeps all eight sections and loads authentication before controllers', () => {
   const html = renderTablePage('');
   for (const id of ['adminSidebar', 'adminSidebarToggle', 'adminSidebarBackdrop', 'adminPageTitle', 'adminBreadcrumb', 'adminUsername', 'adminLogout']) assert.match(html, new RegExp('id="' + id + '"'));
   assert.match(html, /images\/lpclub-logo\.png/);
   assert.match(html, /assets\/admin-shell\.css/);
   assert.ok(html.indexOf('assets/admin-auth.js') < html.indexOf('const STATUSES='));
   assert.ok(html.indexOf('assets/admin-shell.js') > html.indexOf('setTab('));
-  assert.equal((html.match(/role="tab"/g) || []).length, 7);
+  assert.equal((html.match(/role="tab"/g) || []).length, 8);
 });
 
 function shell(mobile = false) {
   const nodes = new Map();
-  for (const id of ['adminSidebar', 'adminSidebarToggle', 'adminSidebarBackdrop', 'adminPageTitle', 'adminBreadcrumb', 'adminLogout', 'activeTab', 'deletedTab', 'vipTab', 'materialsTab', 'pricingTab']) {
+  for (const id of ['adminSidebar', 'adminSidebarToggle', 'adminSidebarBackdrop', 'adminPageTitle', 'adminBreadcrumb', 'adminLogout', 'activeTab', 'deletedTab', 'vipTab', 'materialsTab', 'showcaseTab', 'pricingTab']) {
     const classes = new Set();
     nodes.set(id, { textContent: '', hidden: true, attrs: {}, events: {}, classList: { toggle(name, enabled) { enabled ? classes.add(name) : classes.delete(name); }, contains: name => classes.has(name) }, setAttribute(name, value) { this.attrs[name] = value; }, getAttribute(name) { return this.attrs[name]; }, addEventListener(name, fn) { this.events[name] = fn; }, focus() { this.focused = true; } });
   }
@@ -62,4 +62,10 @@ test('pricing controls share the page header without a duplicate heading', () =>
   const pricing = html.slice(html.indexOf('id="pricingPanel"'), html.indexOf('<script src="assets/admin-auth.js"'));
   assert.doesNotMatch(pricing, /<h1/);
   assert.match(pricing, /class="toolbar"/);
+});
+
+test('showcase navigation updates its heading and breadcrumb', () => {
+ const app=shell();app.window.LPClubAdminShell.activate('showcase');
+ assert.equal(app.nodes.get('adminPageTitle').textContent,'translated:官网展示柜');
+ assert.equal(app.nodes.get('adminBreadcrumb').textContent,'translated:官网展示柜');
 });

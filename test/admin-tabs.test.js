@@ -4,12 +4,12 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const { renderTablePage } = require('../server/sheet');
 
-test('all seven admin tabs are buttons in one document with isolated content panels', () => {
+test('all eight admin tabs are buttons in one document with isolated content panels', () => {
   const html = renderTablePage('admin-test');
   const tabs = html.match(/<div class="tabs"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.equal((tabs.match(/<button\b/g) || []).length, 7);
+  assert.equal((tabs.match(/<button\b/g) || []).length, 8);
   assert.equal((tabs.match(/<a\b/g) || []).length, 0);
-  for (const id of ['registrationPanel', 'vipPanel', 'materialsPanel', 'pricingPanel']) assert.ok(html.includes('id="' + id + '"'));
+  for (const id of ['registrationPanel', 'vipPanel', 'materialsPanel', 'showcasePanel', 'pricingPanel']) assert.ok(html.includes('id="' + id + '"'));
   assert.equal((html.match(/<!doctype html>/gi) || []).length, 1);
   assert.equal(html.includes('<iframe'), false);
   const markup = html.replace(/<script>[\s\S]*?<\/script>/g, '');
@@ -65,10 +65,11 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 
 test('tab controllers preserve page location and only activate the selected panel', async () => {
   const app = operations(); await flush();
-  for (const tab of ['vip', 'materials', 'feishu', 'mail', 'pricing', 'deleted', 'active']) {
+  for (const tab of ['vip', 'materials', 'showcase', 'feishu', 'mail', 'pricing', 'deleted', 'active']) {
     vm.runInContext(`setTab('${tab}')`, app.context); await flush();
     assert.equal(app.elements.get('vipPanel').hidden, tab !== 'vip');
     assert.equal(app.elements.get('materialsPanel').hidden, tab !== 'materials');
+    assert.equal(app.elements.get('showcasePanel').hidden, tab !== 'showcase');
     assert.equal(app.elements.get('pricingPanel').hidden, tab !== 'pricing');
     assert.equal(app.elements.get('feishuPanel').hidden, tab !== 'feishu');
     assert.equal(app.elements.get('mailPanel').hidden, tab !== 'mail');
@@ -165,9 +166,12 @@ test('delayed materials list cannot overwrite a newer filter response',async()=>
  assert.ok(app.elements.get('materials-rows').innerHTML.includes('NEW'));assert.ok(!app.elements.get('materials-rows').innerHTML.includes('OLD'));
 });
 
-test('materials offers review and cabinet workareas without technical publishing fields',()=>{
+test('showcase has its own tab instead of a nested materials workarea',()=>{
  const html=renderTablePage('test-admin');
- assert.match(html,/官网展示柜/);assert.match(html,/审核工作台/);assert.match(html,/showcase-admin\.js/);
+ assert.match(html, /id="showcaseTab"[^>]*aria-controls="showcasePanel"/);
+ assert.match(html, /id="showcasePanel"[^>]*aria-labelledby="showcaseTab"/);
+ assert.doesNotMatch(html, /id="materials-showcase-workarea-button"/);
+ assert.match(html,/官网展示柜/);assert.match(html,/showcase-admin\.js/);
  assert.ok(!html.includes('id="orgKey"'));assert.ok(!html.includes('data-lang="'));const controller=require('../server/materials-pages').renderMaterialsAdminParts('token').script;assert.ok(!controller.includes('审核并发布当前版本'));
 });
 
@@ -232,4 +236,24 @@ test('a finished mutation cannot reopen or replace another active review',async(
 
 test('edits made while saving survive even when reverted to the previous server value',async()=>{
  let finish;const pending=new Promise(resolve=>finish=resolve);let row=reviewRecord();const app=operations(async(url,options)=>{if(options?.method==='PUT'){const data=JSON.parse(options.body);await pending;row={...row,owner:data.owner,followUpNote:data.note,rowVersion:2};return {ok:true};}return {ok:true,rows:url.startsWith('/api/admin/materials')?[JSON.parse(JSON.stringify(row))]:[]};});await flush();vm.runInContext("setTab('materials','DRAFT')",app.context);await flush();app.elements.get('owner').value='Submitted owner';const saving=app.elements.get('saveOwner').onclick();app.elements.get('owner').value='Original owner';finish();await saving;await flush();assert.equal(app.elements.get('owner').value,'Original owner');await app.window.LPClubOpsMaterials.refresh();await flush();assert.equal(app.elements.get('owner').value,'Original owner');
+});
+
+test('showcase activation is independent of material review and keeps its controller across tab switches', async () => {
+ const app=operations(()=>({ok:true,rows:[]}));await flush();
+ let initialized=0,activated=0;
+ app.window.LPClubShowcaseAdmin={init({element}){initialized++;assert.equal(element.id,'showcase-workarea');return {activate(){activated++;}};}};
+ vm.runInContext("setTab('showcase')",app.context);
+ assert.equal(app.elements.get('showcasePanel').hidden,false);
+ assert.equal(app.elements.get('materialsPanel').hidden,true);
+ assert.equal(app.elements.get('showcaseTab')['aria-selected'],'true');
+ vm.runInContext("setTab('materials');setTab('showcase')",app.context);
+ assert.equal(initialized,1);assert.equal(activated,2);
+});
+
+test('showcase supports direct selection and keyboard navigation after materials', async () => {
+ assert.match(renderTablePage('', 'active', {tab:'showcase'}), /setTab\("showcase",/);
+ const app=operations();await flush();vm.runInContext("setTab('materials')",app.context);
+ app.tabs.events.keydown({key:'ArrowDown',preventDefault(){}});
+ assert.equal(app.elements.get('showcasePanel').hidden,false);
+ assert.equal(vm.runInContext('document.activeElement',app.context),app.elements.get('showcaseTab'));
 });

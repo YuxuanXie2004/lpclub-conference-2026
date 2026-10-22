@@ -1,6 +1,6 @@
 'use strict';
 (function () {
-  const titles = { active: 'Active Registrations', deleted: 'Deleted / 回收站', vip: 'VIP Codes', materials: 'Materials / 资料审核', feishu: 'Feishu notifications', mail: 'Email notifications', pricing: 'Pricing / 价格设置' };
+  const titles = { active: 'Active Registrations', deleted: 'Deleted / 回收站', vip: 'VIP Codes', materials: 'Materials / 资料审核', showcase: '官网展示柜', feishu: 'Feishu notifications', mail: 'Email notifications', pricing: 'Pricing / 价格设置' };
   const byId = id => document.getElementById(id);
   const toggle = byId('adminSidebarToggle'), backdrop = byId('adminSidebarBackdrop');
   const mobile = window.matchMedia('(max-width: 767px)');
