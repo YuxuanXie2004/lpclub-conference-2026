@@ -27,11 +27,11 @@ mkdir -p "$APP_DIR/data/material-originals"
 chmod 700 "$APP_DIR/data/material-originals"
 if [ ! -f "$APP_DIR/server/.env" ]; then
   cp "$APP_DIR/server/.env.example" "$APP_DIR/server/.env"
-  echo "ERROR: created $APP_DIR/server/.env. Set a strong ADMIN_TOKEN and rerun this script."
+  echo "ERROR: created $APP_DIR/server/.env. Set ADMIN_USERNAME, ADMIN_PASSWORD_HASH and ADMIN_JWT_SECRET, then rerun this script."
   exit 1
 fi
-if grep -q 'replace-with-a-long-random-secret' "$APP_DIR/server/.env"; then
-  echo "ERROR: replace ADMIN_TOKEN in $APP_DIR/server/.env before starting production."
+if ! node -e "const {loadEnv}=require('./server/env'); const {createAdminAuth}=require('./server/admin-auth'); process.exit(createAdminAuth(loadEnv({...process.env})).configured()?0:1)"; then
+  echo "ERROR: configure ADMIN_PASSWORD_HASH and ADMIN_JWT_SECRET in $APP_DIR/server/.env before starting production."
   exit 1
 fi
 
@@ -77,7 +77,7 @@ server {
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
   }
-  location ~ ^/(api/|table$|vip-codes$|materials$|materials-admin$|export\.csv$|health$) {
+  location ~ ^/(api/|login$|table$|pricing-admin$|pricing$|vip-codes$|materials$|materials-admin$|export\.csv$|health$) {
     proxy_pass http://127.0.0.1:8787;
     proxy_http_version 1.1;
     proxy_set_header Host \$host;
@@ -100,4 +100,4 @@ fi
 
 echo "Deployment complete."
 echo "Health: http://${DOMAIN:-SERVER_IP}/health"
-echo "Admin:  http://${DOMAIN:-SERVER_IP}/table?token=<ADMIN_TOKEN>"
+echo "Admin:  http://${DOMAIN:-SERVER_IP}/login"

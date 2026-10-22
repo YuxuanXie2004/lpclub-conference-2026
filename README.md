@@ -18,7 +18,11 @@ MySQL 是报名、VIP、授权、审核、发布和邮件状态的唯一业务�
 4. `npm run db:init` 创建指定数据库和版本化表结构；重复运行不会清空数据。初始化账号须具备建库、建表权限，日常运行账号可单独配置。
 5. `npm run dev`
 
-默认访问 `http://localhost:8787/`，健康检查 `/health`，后台 `/table?token=<ADMIN_TOKEN>`。后台五个 Tab 在同一页面切换，资料审核使用弹窗，右上角切换语言。价格设置直接读写 MySQL；保存时校验配置修订号，数据库不可用时不会回退到本地文件或静态价格。
+默认访问 `http://localhost:8787/`，健康检查 `/health`，后台 `/table`，未登录时跳转 `/login`。后台五个菜单在同一页面切换，资料审核使用弹窗，右上角切换语言。价格设置直接读写 MySQL；保存时校验配置修订号，数据库不可用时不会回退到本地文件或静态价格。
+
+管理员配置：`ADMIN_USERNAME` 默认 `admin`，运行 `npm run admin:password` 输入至少 12 位密码，将输出哈希填入 `ADMIN_PASSWORD_HASH`；为 `ADMIN_JWT_SECRET` 生成至少 32 字节的随机密钥并固定保存。真实密码不写入配置或代码。旧 `ADMIN_TOKEN`、URL token 和 `X-Admin-Token` 均不再授权。JWT 使用 HttpOnly Cookie，有效期 8 小时，退出立即撤销会话，服务重启后需重新登录；本期适用于单 Node 进程。生产使用 HTTPS，Cookie 带 Secure；localhost/127.0.0.1 本机直连支持 HTTP 开发。配置缺失时仅禁用后台登录，公开报名保持可用。
+
+后台写请求使用同源校验及会话 CSRF token；导出和私有预览也需登录。旧后台链接会清除 token，登录后返回指定菜单或报名记录。前端不保存 JWT，参会者邮件补交凭证保持原有方式。
 
 `PUBLIC_BASE_URL` 是邮件链接的固定来源，不使用请求 Host。部署到子路径时必须包含完整目录，例如 `https://lp-club.cn/2026-pe-conference/`。Node 支持直接接收此前缀和由 Nginx 去掉前缀后的请求。
 

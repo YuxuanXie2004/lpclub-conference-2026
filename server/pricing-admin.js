@@ -4,8 +4,7 @@ const { helpers: languageHelpers } = require('./admin-i18n');
 const { BASE_PRICES, IDENTITIES, OPTION_LABELS, clonePrices } = require('./packages');
 
 function renderPricingPage(token) {
-  const auth = JSON.stringify(String(token || '')).replace(/[<>&\u2028\u2029]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
-  const back = token ? '?token=' + encodeURIComponent(token).replace(/'/g, '%27') : '';
+  const back = '';
   const current = clonePrices(BASE_PRICES);
 
   // Column definitions: Options
@@ -143,7 +142,7 @@ tbody tr:hover td:first-child{background:#fafcfb}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const TOKEN = ${auth};
+
 const $ = id => document.getElementById(id);
 ${languageHelpers}
 
@@ -234,7 +233,7 @@ async function fetchPricing({ preserveDirty = false, silent = false } = {}) {
   const request = ++pricingRequest;
   try {
     const res = await fetch('api/admin/pricing', {
-      headers: { 'X-Admin-Token': TOKEN }
+      credentials: 'same-origin'
     });
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || 'Failed to load pricing');
@@ -267,8 +266,7 @@ async function savePrices() {
     const res = await fetch('api/admin/pricing', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Token': TOKEN
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ prices: payload, revision: currentRevision })
     });
@@ -301,8 +299,7 @@ async function resetDefaults() {
     const res = await fetch('api/admin/pricing', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Token': TOKEN
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ reset: true, revision: currentRevision })
     });

@@ -33,7 +33,7 @@ function languageApp(saved = 'en', blockedStorage = false) {
 
 test('management header has an in-page language control and status values remain canonical', () => {
   const html = renderTablePage('test-admin');
-  const header = html.match(/<header>([\s\S]*?)<\/header>/)[1];
+  const header = html.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)[1];
   assert.match(header, /id="adminLangZh"/);
   assert.match(header, /id="adminLangEn"/);
   for (const status of ['Received', 'Under Review', 'Approved', 'Waitlisted', 'Rejected', 'Cancelled']) assert.ok(html.includes('value="' + status + '"'));
@@ -94,4 +94,21 @@ test('manual cabinet and independent review controls translate without publishin
 
 test('candidate pagination keeps parameter bindings across language switches',()=>{
  const app=languageApp('en'),node=app.node(null),client=require('../assets/showcase-admin');assert.equal(typeof client.setPageInfo,'function');client.setPageInfo(node,app.api,2,35,12);assert.equal(node.textContent,'Page 2 / 3 · Total 35');assert.equal(node.getAttribute('data-admin-i18n'),'Page {page} / {pages} · Total {total}');app.api.setLanguage('zh');assert.equal(node.textContent,'第 2 / 3 页 · 共 35 项');app.api.setLanguage('en');assert.equal(node.textContent,'Page 2 / 3 · Total 35');
+});
+
+test('notification navigation, statuses, filters, details and errors translate in both directions', () => {
+  const app = languageApp('en');
+  const pairs = {
+    'Feishu notifications': '飞书通知', 'Email notifications': '邮件通知',
+    'Table sync': '表格同步', 'Pending notification': '待发送', 'Accepted by channel': '发送成功（渠道已接受）',
+    'Search notifications': '搜索姓名、邮箱或报名编号', 'From date': '开始日期',
+    'Notification details': '通知详情', 'Historical content is unavailable': '历史正文未保存，无法查看',
+    'Only failed notifications can be retried': '只能重试失败的通知', 'Feishu notifications and sync': '飞书通知与同步'
+  };
+  for (const [en, zh] of Object.entries(pairs)) {
+    app.api.setLanguage('zh'); assert.equal(app.api.text(en), zh);
+    app.api.setLanguage('en'); assert.equal(app.api.text(en), en);
+  }
+  const html = renderTablePage('');
+  for (const key of ['Feishu notifications', 'Email notifications', 'From date', 'To date', 'Notification details']) assert.ok(html.includes('data-admin-i18n="' + key + '"'), key);
 });

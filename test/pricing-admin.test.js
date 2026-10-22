@@ -118,7 +118,7 @@ test('pricing controller rejects blank values, sends revisions, and preserves dr
   await vm.runInContext('savePrices()', context);
   const saved = requests.at(-1);
   assert.equal(saved.url, 'api/admin/pricing');
-  assert.equal(saved.options.headers['X-Admin-Token'], 'test-token');
+  assert.equal(saved.options.headers['X-Admin-Token'], undefined);
   assert.equal(JSON.parse(saved.options.body).revision, 3);
   assert.equal(JSON.parse(saved.options.body).prices.gp.ticket, 2500);
 
@@ -135,7 +135,7 @@ function request(server, path, options = {}) {
       response.on('end', () => {
         let payload = null;
         try { payload = JSON.parse(body); } catch (_) {}
-        resolve({ status: response.statusCode, body, payload });
+        resolve({ status: response.statusCode, body, payload, headers: response.headers });
       });
     });
     req.on('error', reject);
@@ -160,7 +160,7 @@ test('HTTP pricing routes use the database-backed store and require authenticati
     }
   };
   const backend = createBackend({
-    env: { ADMIN_TOKEN: 'super-secret-token' },
+    env: { ADMIN_TOKEN: 'super-secret-token', ADMIN_PASSWORD_HASH: require('../server/admin-auth').hashPassword('admin-test-password'), ADMIN_JWT_SECRET: 'k'.repeat(48) },
     pricingStore,
     db: {
       query: async () => [],
@@ -170,12 +170,17 @@ test('HTTP pricing routes use the database-backed store and require authenticati
   });
   await new Promise(resolve => backend.server.listen(0, '127.0.0.1', resolve));
   try {
-    assert.equal((await request(backend.server, '/pricing-admin')).status, 401);
-    assert.equal((await request(backend.server, '/pricing-admin?token=super-secret-token')).status, 200);
+    assert.equal((await request(backend.server, '/pricing-admin')).status, 302);
+    const origin = 'http://127.0.0.1:' + backend.server.address().port;
+    const login = await request(backend.server, '/api/admin/auth/login', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: { username: 'admin', password: 'admin-test-password' } });
+    assert.equal(login.status, 200);
+    const authHeaders = { Cookie: login.headers['set-cookie'][0].split(';')[0], Origin: origin, 'X-CSRF-Token': login.payload.csrfToken };
+    assert.equal((await request(backend.server, '/pricing-admin?token=super-secret-token')).status, 302);
+    assert.equal((await request(backend.server, '/pricing-admin', { headers: authHeaders })).status, 200);
     assert.equal((await request(backend.server, '/api/admin/pricing')).status, 401);
 
     const initial = await request(backend.server, '/api/admin/pricing', {
-      headers: { 'X-Admin-Token': 'super-secret-token' }
+      headers: authHeaders
     });
     assert.equal(initial.status, 200);
     assert.equal(initial.payload.revision, 1);
@@ -184,7 +189,7 @@ test('HTTP pricing routes use the database-backed store and require authenticati
     next.gp.ticket = 2500;
     const saved = await request(backend.server, '/api/admin/pricing', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': 'super-secret-token' },
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: { prices: next, revision: 1 }
     });
     assert.equal(saved.status, 200);
@@ -197,7 +202,7 @@ test('HTTP pricing routes use the database-backed store and require authenticati
 
     const reset = await request(backend.server, '/api/admin/pricing', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': 'super-secret-token' },
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: { reset: true, revision: 2 }
     });
     assert.equal(reset.status, 200);

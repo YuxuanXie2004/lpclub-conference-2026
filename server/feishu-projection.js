@@ -26,7 +26,7 @@ function millis(value) {
   return Number.isFinite(stamp)?stamp:null;
 }
 function list(value) {try {const parsed=typeof value==='string'?JSON.parse(value):value;return Array.isArray(parsed)?parsed.join('; '):'';}catch(_){return '';}}
-function adminLink(ref,env,withToken=false) { const url=new URL(publicUrl(env.PUBLIC_BASE_URL,'table'));url.searchParams.set('tab','materials');url.searchParams.set('ref',ref);if(withToken&&env.ADMIN_TOKEN)url.searchParams.set('token',env.ADMIN_TOKEN);return url.href; }
+function adminLink(ref,env) { const url=new URL(publicUrl(env.PUBLIC_BASE_URL,'table'));url.searchParams.set('tab','materials');url.searchParams.set('ref',ref);return url.href; }
 function mapFields(row,items=[],consents=[],env={}) {
   const fields=Object.fromEntries(Object.entries(TEXT_FIELDS).map(([label,column])=>[label,String(row[column]??'')]));
   for(const [label,column] of Object.entries(DATE_FIELDS))fields[label]=millis(row[column]);

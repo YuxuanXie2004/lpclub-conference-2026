@@ -1,6 +1,5 @@
 'use strict';
 
-const crypto = require('node:crypto');
 const Busboy = require('busboy');
 const { MAX_BYTES } = require('./materials');
 const { renderMaterialsPage, renderMaterialsAdminPage } = require('./materials-pages');
@@ -34,7 +33,7 @@ function readImage(req) {
   });
 }
 
-function createMaterialsHandler({ service, showcase, json, readBody, setSecurityHeaders, allowed, adminToken = '', logger = console }) {
+function createMaterialsHandler({ service, showcase, json, readBody, setSecurityHeaders, allowed, logger = console }) {
   const buckets = new Map();
   function throttle(req, ref, action) {
     const now = Date.now(), key = [req.socket?.remoteAddress || '', ref, action].join('|');
@@ -52,9 +51,7 @@ function createMaterialsHandler({ service, showcase, json, readBody, setSecurity
   function adminAllowed(req, url, override) {
     if (typeof override === 'function') return !!override(req, url);
     if (typeof allowed === 'function') return !!allowed(req, url);
-    const token = String(req.headers['x-admin-token'] || url.searchParams.get('token') || '');
-    const a = Buffer.from(token), b = Buffer.from(adminToken);
-    return b.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
+    return false;
   }
   async function auth(req, uploadOnly = false) {
     const ref = String(req.headers['x-registration-ref'] || '');
@@ -77,7 +74,7 @@ function createMaterialsHandler({ service, showcase, json, readBody, setSecurity
       if (!service.ready()) throw error('Materials are not configured', 503);
       const isAdmin = path === '/materials-admin' || path.startsWith('/api/admin/materials') || path.startsWith('/api/admin/showcase/');
       if (isAdmin && !adminAllowed(req, url, context.allowed)) throw error('Unauthorised', 401);
-      if (req.method === 'GET' && path === '/materials-admin') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(renderMaterialsAdminPage(adminToken || url.searchParams.get('token') || '', url.searchParams.get('ref') || '')); return true; }
+      if (req.method === 'GET' && path === '/materials-admin') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(renderMaterialsAdminPage('', url.searchParams.get('ref') || '')); return true; }
       let match;
       if (path.startsWith('/api/admin/showcase/')) {
         match = path.match(/^\/api\/admin\/showcase\/(portrait|logo)\/uploads(?:\/([0-9a-f-]{36})\/preview)?$/i);

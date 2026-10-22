@@ -17,7 +17,7 @@ function parts(page, prefix) {
 
 function vipPanel(token) {
   const panel = parts(renderVipPage(token), 'vip-');
-  panel.html = panel.html.replace(/<header>[\s\S]*?<div class="actions">([\s\S]*?)<\/div><\/header>/, '<div class="toolbar"><div class="actions">$1</div></div>')
+  panel.html = panel.html.replace(/<header>[\s\S]*?<div class="actions">([\s\S]*?)<\/div>\s*<\/header>/, '<div class="toolbar"><div class="actions">$1</div></div>')
     .replace(/<div class="tabs">[\s\S]*?<\/div>/, '');
   panel.script = panel.script.replace('function closeModal(id){', "function closeModal(id){id=id.replace(/^vip-/,'');")
     .replace(/load\(\);\s*$/, "window.LPClubOpsVip={refresh:load,close:()=>document.querySelectorAll('.modal.on').forEach(modal=>closeModal(modal.id))};");
@@ -33,7 +33,7 @@ function materialsPanel(token, initialRef = '') {
 
 function pricingPanel(token) {
   const panel = parts(renderPricingPage(token), 'pricing-');
-  panel.html = panel.html.replace(/<header>[\s\S]*?<div class="actions">([\s\S]*?)<\/div><\/header>/, '<div class="toolbar"><div class="actions">$1</div></div>')
+  panel.html = panel.html.replace(/<header>[\s\S]*?<div class="actions">([\s\S]*?)<\/div>\s*<\/header>/, '<div class="toolbar"><div class="actions">$1</div></div>')
     .replace(/<div class="tabs"[^>]*>[\s\S]*?<\/div>/, '');
   return panel;
 }

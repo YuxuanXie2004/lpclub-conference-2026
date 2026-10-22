@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const { renderTablePage } = require('../server/sheet');
 
-test('all five admin tabs are buttons in one document with isolated content panels', () => {
+test('all seven admin tabs are buttons in one document with isolated content panels', () => {
   const html = renderTablePage('admin-test');
   const tabs = html.match(/<div class="tabs"[^>]*>([\s\S]*?)<\/div>/)[1];
-  assert.equal((tabs.match(/<button\b/g) || []).length, 5);
+  assert.equal((tabs.match(/<button\b/g) || []).length, 7);
   assert.equal((tabs.match(/<a\b/g) || []).length, 0);
   for (const id of ['registrationPanel', 'vipPanel', 'materialsPanel', 'pricingPanel']) assert.ok(html.includes('id="' + id + '"'));
   assert.equal((html.match(/<!doctype html>/gi) || []).length, 1);
@@ -65,17 +65,28 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 
 test('tab controllers preserve page location and only activate the selected panel', async () => {
   const app = operations(); await flush();
-  for (const tab of ['vip', 'materials', 'pricing', 'deleted', 'active']) {
+  for (const tab of ['vip', 'materials', 'feishu', 'mail', 'pricing', 'deleted', 'active']) {
     vm.runInContext(`setTab('${tab}')`, app.context); await flush();
     assert.equal(app.elements.get('vipPanel').hidden, tab !== 'vip');
     assert.equal(app.elements.get('materialsPanel').hidden, tab !== 'materials');
     assert.equal(app.elements.get('pricingPanel').hidden, tab !== 'pricing');
+    assert.equal(app.elements.get('feishuPanel').hidden, tab !== 'feishu');
+    assert.equal(app.elements.get('mailPanel').hidden, tab !== 'mail');
     assert.equal(app.elements.get('registrationPanel').hidden, !['active', 'deleted'].includes(tab));
-    for (const name of ['vip', 'materials', 'pricing', 'active', 'deleted']) assert.equal(app.elements.get(name + 'Tab')['aria-selected'], String(name === tab));
+    for (const name of ['vip', 'materials', 'feishu', 'mail', 'pricing', 'active', 'deleted']) assert.equal(app.elements.get(name + 'Tab')['aria-selected'], String(name === tab));
   }
   assert.equal(vm.runInContext('location.href', app.context), '/table?token=test-admin');
   assert.ok(app.requests.some(r => r.url.startsWith('/api/admin/vip-codes')));
   assert.ok(app.requests.some(r => r.url.startsWith('/api/admin/materials')));
+});
+
+test('notification detail can open a registration outside the currently loaded registration page', async () => {
+  const app = operations(url => ({ ok: true, rows: [], row: { ref: 'OUTSIDE-PAGE', fullName: 'Jane', email: 'jane@example.com' } })); await flush();
+  vm.runInContext("setTab('mail')", app.context);
+  assert.equal(typeof app.window.LPClubOpenRegistration, 'function');
+  await app.window.LPClubOpenRegistration('OUTSIDE-PAGE');
+  assert.match(app.elements.get('modalTitle').textContent, /OUTSIDE-PAGE/);
+  assert.ok(app.requests.some(r => r.url.includes('ref=OUTSIDE-PAGE')));
 });
 
 test('a delayed active-registration response cannot replace the deleted list', async () => {
@@ -171,7 +182,7 @@ test('registration list shows read-only statuses and review dialog edits admissi
 test('admission status saves from review with authentication and revision while preserving drafts',async()=>{
  let row=reviewRecord();const app=operations((url,options)=>{if(url==='/api/admin/status'){const body=JSON.parse(options.body);row={...row,status:body.status,rowVersion:2};return {ok:true};}return {ok:true,rows:url.startsWith('/api/admin/materials')?[JSON.parse(JSON.stringify(row))]:[]};});await flush();vm.runInContext("setTab('materials','DRAFT')",app.context);await flush();
  app.elements.get('material-text-name').value='Unsaved name';app.elements.get('owner').value='Unsaved owner';const select=app.elements.get('registrationStatus');select.value='Rejected';await select.onchange();
- const sent=app.requests.find(r=>r.url==='/api/admin/status');assert.equal(sent.options.headers['X-Admin-Token'],'test-admin');assert.deepEqual(JSON.parse(sent.options.body),{ref:'DRAFT',rowVersion:1,status:'Rejected'});assert.equal(app.elements.get('registrationStatus').value,'Rejected');assert.equal(app.elements.get('material-text-name').value,'Unsaved name');assert.equal(app.elements.get('owner').value,'Unsaved owner');
+ const sent=app.requests.find(r=>r.url==='/api/admin/status');assert.equal(sent.options.credentials,'same-origin');assert.equal(sent.options.headers?.['X-Admin-Token'],undefined);assert.deepEqual(JSON.parse(sent.options.body),{ref:'DRAFT',rowVersion:1,status:'Rejected'});assert.equal(app.elements.get('registrationStatus').value,'Rejected');assert.equal(app.elements.get('material-text-name').value,'Unsaved name');assert.equal(app.elements.get('owner').value,'Unsaved owner');
  app.elements.get('registrationStatus').value='Approved';await app.elements.get('registrationStatus').onchange();assert.equal(JSON.parse(app.requests.filter(r=>r.url==='/api/admin/status').at(-1).options.body).rowVersion,2);
 });
 test('failed admission change restores saved status and does not send material review',async()=>{

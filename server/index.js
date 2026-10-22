@@ -1,6 +1,6 @@
 /** LP CLUB conference API. MySQL is the authoritative business store; originals stay private on disk. */
 'use strict';
-const http=require('http'),fs=require('fs'),path=require('path'),crypto=require('crypto');
+const http=require('http'),fs=require('fs'),path=require('path');
 const {loadEnv}=require('./env');
 const sheet=require('./sheet');
 const orderData=require('./order');
@@ -15,6 +15,8 @@ const {createShowcaseService}=require('./showcase');
 const {createMailOutbox}=require('./mail-outbox');
 const {createMailer}=require('./mailer');
 const {stripPrefix}=require('./public-paths');
+const {createAdminAuth}=require('./admin-auth');
+const {renderLoginPage}=require('./admin-login');
 const ROOT=path.join(__dirname,'..');
 function createBackend({env=loadEnv({...process.env}),db:providedDatabase,pricingStore:providedPricingStore,sendMail,logger=console}={}) {
   let actualDatabase=providedDatabase,vipStore;
@@ -22,9 +24,10 @@ function createBackend({env=loadEnv({...process.env}),db:providedDatabase,pricin
   const db={query:(...args)=>database().query(...args),transaction:(...args)=>database().transaction(...args),withNamedLock:(...args)=>database().withNamedLock(...args),health:(...args)=>database().health(...args),close:()=>actualDatabase?.close()};
   const vip=()=>vipStore||(vipStore=createMysqlVipStore(db,env));
   const pricingStore=providedPricingStore||createMysqlPricingStore(db);
-  const ADMIN_TOKEN=env.ADMIN_TOKEN||'',ALLOW_ORIGIN=env.ALLOW_ORIGIN||'';
+  const adminAuth=createAdminAuth(env),ALLOW_ORIGIN=env.ALLOW_ORIGIN||'';
   const integrations=require('./feishu-integration').createFeishuIntegration({db,env,logger});
   const mailer=createMailer(env),outbox=createMailOutbox({db,env,send:sendMail||mailer.send,integrations,logger});
+  const notifications=require('./notification-admin').createNotificationAdmin({db,env,integrations,mailConfigured:outbox.configured});
   const materials=createMaterialService({db,packages:PACKAGES,env,mail:outbox,integrations,composeSupplement:mailer.composeSupplement});
   const showcaseAdmin=createShowcaseService({db,env,materials});
   const registrations=createRegistrationService({db,pricing:pricingStore,normaliseOrder:orderData.normaliseOrder,vip:{previewCode:(...a)=>vip().previewCode(...a),redeem:(...a)=>vip().redeem(...a)},materials,mail:outbox,integrations,composeMail:mailer.composeRegistration});
@@ -35,6 +38,13 @@ function createBackend({env=loadEnv({...process.env}),db:providedDatabase,pricin
     let b=rateBuckets.get(ip);if(!b||now-b.start>=windowMs){b={start:now,count:0};rateBuckets.set(ip,b);}return ++b.count<=max;
   }
   function clientIp(req){return env.TRUST_PROXY==='true'?String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim():req.socket?.remoteAddress||'unknown';}
+  function adminClientIp(req){
+    const peer=req.socket?.remoteAddress||'unknown';
+    if(env.TRUST_PROXY!=='true'||!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(peer))return peer;
+    // The local Nginx proxy appends the actual client after any supplied values.
+    const forwarded=String(req.headers['x-forwarded-for']||'').split(',').at(-1).trim();
+    return require('node:net').isIP(forwarded)?forwarded:peer;
+  }
   async function validateVip(input){const code=await vip().previewCode(input?.vipCode);if(input?.packageId){const catalogue=await pricingStore.packages();const p=orderData.registrationPackage(input,catalogue.packages);if(p.optionId!=='ticket')throw Object.assign(new Error('VIP Code applies to delegate passes only. Please select a Delegate Pass.'),{statusCode:400,code:'VIP_TICKET_ONLY'});return{valid:true,package:{...p,originalPrice:p.price,price:0,displayPrice:'Complimentary / VIP Code',vipApplied:true}};}return{valid:true};}
   const processOrder=input=>registrations.submit(input);
 function readBody(req) {
@@ -54,7 +64,7 @@ function setSecurityHeaders(res) {
   res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 }
 function json(res, code, payload) {
-  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token, Authorization, X-Registration-Ref, Idempotency-Key', 'Access-Control-Allow-Methods': 'POST,GET,PUT,DELETE,PATCH,OPTIONS' };
+  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Headers': 'Content-Type, X-CSRF-Token, Authorization, X-Registration-Ref, Idempotency-Key', 'Access-Control-Allow-Methods': 'POST,GET,PUT,DELETE,PATCH,OPTIONS' };
   if (ALLOW_ORIGIN) headers['Access-Control-Allow-Origin'] = ALLOW_ORIGIN;
   if (typeof res.setHeader === 'function') { Object.entries(headers).forEach(([k,v]) => res.setHeader(k,v)); setSecurityHeaders(res); }
   if (typeof res.status === 'function' && typeof res.json === 'function') return res.status(code).json(payload);
@@ -73,35 +83,68 @@ function serveFile(res, file) {
   fs.createReadStream(abs).pipe(res); return true;
 }
 
-function secureEquals(a, b) {
-  const aa = Buffer.from(String(a || '')), bb = Buffer.from(String(b || ''));
-  return aa.length === bb.length && aa.length > 0 && crypto.timingSafeEqual(aa, bb);
-}
-
   function failure(res,error,fallback='Request failed') {
     const code=error.statusCode||503;
     return json(res,code,{ok:false,code:error.code&&error.statusCode?error.code:'DATABASE_UNAVAILABLE',error:error.statusCode?error.message:fallback,ref:error.ref||undefined,retryable:error.retryable||undefined,currentPrice:error.currentPrice,currentRevision:error.currentRevision});
   }
-  async function health(){let state;try{state=await db.health()}catch(_){state={ok:false,schemaReady:false}}let vipReady=false,pricingReady=false;try{vip();vipReady=true}catch(_){}try{await pricingStore.get();pricingReady=true}catch(_){}return{...state,ok:Boolean(state.ok&&pricingReady),service:'lpclub-conference',database:'mysql',email:outbox.configured(),admin:Boolean(ADMIN_TOKEN),vipReady,pricingReady,materialsReady:materials.ready(),materialsStorage:'local',packagesReady:pricingReady,feishu:integrations.configured()};}
-  const materialHandler=require('./materials-http').createMaterialsHandler({service:materials,showcase:showcaseAdmin,json,readBody,setSecurityHeaders,adminToken:ADMIN_TOKEN,logger});
+  async function health(){let state;try{state=await db.health()}catch(_){state={ok:false,schemaReady:false}}let vipReady=false,pricingReady=false;try{vip();vipReady=true}catch(_){}try{await pricingStore.get();pricingReady=true}catch(_){}return{...state,ok:Boolean(state.ok&&pricingReady),service:'lpclub-conference',database:'mysql',email:outbox.configured(),admin:adminAuth.configured(),vipReady,pricingReady,materialsReady:materials.ready(),materialsStorage:'local',packagesReady:pricingReady,feishu:integrations.configured()};}
+  const materialHandler=require('./materials-http').createMaterialsHandler({service:materials,showcase:showcaseAdmin,json,readBody,setSecurityHeaders,logger});
   const server=http.createServer(async(req,res)=>{
     try {
       if(req.method==='OPTIONS')return json(res,204,{});
       const url=new URL(req.url,'http://localhost');url.pathname=stripPrefix(url.pathname,env.PUBLIC_BASE_URL);const pathname=url.pathname;
-      const token=String(req.headers['x-admin-token']||url.searchParams.get('token')||'');const allowed=()=>Boolean(ADMIN_TOKEN)&&secureEquals(token,ADMIN_TOKEN);
-      if(req.method==='GET'&&['/table','/vip-codes','/materials-admin','/pricing-admin','/pricing'].includes(pathname)){
-        if(!allowed())return json(res,401,{ok:false,error:'unauthorised'});
+      const currentSession=adminAuth.session(req),allowed=()=>Boolean(currentSession);
+      const prefix=adminAuth.pathPrefix(req);
+      const redirect=target=>{setSecurityHeaders(res);res.writeHead(302,{'Location':target,'Cache-Control':'no-store'});res.end();};
+      if(pathname==='/login'&&req.method==='GET'){
+        const target=adminAuth.returnTo(url.searchParams.get('returnTo'),req);
+        if(currentSession)return redirect(target);
+        setSecurityHeaders(res);res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
+        return res.end(renderLoginPage({prefix,returnTo:target,configured:adminAuth.configured()}));
+      }
+      if(pathname.startsWith('/api/admin/auth/')){
+        if(pathname==='/api/admin/auth/login'&&req.method==='POST'){
+          adminAuth.checkOrigin(req);
+          let body;try{body=await readBody(req);}catch(_){return json(res,400,{ok:false,code:'INVALID_JSON',error:'Invalid JSON request'});}
+          const result=await adminAuth.login(body?.username,body?.password,adminClientIp(req),req);
+          res.setHeader('Set-Cookie',result.cookie);
+          return json(res,200,{ok:true,user:result.user,csrfToken:result.csrfToken,expiresAt:result.expiresAt,returnTo:adminAuth.returnTo(body?.returnTo,req)});
+        }
+        if(!allowed())return json(res,401,{ok:false,code:'ADMIN_UNAUTHENTICATED',error:'Please sign in again'});
+        if(pathname==='/api/admin/auth/session'&&req.method==='GET')return json(res,200,{ok:true,user:currentSession.user,csrfToken:currentSession.csrfToken,expiresAt:currentSession.expiresAt});
+        if(pathname==='/api/admin/auth/logout'&&req.method==='POST'){
+          adminAuth.checkWrite(req,currentSession);adminAuth.logout(currentSession);res.setHeader('Set-Cookie',adminAuth.clearCookie(req));return json(res,200,{ok:true});
+        }
+        return json(res,405,{ok:false,error:'Method not allowed'});
+      }
+      const isAdminPage=['/table','/vip-codes','/materials-admin','/pricing-admin','/pricing'].includes(pathname);
+      const isAdminApi=pathname.startsWith('/api/admin/')||['/api/registrations','/export.csv','/api/pricing'].includes(pathname);
+      if(isAdminApi){
+        if(!allowed())return json(res,401,{ok:false,code:'ADMIN_UNAUTHENTICATED',error:'Please sign in again'});
+        if(!['GET','HEAD','OPTIONS'].includes(req.method))adminAuth.checkWrite(req,currentSession);
+      }
+      if(req.method==='GET'&&isAdminPage){
+        const target=adminAuth.returnTo(prefix+pathname+url.search,req);
+        if(!allowed())return redirect(prefix+'/login?returnTo='+encodeURIComponent(target));
+        if(url.searchParams.has('token'))return redirect(target);
         const tab=pathname==='/vip-codes'?'vip':pathname==='/materials-admin'?'materials':['/pricing-admin','/pricing'].includes(pathname)?'pricing':url.searchParams.get('tab');
         setSecurityHeaders(res);res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});
-        return res.end(sheet.renderTablePage(ADMIN_TOKEN,url.searchParams.get('mode'),{tab,ref:url.searchParams.get('ref')||''}));
+        return res.end(sheet.renderTablePage('',url.searchParams.get('mode'),{tab,ref:url.searchParams.get('ref')||''}));
       }
       if(await materialHandler(req,res,url,{allowed}))return;
+      const notificationRoute=pathname.match(/^\/api\/admin\/notifications\/(mail|feishu|sync)(?:\/([a-zA-Z0-9-]+)(?:\/(retry))?)?$/);
+      if(notificationRoute){
+        const [,channel,id,action]=notificationRoute;
+        if(req.method==='GET'&&!action)return json(res,200,{ok:true,...await (id?notifications.detail(channel,id):notifications.list(channel,Object.fromEntries(url.searchParams)))});
+        if(req.method==='POST'&&id&&action==='retry')return json(res,200,{ok:true,...await notifications.retry(channel,id)});
+        return json(res,405,{ok:false,error:'Method not allowed'});
+      }
       if(req.method==='GET'&&['/health','/api/health'].includes(pathname)){const result=await health();return json(res,result.ok?200:503,result);}
       if(pathname==='/api/admin/integrations/feishu'||pathname.startsWith('/api/admin/integrations/feishu/')){
         if(!allowed())return json(res,401,{ok:false,error:'unauthorised'});
         const base='/api/admin/integrations/feishu';
         if(req.method==='GET'&&pathname===base)return json(res,200,{ok:true,...await integrations.status()});
-        if(req.method==='POST'&&pathname===base+'/retry')return json(res,200,{ok:true,...await integrations.retry(await readBody(req))});
+        if(req.method==='POST'&&pathname===base+'/retry')return json(res,200,{ok:true,...await notifications.retryFeishu(await readBody(req))});
         if(req.method==='POST'&&pathname===base+'/reconcile')return json(res,200,{ok:true,...await integrations.requestReconcile()});
         return json(res,405,{ok:false,error:'Method not allowed'});
       }
@@ -160,7 +203,7 @@ if(require.main===module){
   const PORT=Number(process.env.PORT||8787),HOST=process.env.HOST||'0.0.0.0';
   // .env settings are loaded into the isolated backend environment, including host/port.
   const env=loadEnv({...process.env});
-  backend.server.listen(Number(env.PORT||PORT),env.HOST||HOST,()=>{console.log('LP CLUB conference listening on port '+(env.PORT||PORT));console.log('database: MySQL; admin: '+(env.ADMIN_TOKEN?'enabled':'disabled'));backend.outbox.start();backend.integrations.start();});
+  backend.server.listen(Number(env.PORT||PORT),env.HOST||HOST,()=>{console.log('LP CLUB conference listening on port '+(env.PORT||PORT));console.log('database: MySQL; admin: '+(createAdminAuth(env).configured()?'enabled':'disabled'));backend.outbox.start();backend.integrations.start();});
   const shutdown=()=>{backend.outbox.stop();backend.integrations.stop();backend.server.close(()=>backend.db.close().then(()=>process.exit(0)));setTimeout(()=>process.exit(1),10000).unref();};
   process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
 }

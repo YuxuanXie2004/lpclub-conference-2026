@@ -1,0 +1,76 @@
+'use strict';
+const test = require('node:test'), assert = require('node:assert/strict'), crypto = require('node:crypto');
+const { mysqlFixture, insertRegistration } = require('./helpers/mysql');
+const { createMailOutbox } = require('../server/mail-outbox');
+const { createNotificationAdmin } = require('../server/notification-admin');
+const integration = (name, fn) => test(name, { skip: process.env.RUN_MYSQL_TESTS !== '1' }, fn);
+
+integration('notification records query real MySQL and retain original mail after delivery and registration edits', async t => {
+  const { db, env } = await mysqlFixture(t);
+  Object.assign(env, { SMTP_PASS: 'test', MAIL_PAYLOAD_KEY: crypto.randomBytes(32).toString('base64') });
+  const registration = await insertRegistration(db, { email: 'original@example.com' });
+  const integrations = { target: 'a'.repeat(64), capture: async () => {} };
+  const outbox = createMailOutbox({ db, env, send: async () => ({ sent: true, id: 'message-1' }) });
+  const queued = await db.transaction(tx => outbox.enqueue(tx, registration.id, 'registration', { to: registration.email, subject: 'Original subject', text: 'Original body' }));
+  await outbox.runOnce();
+  await db.query('UPDATE registrations SET email=? WHERE id=?', ['changed@example.com', registration.id]);
+  const api = createNotificationAdmin({ db, env, integrations });
+  const result = await api.list('mail', { q: 'original@example.com', status: 'sent' });
+  assert.equal(result.total, 1); assert.equal(result.rows[0].target, 'original@example.com');
+  assert.equal(result.rows[0].subject, 'Original subject'); assert.equal(result.stats.sent, 1);
+  assert.ok(result.lastSuccess.endsWith('Z'));
+  const detail = await api.detail('mail', queued.jobId);
+  assert.equal(detail.content.to, 'original@example.com'); assert.equal(detail.content.text, 'Original body');
+  assert.equal(detail.contentAvailable, true); assert.equal(detail.encrypted_payload, undefined);
+  assert.equal((await db.query('SELECT encrypted_payload FROM mail_jobs WHERE id=?', [queued.jobId]))[0].encrypted_payload, null);
+  await assert.rejects(api.retryMail(queued.jobId), e => e.statusCode === 409);
+});
+
+integration('notification retry is atomic, records audit history and cannot reset a queued job twice', async t => {
+  const { db, env } = await mysqlFixture(t);
+  Object.assign(env, { SMTP_PASS: 'test', MAIL_PAYLOAD_KEY: crypto.randomBytes(32).toString('base64') });
+  const registration = await insertRegistration(db);
+  const outbox = createMailOutbox({ db, env });
+  const queued = await db.transaction(tx => outbox.enqueue(tx, registration.id, 'registration', { to: registration.email, text: 'retry' }));
+  await db.query("UPDATE mail_jobs SET status='failed',attempts=5,last_error='SMTP_TIMEOUT' WHERE id=?", [queued.jobId]);
+  await db.query("UPDATE registrations SET email_status='Failed' WHERE id=?", [registration.id]);
+  const api = createNotificationAdmin({ db, env, integrations: { capture: async () => {} } });
+  const results = await Promise.allSettled([api.retryMail(queued.jobId), api.retryMail(queued.jobId)]);
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+  assert.equal(results.find(result => result.status === 'rejected').reason.statusCode, 409);
+  const detail = await api.detail('mail', queued.jobId);
+  assert.equal(detail.status, 'pending'); assert.equal(detail.attempts, 0);
+  assert.equal(detail.history.length, 1); assert.equal(detail.history[0].previousAttempts, 5);
+  assert.equal(detail.history[0].previousError, 'SMTP_TIMEOUT');
+  assert.equal((await db.query('SELECT email_status FROM registrations WHERE id=?', [registration.id]))[0].email_status, 'Queued');
+});
+
+integration('Feishu lists event snapshots while sync queries and retries remain isolated by target', async t => {
+  const { db, env } = await mysqlFixture(t);
+  const registration = await insertRegistration(db), event = crypto.randomUUID(), job = crypto.randomUUID();
+  env.PUBLIC_BASE_URL = 'https://example.com/conference/';
+  const target = 'a'.repeat(64), other = 'b'.repeat(64);
+  await db.query('INSERT INTO integration_events(id,registration_id,kind,snapshot) VALUES (?,?,?,?)', [event, registration.id, 'registration_created', JSON.stringify({ ref: registration.ref, full_name: 'Historical name' })]);
+  await db.query("INSERT INTO integration_jobs(id,event_id,registration_id,dedupe_key,status) VALUES (?,?,?,?,'failed')", [job, event, registration.id, 'test:' + job]);
+  for (const value of [target, other]) await db.query("INSERT INTO feishu_sync_state(registration_id,target_key,status) VALUES (?,?,'failed')", [registration.id, value]);
+  const api = createNotificationAdmin({ db, env, integrations: { target } });
+  const list = await api.list('feishu', { q: 'Historical name' });
+  assert.equal(list.total, 1); assert.equal(list.rows[0].kind, 'registration_created');
+  const detail = await api.detail('feishu', job); assert.equal(detail.content.msg_type, 'interactive');
+  await api.retry('feishu', job); assert.equal((await api.detail('feishu', job)).history.length, 1);
+  const sync = await api.list('sync'); assert.equal(sync.total, 1);
+  await api.retry('sync', registration.id);
+  const states = await db.query('SELECT target_key,status FROM feishu_sync_state');
+  assert.equal(states.find(row => row.target_key === target).status, 'pending');
+  assert.equal(states.find(row => row.target_key === other).status, 'failed');
+  assert.equal((await api.detail('sync', registration.id)).history.length, 1);
+  await db.query("UPDATE integration_jobs SET status='failed',attempts=8 WHERE id=?", [job]);
+  await db.query("UPDATE feishu_sync_state SET status='failed' WHERE target_key=?", [target]);
+  const retried = await api.retryFeishu({ ref: registration.ref });
+  assert.equal(retried.count, 2);
+  assert.equal((await api.detail('feishu', job)).history.length, 2);
+  assert.equal((await api.detail('sync', registration.id)).history.length, 2);
+  assert.equal((await db.query('SELECT status FROM feishu_sync_state WHERE target_key=?', [other]))[0].status, 'failed');
+  const otherApi = createNotificationAdmin({ db, env, integrations: { target: other } });
+  assert.equal((await otherApi.detail('sync', registration.id)).history.length, 0, 'retry history belongs to the selected table target');
+});

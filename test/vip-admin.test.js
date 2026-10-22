@@ -47,15 +47,12 @@ function browser(items = [], responder) {
   return { context, get, requests };
 }
 
-test('VIP 页面安全嵌入 token，无法结束脚本或污染 HTML 属性', () => {
-  const token = '\"><script>alert(1)</script>&\u2028\u2029';
+test('VIP 页面不嵌入旧管理员凭据或将凭据写入链接', () => {
+  const token = '\"><script>alert(1)</script>&secret';
   const html = render(token);
   assert.ok(!html.includes(token));
-  const source = script(html);
-  const context = vm.createContext({});
-  vm.runInContext(source.split('const $=')[0] + '; globalThis.actualToken = TOKEN;', context);
-  assert.equal(context.actualToken, token);
-  assert.ok(html.includes('table?token=' + encodeURIComponent(token)));
+  assert.doesNotMatch(html, /const TOKEN|X-Admin-Token|table\?token=/);
+  assert.ok(html.includes('href="table"'));
 });
 
 test('VIP 页面浏览器脚本语法有效，提供移动端布局与原后台一致的英文操作', () => {
@@ -66,13 +63,13 @@ test('VIP 页面浏览器脚本语法有效，提供移动端布局与原后台�
   for (const label of ['Generate VIP Codes', 'Used By', 'Business Email', 'Export CSV']) assert.ok(html.includes(label), label);
 });
 
-test('加载列表通过管理头认证，URL 不携带管理员 token', async () => {
+test('加载列表通过会话认证，URL 不携带管理员 token', async () => {
   const { requests } = browser();
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(requests.length, 1);
   assert.ok(requests[0].url.startsWith('api/admin/vip-codes?'));
   assert.ok(!requests[0].url.includes('admin-secret'));
-  assert.equal(requests[0].options.headers['X-Admin-Token'], 'admin-secret');
+  assert.equal(requests[0].options.credentials, 'same-origin');
 });
 
 test('列表中的批次、姓名和邮件渲染为文本，阻止 HTML 注入', async () => {
@@ -100,7 +97,7 @@ test('生成仅需数量，不要求手工登记收件人或分发信息', async
   const request = requests.find(r => r.options.method === 'POST');
   assert.ok(request);
   assert.deepEqual(JSON.parse(request.options.body), { count: 1 });
-  assert.equal(request.options.headers['X-Admin-Token'], 'admin-secret');
+  assert.equal(request.options.credentials, 'same-origin');
   assert.ok(!JSON.parse(request.options.body).distributedAt);
 });
 

@@ -82,7 +82,7 @@ function previewCache(options={}) {
  return {cache,requests,revoked,created};
 }
 test('private preview cache reuses verified image URLs when cards reorder',async()=>{
- const {cache,requests,created}=previewCache();const a=previewPath('a'),b=previewPath('b');cache.setActive([a,b]);const urls=await Promise.all([cache.get(a),cache.get(b)]);cache.setActive([b,a]);assert.equal(cache.peek(a),urls[0]);assert.equal(await cache.get(b),urls[1]);assert.equal(requests.length,2);assert.equal(created.length,2);assert.equal(requests[0].init.headers['X-Admin-Token'],'private-admin-token');assert.ok(!requests[0].path.includes('private-admin-token'));
+ const {cache,requests,created}=previewCache();const a=previewPath('a'),b=previewPath('b');cache.setActive([a,b]);const urls=await Promise.all([cache.get(a),cache.get(b)]);cache.setActive([b,a]);assert.equal(cache.peek(a),urls[0]);assert.equal(await cache.get(b),urls[1]);assert.equal(requests.length,2);assert.equal(created.length,2);assert.equal(requests[0].init.credentials,'same-origin');assert.equal(requests[0].init.headers,undefined);assert.ok(!requests[0].path.includes('private-admin-token'));
 });
 test('concurrent requests for the same private preview share one download and object URL',async()=>{
  let finish;const response=new Promise(resolve=>finish=resolve);let fetches=0;const {cache,created}=previewCache({fetch:()=>{fetches++;return response;}});const a=previewPath('a'),first=cache.get(a),second=cache.get(a);assert.equal(fetches,1);finish({ok:true,blob:async()=>({})});assert.equal(await first,await second);assert.equal(created.length,1);

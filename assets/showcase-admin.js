@@ -43,7 +43,7 @@
     if (parsed.origin !== 'https://preview.invalid' || (manual ? !/\/api\/admin\/showcase\/(portrait|logo)\/uploads\/[0-9a-f-]{36}\/preview$/i.test(parsed.pathname) || !!parsed.search : !/\/preview\/(portrait|logo)$/.test(parsed.pathname) || [...parsed.searchParams.keys()].some(key => !['versionId', 'fit'].includes(key)))) throw Error('Invalid preview URL');
     return raw;
   }
-  function createPreviewCache({ prefix = '/', token, fetch, createObjectURL, revokeObjectURL, maxEntries = 96 }) {
+  function createPreviewCache({ prefix = '/', fetch, createObjectURL, revokeObjectURL, maxEntries = 96 }) {
     const entries = new Map();
     let active = new Set();
     const limit = Number.isInteger(maxEntries) && maxEntries > 0 ? maxEntries : 96;
@@ -65,7 +65,7 @@
       const entry = { url: null, promise: null };
       entries.set(path, entry);
       let response;
-      try { response = fetch(path, { headers: { 'X-Admin-Token': token } }); }
+      try { response = fetch(path, { credentials: 'same-origin' }); }
       catch (error) { response = Promise.reject(error); }
       entry.promise = Promise.resolve(response).then(async result => {
         if (!result.ok) throw Error('Preview unavailable');
@@ -87,14 +87,14 @@
     return { get, peek, setActive, clear };
   }
   function setPageInfo(element,i18n,page,total,pageSize=12){const key='Page {page} / {pages} · Total {total}',params={page,pages:Math.max(1,Math.ceil(total/pageSize)),total};if(i18n)i18n.setText(element,key,params);else element.textContent=key.replace(/\{(\w+)\}/g,(_,name)=>params[name]);}
-  function init({ element, request, token, message, document: doc = document, window: win = window }) {
+  function init({ element, request, message, document: doc = document, window: win = window }) {
     if (!element) return null;
     const state = createDrafts(), e = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const l = key => win.LPClubAdminI18n?.label(key) || e(key), t = key => win.LPClubAdminI18n?.text(key) || key;
     let kind = 'portrait', page = 1, q = '', candidates = [], total = 0, querySequence = 0, boardSequence = { portrait: 0, logo: 0 }, previewSequence = 0, saving = false, uploading = false, dragged = null;
     const prefix = win.location.pathname.slice(0, win.location.pathname.lastIndexOf('/') + 1);
     const find = selector => element.querySelector(selector), all = selector => [...element.querySelectorAll(selector)];
-    const previewCache = createPreviewCache({prefix,token,fetch:(...args)=>win.fetch(...args),createObjectURL:blob=>win.URL.createObjectURL(blob),revokeObjectURL:url=>win.URL.revokeObjectURL(url)});
+    const previewCache = createPreviewCache({prefix,fetch:(...args)=>win.fetch(...args),createObjectURL:blob=>win.URL.createObjectURL(blob),revokeObjectURL:url=>win.URL.revokeObjectURL(url)});
     const release = () => { previewSequence++; previewCache.clear(); };
     async function json(path, options) { const response = await request(path, options); return response.json(); }
     function status(card) { if (!card.eligible) return l('暂不可展示') + ' · ' + (card.blockedReasons || []).map(code => l(({ ADMISSION_PENDING: '报名待通过', CONSENT_REQUIRED: '缺少展示授权', MATERIAL_NOT_APPROVED: '资料待审核', MATERIAL_MISSING: '尚未上传', PACKAGE_INELIGIBLE: '套餐不支持肖像', PORTRAIT_INELIGIBLE: '套餐不支持肖像', REGISTRATION_DELETED: '报名已删除', DELETED: '报名已删除' })[code] || '请检查审核与授权')).join(' · '); return l(card.published ? '官网已展示' : '可加入展示柜'); }

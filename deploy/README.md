@@ -7,7 +7,7 @@
 部署前备份现有配置和数据，上传代码与 lockfile，执行 `npm ci --omit=dev`。补全受保护的 `server/.env`：
 
 - `MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`，目标数据库独立使用 `lpclub_conference`。
-- 原有 `ADMIN_TOKEN`、`VIP_CODE_ENCRYPTION_KEY`、`MATERIALS_SIGNING_KEY` 保持稳定；新增稳定的 `MAIL_PAYLOAD_KEY`。
+- 原有 `VIP_CODE_ENCRYPTION_KEY`、`MATERIALS_SIGNING_KEY` 和 `MAIL_PAYLOAD_KEY` 保持稳定。后台配置 `ADMIN_USERNAME`、`ADMIN_PASSWORD_HASH` 与稳定的 `ADMIN_JWT_SECRET`；哈希通过 `npm run admin:password` 生成，旧 `ADMIN_TOKEN` 不再用于登录。
 - `HOST=127.0.0.1`、`TRUST_PROXY=true`，以及真实 HTTPS `PUBLIC_BASE_URL`。
 - `MATERIALS_ENABLED=true`、原件目录 `MATERIALS_STORAGE_DIR` 和独立的可丢弃缓存目录 `MATERIALS_CACHE_DIR`。
 - SMTP 配置；没有配置时报名仍保存，邮件状态显示未配置。
@@ -34,7 +34,9 @@ location ~ ^/2026-pe-conference/api/materials/upload/(card|portrait|logo)$ {
 }
 ```
 
-此规则保留前缀，由 Node 识别；原有通用代理也可继续去前缀。其他接口保持原请求体限制。确认 `/materials`、后台、导出及 `/api/` 均交给大会服务，公开图片不得由 Nginx 静态目录绕过权限校验。
+此规则保留前缀，由 Node 识别；原有通用代理也可继续去前缀。其他接口保持原请求体限制。确认 `/login`、`/materials`、后台、导出及 `/api/` 均交给大会服务，公开图片不得由 Nginx 静态目录绕过权限校验。
+
+后台 JWT 会话保存在当前 Node 进程，PM2 使用单实例；重启会要求所有管理员重新登录，不影响报名和持久化业务数据。根路径部署的 Nginx 匹配规则须包含 `/login`、`/pricing-admin`、`/pricing`，子路径部署的现有完整目录代理无需新增规则。首次切换前先补齐管理员配置，登录页提示未配置时检查 `/health` 的 `admin` 字段。
 
 ## 备份与恢复
 

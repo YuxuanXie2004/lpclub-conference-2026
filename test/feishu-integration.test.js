@@ -30,12 +30,12 @@ test('projection preserves zeros, clears missing dates and contains no private u
  assert.equal(fields['金额'],0);assert.equal(fields['Logo版本'],2);assert.equal(fields['Logo状态'],'rejected');assert.equal(fields['删除时间'],null);assert.equal(fields['头像状态'],'not_applicable');assert.equal(fields['Logo展示授权'],false);
  assert.equal(new Set(SYNC_FIELDS.map(f=>f.name)).size,SYNC_FIELDS.length);assert.doesNotMatch(JSON.stringify(fields),/storage_key|token=/);
 });
-test('notification buttons carry the configured admin token while table links remain unchanged',()=>{
+test('notification buttons and table links never carry legacy admin credentials',()=>{
  const configuredEnv={...env,ADMIN_TOKEN:'test-token&plus+ 中文'};
  for(const kind of ['registration_created','material_uploaded']){
   const payload=buildCard({id:'evt',kind,occurredAt:'2026-10-21T00:00:00Z',snapshot:{...row,kind:'logo',version:2}},configuredEnv);
   const url=new URL(payload.card.elements[1].actions[0].url);
-  assert.equal(url.searchParams.get('token'),configuredEnv.ADMIN_TOKEN);
+  assert.equal(url.searchParams.has('token'),false);
   assert.equal(url.searchParams.get('ref'),row.ref);
   assert.equal(url.searchParams.get('tab'),'materials');
  }

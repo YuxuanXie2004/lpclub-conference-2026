@@ -49,7 +49,8 @@ for (const prefix of ['', '/2026-pe-conference']) {
     const { context, get, requests } = browser(html, pageUrl);
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(requests[0].url.pathname, `${prefix}/api/registrations`);
-    assert.equal(requests[0].options.headers?.['X-Admin-Token'] || requests[0].url.searchParams.get('token'), 'test-secret');
+    assert.equal(requests[0].options.credentials, 'same-origin');
+    assert.equal(requests[0].url.searchParams.has('token'), false);
     vm.runInContext("setMode('deleted')", context);
     assert.equal(new URL(get('export').href, pageUrl).pathname, `${prefix}/export.csv`);
     assert.equal(new URL(get('export').href, pageUrl).searchParams.get('mode'), 'deleted');
@@ -62,13 +63,13 @@ for (const prefix of ['', '/2026-pe-conference']) {
     }
   });
 
-  test(`VIP 管理保留部署前缀和认证头 ${prefix || '/'}`, async () => {
+  test(`VIP 管理保留部署前缀和会话凭据 ${prefix || '/'}`, async () => {
     const pageUrl = `https://lp-club.cn${prefix}/vip-codes?token=test-secret`;
     const html = renderVipPage('test-secret');
     const { requests } = browser(html, pageUrl);
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(requests[0].url.pathname, `${prefix}/api/admin/vip-codes`);
-    assert.equal(requests[0].options.headers['X-Admin-Token'], 'test-secret');
+    assert.equal(requests[0].options.credentials, 'same-origin');
     assert.equal(requests[0].url.searchParams.has('token'), false);
     for (const id of ['activeTab', 'deletedTab']) {
       const href = html.match(new RegExp(`id="${id}"[^>]*href="([^"]+)"`))[1];
@@ -76,3 +77,11 @@ for (const prefix of ['', '/2026-pe-conference']) {
     }
   });
 }
+
+test('登录返回后恢复报名列表筛选和分页', async () => {
+  const pageUrl = 'https://example.com/event/table?mode=deleted&q=Capital&status=Approved&package=GP&page=3';
+  const { requests } = browser(renderTablePage('', 'deleted'), pageUrl);
+  await new Promise(resolve => setImmediate(resolve));
+  const first = requests[0].url;
+  for (const [key, value] of Object.entries({ mode: 'deleted', q: 'Capital', status: 'Approved', package: 'GP', page: '3' })) assert.equal(first.searchParams.get(key), value);
+});
