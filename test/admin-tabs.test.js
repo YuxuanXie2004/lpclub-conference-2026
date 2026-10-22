@@ -63,6 +63,42 @@ function operations(responder) {
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('registration table displays every exported field with matching headers and safe values', async () => {
+  const { COLUMNS } = require('../server/sheet');
+  const row = Object.fromEntries(COLUMNS.map(([key]) => [key, 'value-' + key]));
+  Object.assign(row, { status: 'Approved', createdAt: '2026-10-22T08:00:00Z', total: 0, guests: 0, purpose: '<script>unsafe</script>', consent: false });
+  const app = operations(() => ({ ok: true, rows: [row] }));
+  await flush();
+  const html = renderTablePage('');
+  const table = html.slice(html.indexOf('id="registrationPanel"'), html.indexOf('id="vipPanel"'));
+  assert.equal((table.match(/<th\b/g) || []).length, COLUMNS.length + 1);
+  for (const mode of ['active', 'deleted']) {
+    vm.runInContext("setTab('" + mode + "')", app.context);
+    await flush();
+    const cells = [...app.elements.get('body').innerHTML.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/g)].map(match => match[1]);
+    assert.equal(cells.length, COLUMNS.length + 1);
+    for (const [index, [key]] of COLUMNS.entries()) {
+      if (key === 'status') assert.match(cells[index], /data-admin-i18n="Approved"/);
+      else if (key === 'createdAt') assert.ok(cells[index].length > 0);
+      else if (key === 'purpose') assert.equal(cells[index], '&lt;script&gt;unsafe&lt;/script&gt;');
+      else assert.ok(cells[index].includes(String(row[key])), key);
+    }
+    assert.match(cells.at(-1), mode === 'active' ? /mini bad del/ : /mini restore/);
+  }
+});
+
+test('registration empty, loading and failure rows span all information and action columns', async () => {
+  const { COLUMNS } = require('../server/sheet');
+  const app = operations(() => ({ ok: true, rows: [] }));
+  assert.match(app.elements.get('body').innerHTML, new RegExp('colspan="' + (COLUMNS.length + 1) + '"'));
+  await flush();
+  assert.match(app.elements.get('body').innerHTML, new RegExp('colspan="' + (COLUMNS.length + 1) + '"'));
+  const failed = operations(() => { throw Error('Load unavailable'); });
+  await flush();
+  assert.match(failed.elements.get('body').innerHTML, new RegExp('colspan="' + (COLUMNS.length + 1) + '"'));
+  assert.match(failed.elements.get('body').innerHTML, /Load unavailable/);
+});
+
 test('tab controllers preserve page location and only activate the selected panel', async () => {
   const app = operations(); await flush();
   for (const tab of ['vip', 'materials', 'showcase', 'feishu', 'mail', 'pricing', 'deleted', 'active']) {

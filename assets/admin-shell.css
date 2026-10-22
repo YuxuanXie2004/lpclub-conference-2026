@@ -14,3 +14,8 @@ body.admin-shell{padding:0;background:var(--bg);font-family:Inter,"PingFang SC",
 @media(max-width:767px){.notification-filters input:not([type=date]),.notification-filters select,.notification-filters label{width:100%;min-width:0}.notification-detail{padding:20px}.notification-detail .kv{grid-template-columns:1fr}}
 
 .feishu-status-panel{margin:0 0 16px}.feishu-status-panel>summary{width:fit-content;max-width:100%;margin-left:auto;padding:7px 13px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--brand);font-size:12px;cursor:pointer}.feishu-status-panel>summary:focus-visible{outline:2px solid var(--brand);outline-offset:3px}.feishu-status-content{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:7px;background:#fff}.feishu-status-content .actions{flex-wrap:wrap}.feishu-status-content input{min-width:0;max-width:100%}
+
+#registrationPanel table{width:max-content;min-width:100%}
+#registrationPanel .registration-actions{position:sticky;right:0;background:#fff;box-shadow:-5px 0 8px -6px #20372d66;z-index:1}
+#registrationPanel thead .registration-actions{background:#f8faf9;z-index:3}
+#registrationPanel tbody tr:hover .registration-actions{background:#f7faf8}
