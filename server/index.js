@@ -185,7 +185,7 @@ function serveFile(res, file) {
         const batches=registrations.exportBatches(Object.fromEntries(url.searchParams)),first=await batches.next();setSecurityHeaders(res);res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="lpclub-registrations.csv"','Cache-Control':'no-store'});
         res.write(sheet.toCsv(first.done?[]:first.value));for await(const rows of batches)res.write('\r\n'+sheet.toCsv(rows).split('\r\n').slice(1).join('\r\n'));return res.end();
       }
-      const lifecycle=pathname.match(/^\/api\/admin\/(status|delete|restore)$/);
+      const lifecycle=pathname.match(/^\/api\/admin\/(status|delete|restore|purge)$/);
       if(req.method==='POST'&&lifecycle){if(!allowed())return json(res,401,{ok:false,error:'unauthorised'});return json(res,200,{ok:true,...await registrations.lifecycle(lifecycle[1],await readBody(req)),source:'mysql'});}
       if(req.method==='POST'&&['/api/vip','/api/order'].includes(pathname)){
         if(!rateAllowed((pathname==='/api/vip'?'vip:':'')+clientIp(req)))return json(res,429,{ok:false,code:'RATE_LIMITED',error:'Too many attempts. Please try again later.'});

@@ -52,4 +52,14 @@ test('HTTP MySQL workflow preserves subpath, authorization, idempotency and priv
  const stalePublish=await fetch(base+'/api/admin/showcase/portrait',{method:'PUT',headers,body:JSON.stringify({revision:beforeWithdrawal.revision,items:beforeWithdrawal.items})});assert.equal(stalePublish.status,409);
  assert.equal((await fetch(base+'/health').then(r=>r.json())).database,'mysql');
  for(const tab of ['/table','/vip-codes','/materials-admin'])assert.equal((await fetch(base+tab,{headers})).status,200);
+ assert.equal((await fetch(base+'/api/admin/purge',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'})).status,401);
+ assert.equal((await post('/api/admin/purge',{}, {'X-CSRF-Token':''})).status,403);
+ const current=await backend.registrations.detail(data.ref);
+ assert.equal((await post('/api/admin/purge',{ref:data.ref,rowVersion:current.rowVersion})).status,404);
+ assert.equal((await post('/api/admin/delete',{ref:data.ref,rowVersion:current.rowVersion})).status,200);
+ const recycled=await backend.registrations.detail(data.ref);
+ const purged=await post('/api/admin/purge',{ref:data.ref,rowVersion:recycled.rowVersion});assert.equal(purged.status,200,await purged.clone().text());assert.equal((await purged.json()).permanentlyDeleted,true);
+ assert.equal((await fetch(base+'/api/registrations?mode=deleted',{headers}).then(r=>r.json())).total,0);
+ assert.equal((await fetch(new URL(imageURL,base))).status,404);
+
 });

@@ -58,3 +58,38 @@ integration('purpose validation rejects invalid submissions and preserves other 
  await assert.rejects(service.submit({...request,attendee:{...request.attendee,purposeOther:'新的参会目的'}}),e=>e.code==='IDEMPOTENCY_CONFLICT');
  assert.equal((await db.query('SELECT * FROM registrations')).length,1);
 });
+
+integration('permanent deletion clears foreign keys atomically, keeps VIP consumed and rejects submission replay',async t=>{
+ const {db,env}=await mysqlFixture(t);env.VIP_CODE_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+ const vip=require('../server/mysql-vip-store').createMysqlVipStore(db,env),code=(await vip.generate({count:1}))[0],raw=(await vip.detail(code.id)).item.code;
+ const integrations=require('../server/feishu-integration').createFeishuIntegration({db,env:{FEISHU_SYNC_APP_TOKEN:'test',FEISHU_SYNC_TABLE_ID:'test',FEISHU_NOTIFY_SINCE:'2020-01-01'}});
+ const service=createRegistrationService({db,normaliseOrder,vip,integrations}),request={...input(),vipCode:raw},saved=await service.submit(request),id=saved.registrationId;
+ await assert.rejects(service.lifecycle('purge',{ref:saved.ref,rowVersion:1}),e=>e.code==='REGISTRATION_NOT_FOUND');
+ const item=crypto.randomUUID(),version=crypto.randomUUID(),file=crypto.randomUUID();
+ await db.query('INSERT INTO material_files(id,storage_key,filename,mime_type,byte_size,sha256) VALUES (?,?,?,?,?,?)',[file,'a'.repeat(64),'portrait.png','image/png',10,'b'.repeat(64)]);
+ await db.query("INSERT INTO material_items(id,registration_id,kind) VALUES (?,?,'portrait')",[item,id]);
+ await db.query("INSERT INTO material_versions(id,item_id,version_no,file_id,status) VALUES (?,?,1,?,'approved')",[version,item,file]);
+ await db.query('UPDATE material_items SET current_version_id=?,approved_version_id=? WHERE id=?',[version,version,item]);
+ await db.query("INSERT INTO showcase_entries(id,item_id,event_key,kind,published_version_id,enabled) VALUES (?,?,'conference-2026','portrait',?,1)",[crypto.randomUUID(),item,version]);
+ await db.query("INSERT INTO publication_consents(registration_id,kind,granted) VALUES (?,'portrait',1)",[id]);
+ await db.query("INSERT INTO supplement_tokens(digest,registration_id,scope,expires_at) VALUES (?,?,'upload',DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY))",['c'.repeat(64),id]);
+ await db.query("INSERT INTO material_upload_requests(registration_id,request_key,kind,file_hash,version_id) VALUES (?,'upload','portrait',?,?)",[id,'b'.repeat(64),version]);
+ await db.query("INSERT INTO mail_jobs(id,registration_id,kind,dedupe_key) VALUES (?,?,'registration',?)",[crypto.randomUUID(),id,'mail:'+id]);
+ await service.lifecycle('delete',{ref:saved.ref,rowVersion:1});
+ // A failed delete must roll back dependency cleanup, including the idempotency marker.
+ const failing=createRegistrationService({db:{transaction:work=>db.transaction(tx=>work({query:async(sql,args)=>{if(sql==='DELETE FROM registrations WHERE id=?')throw Error('delete interrupted');return tx.query(sql,args);}}))}});
+ await assert.rejects(failing.lifecycle('purge',{ref:saved.ref,rowVersion:2}),/delete interrupted/);
+ assert.equal((await db.query('SELECT * FROM material_versions WHERE id=?',[version])).length,1);
+ assert.equal((await db.query('SELECT * FROM submission_requests WHERE registration_id=?',[id])).length,1);
+ assert.deepEqual(await service.lifecycle('purge',{ref:saved.ref,rowVersion:2}),{ref:saved.ref,permanentlyDeleted:true});
+ for(const table of ['registrations','material_items','publication_consents','supplement_tokens','mail_jobs','integration_events','integration_jobs','feishu_sync_state','material_upload_requests','vip_redemptions'])assert.equal((await db.query('SELECT * FROM '+table+' WHERE '+(table==='registrations'?'id':'registration_id')+'=?',[id])).length,0,table);
+ assert.equal((await db.query('SELECT * FROM material_versions WHERE id=?',[version])).length,0);
+ assert.equal((await db.query('SELECT * FROM showcase_entries WHERE item_id=?',[item])).length,0);
+ assert.equal((await db.query("SELECT * FROM audit_events WHERE action='purge'"))[0].registration_id,null);
+ assert.equal((await vip.detail(code.id)).item.status,'used');
+ await assert.rejects(service.submit(request),e=>e.code==='REGISTRATION_UNAVAILABLE');
+ await assert.rejects(service.detail(saved.ref),e=>e.code==='REGISTRATION_NOT_FOUND');
+ await assert.rejects(service.lifecycle('restore',{ref:saved.ref,rowVersion:2}),e=>e.code==='REGISTRATION_NOT_FOUND');
+ assert.equal((await service.list({mode:'deleted'})).total,0);
+ await service.submit(input());
+});

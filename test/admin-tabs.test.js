@@ -257,3 +257,17 @@ test('showcase supports direct selection and keyboard navigation after materials
  assert.equal(app.elements.get('showcasePanel').hidden,false);
  assert.equal(vm.runInContext('document.activeElement',app.context),app.elements.get('showcaseTab'));
 });
+
+test('recycle bin offers confirmed permanent deletion with row version and refreshes after success',async()=>{
+ let removed=false;const row={ref:'PURGE',rowVersion:3,status:'Received',fullName:'Test'};
+ const app=operations((url,options)=>{if(url==='/api/admin/purge'){assert.deepEqual(JSON.parse(options.body),{ref:'PURGE',rowVersion:3});removed=true;return {ok:true};}return {ok:true,rows:removed?[]:[row],total:removed?0:1};});await flush();
+ assert.doesNotMatch(app.elements.get('body').innerHTML,/mini bad purge/);
+ vm.runInContext("setTab('deleted')",app.context);await flush();assert.match(app.elements.get('body').innerHTML,/mini bad purge/);
+ const button={dataset:{ref:'PURGE'},disabled:false},panel=app.elements.get('registrationPanel');panel.querySelectorAll=selector=>selector==='.purge'?[button]:[];
+ vm.runInContext('bind()',app.context);await button.onclick();assert.equal(removed,false);
+ app.context.confirm=()=>true;await button.onclick();await flush();assert.equal(removed,true);assert.match(app.elements.get('body').innerHTML,/No matching registrations/);assert.equal(button.disabled,false);
+});
+test('failed permanent deletion keeps the record and allows retry',async()=>{
+ const app=operations(url=>{if(url==='/api/admin/purge')throw Error('Deletion unavailable');return {ok:true,rows:[{ref:'PURGE',rowVersion:3}]};});await flush();vm.runInContext("setTab('deleted')",app.context);await flush();
+ const button={dataset:{ref:'PURGE'},disabled:false};app.elements.get('registrationPanel').querySelectorAll=selector=>selector==='.purge'?[button]:[];app.context.confirm=()=>true;vm.runInContext('bind()',app.context);await button.onclick();assert.equal(button.disabled,false);assert.match(app.elements.get('body').innerHTML,/PURGE/);assert.match(app.elements.get('toast').textContent,/Deletion unavailable/);
+});

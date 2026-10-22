@@ -24,6 +24,7 @@ function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail
         await tx.query('INSERT INTO submission_requests(idempotency_key,request_hash) VALUES (?,?) ON DUPLICATE KEY UPDATE idempotency_key=idempotency_key',[key,requestHash]);
         const previous=(await tx.query('SELECT * FROM submission_requests WHERE idempotency_key=? FOR UPDATE',[key]))[0];
         if(previous.request_hash!==requestHash)throw fail('IDEMPOTENCY_CONFLICT','This submission has changed. Please start a new registration.',409);
+        if(parseJSON(previous.result_json)?.permanentlyDeleted)throw fail('REGISTRATION_UNAVAILABLE','This registration is no longer available. Contact the organiser.',409);
         if(previous.registration_id){
           const saved=(await tx.query('SELECT is_deleted FROM registrations WHERE id=?',[previous.registration_id]))[0];
           if(!saved||saved.is_deleted)throw fail('REGISTRATION_UNAVAILABLE','This registration is no longer available. Contact the organiser.',409);
@@ -99,9 +100,26 @@ function createRegistrationService({db,normaliseOrder,pricing,vip,materials,mail
     try {
       return await db.transaction(async tx=>{
         const r=(await tx.query('SELECT * FROM registrations WHERE event_key=? AND ref=? FOR UPDATE',['conference-2026',body.ref]))[0];
-        if(!r||(action==='restore'?!r.deleted_at:!!r.deleted_at))throw fail('REGISTRATION_NOT_FOUND','Registration not found',404);
+        if(!r||(['restore','purge'].includes(action)?!r.deleted_at:!!r.deleted_at))throw fail('REGISTRATION_NOT_FOUND','Registration not found',404);
         if(!Number.isInteger(body.rowVersion))throw fail('VERSION_REQUIRED','Refresh registration before saving.',400);
         if(body.rowVersion!==r.row_version)throw fail('VERSION_CONFLICT','Registration changed; refresh before saving.',409);
+        if(action==='purge'){
+          const items=await lockItems(tx,[r.id]);
+          await takeDown(tx,items,r.event_key);
+          if(items.length){
+            const ids=items.map(item=>item.id);
+            await tx.query('DELETE FROM showcase_entries WHERE item_id IN (?)',[ids]);
+            await tx.query('UPDATE material_items SET current_version_id=NULL,approved_version_id=NULL WHERE registration_id=?',[r.id]);
+            await tx.query('DELETE FROM material_versions WHERE item_id IN (?)',[ids]);
+          }
+          for(const table of ['material_upload_requests','material_items','publication_consents','supplement_tokens','mail_jobs','integration_jobs','integration_events','feishu_sync_state','vip_redemptions'])await tx.query('DELETE FROM '+table+' WHERE registration_id=?',[r.id]);
+          // Keep an idempotency tombstone so a retried submission cannot recreate the registration.
+          await tx.query('UPDATE submission_requests SET registration_id=NULL,result_json=? WHERE registration_id=?',[JSON.stringify({permanentlyDeleted:true}),r.id]);
+          await tx.query('UPDATE audit_events SET registration_id=NULL WHERE registration_id=?',[r.id]);
+          await audit(tx,null,'purge',{ref:r.ref});
+          await tx.query('DELETE FROM registrations WHERE id=?',[r.id]);
+          return {ref:r.ref,permanentlyDeleted:true};
+        }
         if(action==='status'){
           if(!STATUSES.includes(body.status))throw fail('INVALID_STATUS','Invalid status');
           if(body.status===r.status&&String(body.note||'').trim().slice(0,500)===String(r.status_note||''))return {ref:r.ref,status:r.status,deleted:false,restored:false};
