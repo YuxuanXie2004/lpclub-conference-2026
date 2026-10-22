@@ -1,0 +1,304 @@
+/* Chinese typography is separate so English keeps its existing layout. */
+/* Display serif accents are limited to the hero, format and closing invitation. */
+html[lang="zh-CN"] {
+  --sans: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-break: strict;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+html[lang="zh-CN"] body {
+  font-weight: 400;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .hero h1 {
+  max-width: 16em;
+  font-size: clamp(36px, 4.6vw, 60px);
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .hero h1 em {
+  white-space: nowrap;
+}
+
+html[lang="zh-CN"] .hero .sub {
+  max-width: 36em;
+  line-height: 1.85;
+  text-wrap: pretty;
+}
+
+html[lang="zh-CN"] .hero-meta {
+  gap: 24px 40px;
+}
+
+html[lang="zh-CN"] .hero-meta div {
+  min-width: 0;
+}
+
+html[lang="zh-CN"] .hero-meta div strong {
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+html[lang="zh-CN"] h2.section-title,
+html[lang="zh-CN"] .cta-band h2 {
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+  white-space: normal;
+  text-wrap: balance;
+}
+
+html[lang="zh-CN"] .hl-title,
+html[lang="zh-CN"] .rk-title {
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+html[lang="zh-CN"] .num,
+html[lang="zh-CN"] .eyebrow,
+html[lang="zh-CN"] .hl-eyebrow,
+html[lang="zh-CN"] .rk-eyebrow {
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: .04em;
+}
+
+html[lang="zh-CN"] .hero .kicker,
+html[lang="zh-CN"] .hero-meta div span,
+html[lang="zh-CN"] .hl-meta,
+html[lang="zh-CN"] .shot .yr,
+html[lang="zh-CN"] .about-points .card-body b,
+html[lang="zh-CN"] .why-card .tag {
+  letter-spacing: .02em;
+}
+
+html[lang="zh-CN"] .about-lead {
+  max-width: 42em;
+  font-size: 17px;
+  line-height: 1.9;
+}
+
+html[lang="zh-CN"] .section-lead,
+html[lang="zh-CN"] .showcase-lead {
+  max-width: 38em;
+  line-height: 1.85;
+}
+
+html[lang="zh-CN"] .card p,
+html[lang="zh-CN"] .about-points .card-body p,
+html[lang="zh-CN"] .theme p,
+html[lang="zh-CN"] .why-card p,
+html[lang="zh-CN"] .hl-row p,
+html[lang="zh-CN"] .format-step p {
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+html[lang="zh-CN"] .card h3,
+html[lang="zh-CN"] .theme h3,
+html[lang="zh-CN"] .why-card h3,
+html[lang="zh-CN"] .hl-row h4,
+html[lang="zh-CN"] .attend-card h4,
+html[lang="zh-CN"] .format-step h3 {
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .cards-3,
+html[lang="zh-CN"] .themes,
+html[lang="zh-CN"] .why-grid,
+html[lang="zh-CN"] .attend-grid {
+  grid-auto-rows: 1fr;
+}
+
+html[lang="zh-CN"] .host-services li {
+  grid-template-columns: minmax(100px, .65fr) minmax(0, 1.35fr);
+  column-gap: 24px;
+}
+
+html[lang="zh-CN"] .host-services b {
+  white-space: normal;
+}
+
+html[lang="zh-CN"] .host p,
+html[lang="zh-CN"] .host-services span,
+html[lang="zh-CN"] .rk-lead {
+  line-height: 1.85;
+}
+
+html[lang="zh-CN"] .agenda-time {
+  line-height: 1.65;
+}
+
+html[lang="zh-CN"] .agenda-session b {
+  line-height: 1.65;
+}
+
+html[lang="zh-CN"] .agenda-session span {
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+html[lang="zh-CN"] .speaker-caption h3 {
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+html[lang="zh-CN"] .speaker-caption p,
+html[lang="zh-CN"] .speaker-caption b,
+html[lang="zh-CN"] .organisation-card p {
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+html[lang="zh-CN"] .btn,
+html[lang="zh-CN"] .filter-pill,
+html[lang="zh-CN"] .reg-package b,
+html[lang="zh-CN"] .reg-identity b {
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: .02em;
+}
+
+html[lang="zh-CN"] .reg-head h3,
+html[lang="zh-CN"] .reg-section-title {
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+html[lang="zh-CN"] .reg-step {
+  letter-spacing: 0;
+}
+
+html[lang="zh-CN"] .reg-section-lead {
+  line-height: 1.85;
+}
+
+html[lang="zh-CN"] .cta-band p {
+  max-width: 36em;
+  line-height: 1.85;
+}
+
+@media (max-width: 720px) {
+  html[lang="zh-CN"] .hero h1 {
+    max-width: 13em;
+    font-size: clamp(30px, 6.2vw, 42px);
+    line-height: 1.35;
+  }
+
+  html[lang="zh-CN"] .hero-meta {
+    gap: 18px 28px;
+  }
+
+  html[lang="zh-CN"] .agenda-row {
+    padding: 18px 16px;
+    gap: 10px;
+  }
+
+  html[lang="zh-CN"] .agenda-time {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  html[lang="zh-CN"] h2.section-title,
+  html[lang="zh-CN"] .cta-band h2 {
+    font-size: 26px;
+    line-height: 1.45;
+  }
+
+  html[lang="zh-CN"] .hero .sub {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+
+  html[lang="zh-CN"] .host-services li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  html[lang="zh-CN"] .shot figcaption {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  html[lang="zh-CN"] .stat {
+    padding-left: 16px;
+    padding-right: 0;
+  }
+
+  html[lang="zh-CN"] .stat:nth-child(odd) {
+    padding-left: 0;
+  }
+
+  html[lang="zh-CN"] .stat b {
+    font-size: 30px;
+    line-height: 1.4;
+  }
+
+  html[lang="zh-CN"] .stat span {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  html[lang="zh-CN"] .reg-package {
+    column-gap: 10px;
+    padding: 16px 14px;
+  }
+}
+
+html[lang="zh-CN"] .hero h1,
+html[lang="zh-CN"] .format h2.section-title,
+html[lang="zh-CN"] .cta-band h2 {
+  font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+html[lang="zh-CN"] .hero h1 {
+  line-height: 1.4;
+}
+
+html[lang="zh-CN"] .format h2.section-title {
+  line-height: 1.5;
+}
+
+html[lang="zh-CN"] .cta-band h2 {
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+/* Size the hero and statistics together; statistics may wrap without fixed heights. */
+@media (min-width: 961px) {
+  html[lang="zh-CN"] .conference-intro {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 73px);
+    min-height: calc(100svh - 73px);
+  }
+
+  html[lang="zh-CN"] .conference-intro > .hero {
+    flex: 1 0 auto;
+    display: flex;
+    align-items: center;
+  }
+
+  html[lang="zh-CN"] .conference-intro .hero-grid {
+    width: 100%;
+  }
+
+  html[lang="zh-CN"] .conference-intro > .stats {
+    flex: 0 0 auto;
+  }
+}

@@ -1,0 +1,7 @@
+Noto Sans SC (Source Han Sans sister family)
+Source: https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap
+Font files: https://fonts.gstatic.com/s/notosanssc/v41/
+License: https://github.com/google/fonts/blob/main/ofl/notosanssc/OFL.txt
+Downloaded: 2026-10-22
+Official Unicode shards retained; font binaries are unmodified.
+Variable weights 400–700. Browsers request only shards needed for displayed text.

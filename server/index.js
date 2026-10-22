@@ -62,7 +62,7 @@ function json(res, code, payload) {
 }
 function mime(file) {
   const e = path.extname(file).toLowerCase();
-  return ({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.ico':'image/x-icon'}[e] || 'application/octet-stream');
+  return ({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'application/javascript; charset=utf-8','.jpg':'image/jpeg','.jpeg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.ico':'image/x-icon','.woff2':'font/woff2'}[e] || 'application/octet-stream');
 }
 function serveFile(res, file) {
   const abs = path.resolve(file);
@@ -149,7 +149,7 @@ function secureEquals(a, b) {
         const input=await readBody(req);return json(res,200,{ok:true,...await(pathname==='/api/vip'?validateVip(input):processOrder(input))});
       }
       if(req.method==='GET'&&(pathname==='/'||pathname==='/index.html'))return serveFile(res,path.join(ROOT,'index.html'))||json(res,404,{ok:false});
-      if(req.method==='GET'&&(pathname.startsWith('/images/')||/^\/assets\/[a-z0-9-]+\.(js|css)$/.test(pathname)))return serveFile(res,path.join(ROOT,pathname))||json(res,404,{ok:false});
+      if(req.method==='GET'&&(pathname.startsWith('/images/')||/^\/assets\/[a-z0-9-]+\.(js|css)$/.test(pathname)||/^\/assets\/fonts\/[a-z0-9-]+\.woff2$/.test(pathname)))return serveFile(res,path.join(ROOT,pathname))||json(res,404,{ok:false});
       return json(res,404,{ok:false,error:'not found'});
     }catch(error){if(!res.headersSent)return failure(res,error,'Service temporarily unavailable');if(!res.writableEnded)res.end();}
   });

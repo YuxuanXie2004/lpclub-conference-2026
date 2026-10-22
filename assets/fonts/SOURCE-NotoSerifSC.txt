@@ -1,0 +1,7 @@
+Noto Serif SC (Source Han Serif sister family)
+Source: https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;600&display=swap
+Font files: https://fonts.gstatic.com/s/notoserifsc/v36/
+License: https://github.com/google/fonts/blob/main/ofl/notoserifsc/OFL.txt
+Downloaded: 2026-10-22
+Official Unicode shards intersecting the three display headings retained; binaries unmodified.
+Variable weights 500–600. Other text continues to use the existing sans family.
