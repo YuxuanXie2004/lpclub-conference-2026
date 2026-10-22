@@ -148,7 +148,6 @@ const translations = {
   '邮件未发送，请检查邮件配置':['Email not sent; check mail configuration','邮件未发送，请检查邮件配置'],
   'Queued':['Queued','排队发送中'], 'Not configured':['Not configured','未配置'], 'Sent':['Sent','已发送'], 'Failed':['Failed','发送失败'],
   'Registration Operations · 报名管理': ['Registration Operations', '报名管理'],
-  'MySQL is the source of truth · 删除采用软删除，可随时恢复': ['MySQL is the source of truth · Deleted registrations can be restored', '数据保存在 MySQL · 删除采用软删除，可随时恢复'],
   'Active Registrations': ['Active Registrations', '有效报名'],
   'Deleted / 回收站': ['Deleted', '回收站'], 'VIP Codes': ['VIP Codes', 'VIP 码管理'],
   'Materials / 资料审核': ['Materials', '资料审核'], 'Materials / 资料': ['Materials', '资料'],
