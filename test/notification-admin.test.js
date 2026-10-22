@@ -10,12 +10,12 @@ const env = { MAIL_PAYLOAD_KEY: crypto.randomBytes(32).toString('base64'), SMTP_
 
 test('notification channels have independent sidebar panels and no global Feishu accordion', () => {
   const html = renderTablePage('');
-  assert.equal((html.match(/role="tab"/g) || []).length, 7);
+  assert.equal((html.match(/role="tab"/g) || []).length, 8);
   for (const name of ['feishu', 'mail']) {
     assert.match(html, new RegExp('id="' + name + 'Tab"[^>]*aria-controls="' + name + 'Panel"'));
     assert.match(html, new RegExp('id="' + name + 'Panel"[^>]*role="tabpanel"'));
   }
-  assert.doesNotMatch(html, /<details id="feishuStatusPanel"/);
+  assert.match(html, /id="feishuPanel"[^>]*>[\s\S]*?<details id="feishuStatusPanel"/);
 });
 
 test('mail list filters are parameterized and pagination is bounded; payloads never enter list responses', async () => {

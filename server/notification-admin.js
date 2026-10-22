@@ -108,9 +108,8 @@ function createNotificationAdmin({ db, env = process.env, integrations, mailConf
 
 function renderNotificationPanel(channel) {
   const name = channel === 'mail' ? 'mail' : 'feishu';
-  return `<div class="notification-status" id="${name}Connection" role="status"></div>
+  return `${name === 'feishu' ? require('./feishu-admin').renderFeishuStatus() : ''}<div class="notification-status" id="${name}Connection" role="status"></div>
   <div class="stats" id="${name}Stats"></div>
-  ${name === 'feishu' ? require('./feishu-admin').renderFeishuStatus() : ''}
   <div class="filters notification-filters">
     <input id="${name}Search" aria-label="Search notifications" placeholder="Search notifications">
     ${name === 'feishu' ? '<select id="feishuChannel" aria-label="Notification channel"><option value="feishu">Feishu notifications</option><option value="sync">Table sync</option></select>' : ''}
