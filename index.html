@@ -714,9 +714,12 @@
   .reg-price{font-size:15px;font-weight:800;color:var(--green-800);white-space:nowrap;text-align:right}
   .reg-price small{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--green-500)}
   .reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px 16px}.reg-field.full{grid-column:1/-1}
-  .reg-field label,.reg-group-label{display:block;font-size:12px;font-weight:700;color:var(--green-900);margin:0 0 7px}.reg-field label span{color:#a04a3d}
+  .reg-field label,.reg-group-label{display:block;font-size:12px;font-weight:700;color:var(--green-900);margin:0 0 7px}
+  .reg-required-star{display:inline-block;color:#a13b31;font-size:18px;font-weight:700;line-height:1;vertical-align:middle;margin-left:3px}
   .reg-field input,.reg-field select,.reg-field textarea{width:100%;border:1.5px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);padding:11px 12px;font:inherit;outline:none;transition:.15s ease}.reg-field textarea{min-height:88px;resize:vertical}.reg-field input:focus,.reg-field select:focus,.reg-field textarea:focus{border-color:var(--green-700);box-shadow:0 0 0 3px rgba(44,74,58,.08)}
   .reg-field .hint{font-size:11.5px;color:var(--ink-soft);margin-top:5px;line-height:1.45}.reg-field .hint.error{color:#a13b31;font-weight:600}
+  .reg-field input[aria-invalid="true"],.reg-field select[aria-invalid="true"],.reg-field textarea[aria-invalid="true"],.reg-consent:has(input[aria-invalid="true"]){border-color:#a13b31;box-shadow:0 0 0 2px rgba(161,59,49,.08)}
+  .reg-field-error{font-size:11.5px;color:#a13b31;margin:6px 0 0;line-height:1.45;font-weight:600}
   .reg-choice-grid{display:flex;flex-wrap:wrap;gap:8px}.reg-chip{position:relative}.reg-chip input{position:absolute;opacity:0}.reg-chip span{display:block;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink-soft);cursor:pointer}.reg-chip input:checked+span{background:var(--green-100);border-color:var(--green-500);color:var(--green-900);font-weight:700}
   .reg-consent{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:12px;color:var(--ink-soft);line-height:1.55}.reg-consent input{margin-top:3px}
   .reg-summary{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin-bottom:22px;display:flex;justify-content:space-between;gap:18px}.reg-summary b{display:block;color:var(--green-900);font-size:14px}.reg-summary span{font-size:12px;color:var(--ink-soft)}.reg-summary strong{color:var(--green-800);font-size:16px;white-space:nowrap}
@@ -1262,24 +1265,24 @@
       <section class="reg-screen" data-reg-step="2" hidden>
         <div class="reg-summary"><div><span data-zh="已选报名方案">Selected registration</span><b id="regSummaryName">—</b></div><strong id="regSummaryPrice">—</strong></div>
         <form id="regForm" novalidate>
-          <h4 class="reg-section-title" data-zh="个人资料">Your details</h4><p class="reg-section-lead" data-zh="请准确填写职业信息。标有 * 的项目为必填项。">Please provide accurate professional information. Fields marked * are required.</p>
+          <h4 class="reg-section-title" data-zh="个人资料">Your details</h4><p class="reg-section-lead" data-zh="请填写以下报名信息，确保所有必填项填写完整。">Please provide your registration details below and complete all required fields.</p>
           <div class="reg-grid">
             <div class="reg-field"><label data-zh="称谓">Salutation</label><select name="salutation"><option value="" data-zh="请选择">Select</option><option data-zh="先生" value="Mr.">Mr.</option><option data-zh="女士" value="Ms.">Ms.</option><option data-zh="博士" value="Dr.">Dr.</option><option data-zh="教授" value="Prof.">Prof.</option></select></div>
-            <div class="reg-field"><label data-zh="姓名 &lt;span&gt;*&lt;/span&gt;">Full name <span>*</span></label><input name="fullName" autocomplete="name" required></div>
-            <div class="reg-field full"><label data-zh="公司 / 机构 &lt;span&gt;*&lt;/span&gt;">Company / Organization <span>*</span></label><input name="company" autocomplete="organization" required></div>
-            <div class="reg-field"><label data-zh="机构类型 &lt;span&gt;*&lt;/span&gt;">Organization type <span>*</span></label><select name="companyType" required disabled><option value="" data-zh="请选择">Select</option><option data-zh="有限合伙人（LP）" value="Limited Partner (LP)">Limited Partner (LP)</option><option data-zh="LP CLUB 会员" value="LP CLUB Member">LP CLUB Member</option><option data-zh="普通合伙人（GP）" value="General Partner (GP)">General Partner (GP)</option><option data-zh="资产管理" value="Asset Management">Asset Management</option><option data-zh="标准报名" value="Standard">Standard</option></select></div>
-            <div class="reg-field"><label data-zh="职位 &lt;span&gt;*&lt;/span&gt;">Job title <span>*</span></label><input name="jobTitle" autocomplete="organization-title" required></div>
+            <div class="reg-field"><label data-zh="姓名 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Full name <span class="reg-required-star">*</span></label><input name="fullName" autocomplete="name" required></div>
+            <div class="reg-field full"><label data-zh="公司 / 机构 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Company / Organization <span class="reg-required-star">*</span></label><input name="company" autocomplete="organization" required></div>
+            <div class="reg-field"><label data-zh="机构类型 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Organization type <span class="reg-required-star">*</span></label><select name="companyType" required disabled><option value="" data-zh="请选择">Select</option><option data-zh="有限合伙人（LP）" value="Limited Partner (LP)">Limited Partner (LP)</option><option data-zh="LP CLUB 会员" value="LP CLUB Member">LP CLUB Member</option><option data-zh="普通合伙人（GP）" value="General Partner (GP)">General Partner (GP)</option><option data-zh="资产管理" value="Asset Management">Asset Management</option><option data-zh="标准报名" value="Standard">Standard</option></select></div>
+            <div class="reg-field"><label data-zh="职位 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Job title <span class="reg-required-star">*</span></label><input name="jobTitle" autocomplete="organization-title" required></div>
             <div class="reg-field"><label data-zh="部门">Department</label><input name="department"></div>
-            <div class="reg-field"><label data-zh="国家 / 地区 &lt;span&gt;*&lt;/span&gt;">Country / Region <span>*</span></label><input name="country" autocomplete="country-name" required></div>
+            <div class="reg-field"><label data-zh="国家 / 地区 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Country / Region <span class="reg-required-star">*</span></label><input name="country" autocomplete="country-name" required></div>
             <div class="reg-field"><label data-zh="城市">City</label><input name="city" autocomplete="address-level2"></div>
-            <div class="reg-field"><label data-zh="企业邮箱 &lt;span&gt;*&lt;/span&gt;">Business email <span>*</span></label><input name="email" type="email" autocomplete="email" required><div class="hint" id="emailHint">Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.</div></div>
-            <div class="reg-field"><label data-zh="手机号码 &lt;span&gt;*&lt;/span&gt;">Mobile number <span>*</span></label><div style="display:grid;grid-template-columns:90px 1fr;gap:8px"><input name="dial" value="+86" aria-label="Country code" data-zh-aria-label="国际区号"><input name="phone" type="tel" autocomplete="tel" required></div></div>
+            <div class="reg-field"><label data-zh="企业邮箱 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Business email <span class="reg-required-star">*</span></label><input name="email" type="email" autocomplete="email" aria-describedby="emailHint" required><div class="hint" id="emailHint">Please use your company email. Gmail, Outlook, Yahoo, iCloud, QQ, 163 and other personal addresses are not accepted.</div></div>
+            <div class="reg-field"><label data-zh="手机号码 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Mobile number <span class="reg-required-star">*</span></label><div style="display:grid;grid-template-columns:90px 1fr;gap:8px"><input name="dial" value="+86" aria-label="Country code" data-zh-aria-label="国际区号"><input name="phone" type="tel" autocomplete="tel" required></div></div>
             <div class="reg-field"><label data-zh="是否与 WhatsApp / 微信号码相同？">Same as WhatsApp / WeChat?</label><select name="whatsappSame"><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
             <div class="reg-field"><label data-zh="WhatsApp / 微信号码">WhatsApp / WeChat number</label><input name="whatsappNumber"></div>
             <div class="reg-field full"><label for="investmentFocus" data-zh="投资方向">Investment focus</label><input id="investmentFocus" name="focus" type="text" maxlength="80"></div>
             <div class="reg-field full"><div class="reg-group-label" data-zh="参会目的">Purpose of attendance</div><div class="reg-choice-grid" data-multi="purpose"></div></div>
-            <div class="reg-field full" id="purposeOtherField" hidden><label for="purposeOther" data-zh="请说明其他参会目的 &lt;span&gt;*&lt;/span&gt;">Please specify your other purpose <span>*</span></label><input id="purposeOther" name="purposeOther" type="text" maxlength="80" pattern=".*\S.*" disabled></div>
-            <div class="reg-field"><label data-zh="是否需要签证邀请函？&lt;span&gt;*&lt;/span&gt;">Invitation letter for visa? <span>*</span></label><select name="visaLetter" required><option value="" data-zh="请选择">Select</option><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
+            <div class="reg-field full" id="purposeOtherField" hidden><label for="purposeOther" data-zh="请说明其他参会目的 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Please specify your other purpose <span class="reg-required-star">*</span></label><input id="purposeOther" name="purposeOther" type="text" maxlength="80" pattern=".*\S.*" disabled></div>
+            <div class="reg-field"><label data-zh="是否需要签证邀请函？ &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Invitation letter for visa? <span class="reg-required-star">*</span></label><select name="visaLetter" required><option value="" data-zh="请选择">Select</option><option data-zh="是" value="Yes">Yes</option><option data-zh="否" value="No">No</option></select></div>
             <div class="reg-field"><label data-zh="预计抵达日期">Expected arrival date</label><input name="arrivalDate" type="date"></div>
             <div class="reg-field"><label data-zh="随行人数">Number of accompanying guests</label><input name="guests" type="number" min="0" max="20" value="0"></div>
 
@@ -1311,7 +1314,7 @@
             </div>
 
           </section>
-            <div class="reg-final-confirmation" id="registrationConfirmation"><label class="reg-consent"><input id="regConsent" name="consent" type="checkbox" required><span data-zh="本人确认所填信息准确，并同意 LP CLUB GROUP 使用这些信息处理本次大会报名及与本人联系大会相关事宜。">I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy" data-zh="&lt;b&gt;隐私说明。&lt;/b&gt;报名信息仅用于大会管理、参会资格审核、活动沟通、应申请提供的邀请函 / 签证支持及相关后续服务。信息访问应仅限获授权的 LP CLUB 工作人员及已配置的服务提供方。请勿提交敏感金融账户信息或密码。"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
+            <div class="reg-final-confirmation" id="registrationConfirmation"><div class="reg-group-label" data-zh="报名确认 &lt;span class=&quot;reg-required-star&quot;&gt;*&lt;/span&gt;">Registration confirmation <span class="reg-required-star">*</span></div><label class="reg-consent"><input id="regConsent" name="consent" type="checkbox" required><span data-zh="本人确认所填信息准确，并同意 LP CLUB GROUP 使用这些信息处理本次大会报名及与本人联系大会相关事宜。">I confirm that the information provided is accurate and I agree that LP CLUB GROUP may use it to process this conference registration and contact me about this event.</span></label><div class="reg-privacy" data-zh="&lt;b&gt;隐私说明。&lt;/b&gt;报名信息仅用于大会管理、参会资格审核、活动沟通、应申请提供的邀请函 / 签证支持及相关后续服务。信息访问应仅限获授权的 LP CLUB 工作人员及已配置的服务提供方。请勿提交敏感金融账户信息或密码。"><b>Privacy notice.</b> Registration information is collected only for conference administration, attendee review, event communications, invitation/visa support where requested, and related operational follow-up. Access should be limited to authorised LP CLUB staff and configured service providers. Please do not submit sensitive financial account information or passwords.</div></div>
         </form>
       </section>
       <section class="reg-screen" data-reg-step="3" hidden>
@@ -1411,6 +1414,10 @@
     'Your registration is safely stored. Email delivery is pending server mail configuration; LP CLUB will still be able to contact you at {email}.':'您的报名已保存。确认邮件暂未发送，LP CLUB 仍可通过 {email} 与您联系。',
     'A confirmation email will be sent to your business email when outgoing mail is configured on the server.':'邮件服务配置完成后，确认邮件将发送至您的企业邮箱。'
   };
+  translations['Please complete this required field.']='请填写此必填项。';
+  translations['Please select this required confirmation.']='请勾选此必选确认项。';
+  translations['Please enter a valid value.']='请输入有效的内容。';
+  translations['Please enter a valid email address.']='请输入有效的邮箱地址。';
   var errorMessages = {
     INVALID_VIP_CODE:'Invalid VIP Code. Please check your code.', VIP_USED:'This VIP Code has already been used.',
     VIP_REVOKED:'This VIP Code has been revoked.', VIP_EXPIRED:'This VIP Code has expired.',
@@ -1478,6 +1485,7 @@
   var regStep = 1, selectedIdentity = null, selectedPackage = null, packageList = [], packageLoadError = '';
   var vipCode=document.getElementById('vipCode'), vipApply=document.getElementById('vipApply'), vipMessage=document.getElementById('vipMessage');
   var appliedVipCode='', vipPending=false, vipRequestId=0;
+  var validationAttempted=false;
   var vipSubmissionKey='', vipSubmissionPayload='', registrationResult=null;
   var PERSONAL_DOMAINS = ['gmail.com','googlemail.com','hotmail.com','hotmail.co.uk','outlook.com','live.com','msn.com','yahoo.com','yahoo.co.uk','icloud.com','me.com','mac.com','aol.com','proton.me','protonmail.com','qq.com','163.com','126.com','sina.com','sohu.com','foxmail.com','yeah.net','mail.com','gmx.com'];
   var MULTI = {
@@ -1586,7 +1594,7 @@
     }
   }
   function openReg(){
-    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();updatePurposeOther();if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
+    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();updatePurposeOther();validationAttempted=false;regForm.querySelectorAll('[aria-invalid="true"]').forEach(clearFieldError);if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
     loadPackages();
     regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
   }
@@ -1605,7 +1613,34 @@
   function getMulti(key){return Array.prototype.slice.call(document.querySelectorAll('[data-multi="'+key+'"] input:checked')).map(function(x){return x.value})}
   function updatePurposeOther(){var selected=getMulti('purpose').indexOf('Other')!==-1,input=regForm.elements.purposeOther;document.getElementById('purposeOtherField').hidden=!selected;input.disabled=!selected;input.required=selected}
   function formPayload(){var fd=new FormData(regForm),focus=String(fd.get('focus')||'').trim(),purpose=getMulti('purpose'),purposeOther=String(fd.get('purposeOther')||'').trim();return {packageId:selectedPackage.id,expectedPrice:Number(effectivePackage(selectedPackage).price),vipCode:appliedVipCode||undefined,materials:window.LPClubMaterials?window.LPClubMaterials.payload(language):undefined,attendee:{salutation:fd.get('salutation'),fullName:fd.get('fullName'),company:fd.get('company'),companyType:selectedPackage.organisationType,department:fd.get('department'),jobTitle:fd.get('jobTitle'),country:fd.get('country'),city:fd.get('city'),email:fd.get('email'),dial:fd.get('dial'),phone:fd.get('phone'),whatsappSame:fd.get('whatsappSame'),whatsappNumber:fd.get('whatsappNumber'),focus:focus?[focus]:[],purpose:purpose,purposeOther:purpose.indexOf('Other')!==-1?purposeOther:'',visaLetter:fd.get('visaLetter'),arrivalDate:fd.get('arrivalDate'),guests:fd.get('guests'),consent:Boolean(fd.get('consent'))}}}
-  function validateDetails(){if(!regForm.reportValidity())return false;var email=regForm.elements.email.value;var hint=document.getElementById('emailHint');if(!businessEmail(email)){setMessage(hint,'Please use your business email address. Personal email addresses are not accepted.');hint.classList.add('error');regForm.elements.email.focus();return false}hint.classList.remove('error');return true}
+  function clearFieldError(input){
+    var id='regError-'+input.name,error=document.getElementById(id);
+    input.removeAttribute('aria-invalid');
+    var descriptions=(input.getAttribute('aria-describedby')||'').split(/\s+/).filter(function(value){return value&&value!==id});
+    if(descriptions.length)input.setAttribute('aria-describedby',descriptions.join(' '));else input.removeAttribute('aria-describedby');
+    if(error){error.hidden=true;setMessage(error,'')}
+  }
+  function validateField(input){
+    if(!input.willValidate){clearFieldError(input);return true}
+    var message='';
+    if(!input.validity.valid){
+      message=input.validity.valueMissing?(input.type==='checkbox'?'Please select this required confirmation.':'Please complete this required field.'):(input.type==='email'?'Please enter a valid email address.':'Please enter a valid value.');
+    }else if(input.name==='email'&&!businessEmail(input.value))message='Please use your business email address. Personal email addresses are not accepted.';
+    if(!message){clearFieldError(input);return true}
+    var id='regError-'+input.name,error=document.getElementById(id);
+    if(!error){error=document.createElement('p');error.id=id;error.className='reg-field-error';error.setAttribute('aria-live','polite');input.closest('.reg-field, .reg-final-confirmation').appendChild(error)}
+    setMessage(error,message);error.hidden=false;input.setAttribute('aria-invalid','true');
+    var descriptions=(input.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean);
+    if(descriptions.indexOf(id)===-1)descriptions.push(id);
+    input.setAttribute('aria-describedby',descriptions.join(' '));return false;
+  }
+  function validateDetails(){
+    validationAttempted=true;
+    var firstInvalid=null;
+    regForm.querySelectorAll('input[name], select[name], textarea[name]').forEach(function(input){if(!validateField(input)&&!firstInvalid)firstInvalid=input});
+    if(firstInvalid){firstInvalid.scrollIntoView({block:'center',behavior:'smooth'});firstInvalid.focus({preventScroll:true});return false}
+    return true;
+  }
   async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();{var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;er.currentPrice=data.currentPrice;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};if(window.LPClubMaterials){try{await window.LPClubMaterials.uploadRegistered(data)}catch(_){document.getElementById('materialSubmissionStatus').hidden=false;setMessage(document.getElementById('materialSubmissionStatus'),'Your registration is saved. Please use the email link to submit materials later.')}}renderSuccess();showStep(3)}catch(err){if(err.code==='PRICE_CHANGED'){await loadPackages();showStep(1);showAlert('The registration price has changed to USD {price}. Please review the updated price and submit again.',{price:Number(err.currentPrice||0).toLocaleString('en-US')})}else if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
 
   vipApply.addEventListener('click',applyVipCode);
@@ -1614,8 +1649,12 @@
   document.querySelectorAll('[data-open-form]').forEach(function(btn){btn.addEventListener('click',openReg)});
   regClose.addEventListener('click',closeReg);regModal.addEventListener('click',function(e){if(e.target===regModal)closeReg()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&regModal.classList.contains('open'))closeReg()});
   regBack.addEventListener('click',function(){showStep(1)});regNext.addEventListener('click',function(){if(regStep===1&&selectedPackage){if(vipCode.value.trim()&&!appliedVipCode){showAlert(selectedPackage.optionId==='ticket'?'Click Apply to validate your VIP Code before continuing, or clear the code to use the standard ticket price.':'VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}if(appliedVipCode&&selectedPackage.optionId!=='ticket'){showAlert('VIP Code applies to Delegate Pass only. Choose a Delegate Pass, or clear the code to continue with this package.');return}showAlert('');showStep(2)}else if(regStep===2)submitRegistration()});
-  regForm.addEventListener('change',function(e){if(e.target.matches('[data-multi="purpose"] input'))updatePurposeOther()});
-  regForm.elements.email.addEventListener('blur',function(){var hint=document.getElementById('emailHint');hint.classList.toggle('error',this.value&&!businessEmail(this.value))});
+  regForm.addEventListener('change',function(e){
+    if(e.target.matches('[data-multi="purpose"] input')){updatePurposeOther();if(!regForm.elements.purposeOther.required)clearFieldError(regForm.elements.purposeOther)}
+    if(validationAttempted&&e.target.name)validateField(e.target);
+  });
+  regForm.addEventListener('input',function(e){if(e.target.name&&(validationAttempted||e.target.getAttribute('aria-invalid')==='true'))validateField(e.target)});
+  regForm.elements.email.addEventListener('blur',function(){if(this.value||validationAttempted)validateField(this)});
   function updateSummary(){
     if(!selectedPackage)return;
     document.getElementById('regSummaryName').textContent=t(selectedPackage.identityName)+' — '+t(selectedPackage.ticketName);
