@@ -2,7 +2,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const path = require('node:path');
 const crypto = require('node:crypto');
 const nodemailer = require('nodemailer');
 const { createMailer } = require('../server/mailer');
@@ -44,31 +43,29 @@ test('supplement templates use the same branded layout and stay English', () => 
   }
 });
 
-test('both mail types embed the project logo through encrypted queue and MIME serialization', async () => {
+test('all mail types use the hosted logo through encrypted queue and MIME serialization', async () => {
   const key = crypto.randomBytes(32).toString('base64');
-  const logo = fs.readFileSync(path.join(__dirname, '../images/lpclub-logo.png'));
+  const logoUrl = 'https://lp-club.tos-cn-beijing.volces.com/logo.png';
   const transport = nodemailer.createTransport({ streamTransport: true, buffer: true });
-  for (const mail of [mailer.composeRegistration(order, url), mailer.composeSupplement({ to: order.attendee.email, fullName: 'Jane Example', url, ref: order.ref })]) {
-    assert.equal(mail.attachments?.length, 1);
-    const attachment = mail.attachments[0];
-    assert.equal(attachment.contentType, 'image/png');
-    assert.equal(attachment.contentDisposition, 'inline');
-    assert.equal(attachment.encoding, 'base64');
-    assert.deepEqual(Buffer.from(attachment.content, 'base64'), logo);
-    assert.ok(mail.html.includes('src="cid:'+attachment.cid+'"'));
+  for (const mail of [mailer.composeRegistration(order, url), mailer.composeRegistration(order), mailer.composeSupplement({ to: order.attendee.email, fullName: 'Jane Example', url, ref: order.ref })]) {
+    assert.ok(mail.html.includes('src="'+logoUrl+'"'));
+    assert.doesNotMatch(mail.html, /src="cid:/);
+    assert.equal(mail.attachments, undefined);
     const restored = decryptPayload(encryptPayload(mail, key), key);
     assert.deepEqual(restored, mail);
-    const message = (await transport.sendMail(restored)).message.toString();
-    assert.match(message, /Content-Type: multipart\/related/);
-    assert.ok(message.includes('Content-ID: <'+attachment.cid+'>'));
-    assert.match(message, /Content-Type: image\/png/);
-    assert.match(message, /Content-Disposition: inline/);
+    const message = (await transport.sendMail({ ...restored, textEncoding: 'base64' })).message.toString();
+    const htmlPart = message.match(/Content-Type: text\/html[^]*?Content-Transfer-Encoding: base64\r\n\r\n([A-Za-z0-9+/=\r\n]+)/);
+    assert.ok(htmlPart);
+    assert.ok(Buffer.from(htmlPart[1], 'base64').toString().includes('src="'+logoUrl+'"'));
+    assert.doesNotMatch(message, /Content-ID:|Content-Type: image\/png|Content-Type: multipart\/related/);
   }
+  const template = fs.readFileSync(require.resolve('../server/email-templates/registration-confirmation.html'), 'utf8');
+  assert.ok(template.includes('src="'+logoUrl+'"'));
 });
 
 test('registration without materials keeps branding and omits the materials call to action', () => {
   const mail = mailer.composeRegistration(order);
-  assert.match(mail.html, /src="cid:/);
+  assert.ok(mail.html.includes('src="https://lp-club.tos-cn-beijing.volces.com/logo.png"'));
   assert.doesNotMatch(mail.html + mail.text, /Complete your materials|30 days|undefined/);
 });
 

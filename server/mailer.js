@@ -1,6 +1,4 @@
 'use strict';
-const fs = require('node:fs');
-const path = require('node:path');
 function createMailer(env=process.env){
 const SMTP = {
   host: env.SMTP_HOST || 'smtp.feishu.cn',
@@ -10,7 +8,7 @@ const SMTP = {
   pass: env.SMTP_PASS || ''
 };
 const ORGANISER = env.ORGANISER_EMAIL || 'LPCLUBGROUP@LP-club.cn';
-const LOGO_CID = 'lpclub-logo@lp-club.cn';
+const LOGO_URL = 'https://lp-club.tos-cn-beijing.volces.com/logo.png';
 const MATERIALS_TITLE = 'Complete your conference materials';
 const MATERIALS_DESCRIPTION = 'Use your private link to submit or update your business card, portrait and company logo, and manage publication consent. The link expires in 30 days; please do not forward it. Your business card stays private. Portraits and logos appear on the conference website only with your permission and after approval.';
 const EVENT_TEXT = 'Wednesday, 18 November 2026\nHong Kong Convention and Exhibition Centre\nHong Kong, China';
@@ -26,15 +24,14 @@ function composeMessage({ to, cc, subject, title, fullName, content, text }) {
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f4f7f4;font-family:Arial,Helvetica,sans-serif;color:#183026">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7f4;padding:30px 12px"><tr><td align="center">
   <table role="presentation" width="640" cellspacing="0" cellpadding="0" style="max-width:640px;width:100%;table-layout:fixed;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #dce7df">
-  <tr><td bgcolor="#eef5ef" style="padding:30px 34px;background:#eef5ef;border-bottom:1px solid #dce7df"><img src="cid:${LOGO_CID}" alt="LP CLUB" width="160" height="55" style="display:block;width:160px;height:auto;border:0"><div style="margin-top:24px;color:#53695c;font-size:11px;line-height:1.6;letter-spacing:.1em;text-transform:uppercase">The 3rd International</div><div style="margin-top:5px;color:#173f2b;font-size:21px;line-height:1.4;font-weight:700">Private Equity Conference 2026</div></td></tr>
+  <tr><td bgcolor="#eef5ef" style="padding:30px 34px;background:#eef5ef;border-bottom:1px solid #dce7df"><img src="${LOGO_URL}" alt="LP CLUB" width="160" height="55" style="display:block;width:160px;height:auto;border:0"><div style="margin-top:24px;color:#53695c;font-size:11px;line-height:1.6;letter-spacing:.1em;text-transform:uppercase">The 3rd International</div><div style="margin-top:5px;color:#173f2b;font-size:21px;line-height:1.4;font-weight:700">Private Equity Conference 2026</div></td></tr>
   <tr><td style="padding:30px 34px;overflow-wrap:anywhere"><h1 style="font-size:24px;line-height:1.3;margin:0 0 16px;color:#173f2b">${esc(title)}</h1><p style="line-height:1.7;margin:0 0 18px">Dear ${esc(fullName || 'Guest')},</p>${content}
   <h2 style="font-size:16px;margin:26px 0 8px;color:#173f2b">Event details</h2><p style="line-height:1.8;margin:0">Wednesday, 18 November 2026<br>Hong Kong Convention and Exhibition Centre<br>Hong Kong, China</p>
   <p style="line-height:1.7;margin:26px 0 0">We look forward to welcoming you in Hong Kong.</p><p style="line-height:1.7;margin:16px 0 0"><b>LP CLUB GROUP</b><br><a href="mailto:LPCLUBGROUP@LP-club.cn" style="color:#205f40">LPCLUBGROUP@LP-club.cn</a><br><a href="https://www.lp-club.cn" style="color:#205f40">www.lp-club.cn</a></p></td></tr>
   </table></td></tr></table></body></html>`;
   return {
     from: `LP CLUB GROUP <${SMTP.user}>`, to, ...(cc ? { cc } : {}), subject, html,
-    text: `Dear ${fullName || 'Guest'},\n\n${text}\n\nEvent details\n${EVENT_TEXT}\n\nWe look forward to welcoming you in Hong Kong.\n\nLP CLUB GROUP\nLPCLUBGROUP@LP-club.cn\nwww.lp-club.cn`,
-    attachments: [{ filename: 'lpclub-logo.png', content: fs.readFileSync(path.join(__dirname, '../images/lpclub-logo.png')).toString('base64'), encoding: 'base64', contentType: 'image/png', contentDisposition: 'inline', cid: LOGO_CID }]
+    text: `Dear ${fullName || 'Guest'},\n\n${text}\n\nEvent details\n${EVENT_TEXT}\n\nWe look forward to welcoming you in Hong Kong.\n\nLP CLUB GROUP\nLPCLUBGROUP@LP-club.cn\nwww.lp-club.cn`
   };
 }
 function composeRegistration(order, link) {
