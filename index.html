@@ -731,6 +731,10 @@
   .reg-back{border:0;background:none;color:var(--ink-soft);font-weight:700;cursor:pointer;padding:10px}.reg-back[hidden]{display:none}.reg-actions{display:flex;gap:10px;margin-left:auto}.reg-foot .btn{min-width:160px;justify-content:center}.reg-foot .btn:disabled{opacity:.5;cursor:not-allowed}
   .reg-success{text-align:center;max-width:620px;margin:0 auto;padding:22px 0 30px}.reg-check{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--green-800);color:#fff;font-size:30px;margin:0 auto 18px}.reg-success h4{font-family:var(--sans);font-size:25px;color:var(--green-900);margin:0}.reg-success>p{color:var(--ink-soft);line-height:1.7;margin:10px auto 0}.reg-ref{display:inline-block;margin-top:17px;padding:8px 13px;background:var(--green-100);border:1px dashed var(--green-500);border-radius:9px;font-size:12px;color:var(--ink-soft)}.reg-ref b{color:var(--green-900);letter-spacing:.06em}.reg-success-card{text-align:left;margin:20px auto 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px 18px;line-height:1.8;font-size:13px;color:var(--ink-soft)}.reg-success-card b{color:var(--green-900)}
   .reg-note{margin-top:16px;font-size:11.5px;color:var(--green-500);line-height:1.6}
+  #regClearDraft[hidden]{display:none}
+  .reg-actions{align-items:flex-start}.reg-draft-save{display:flex;flex-direction:column;gap:4px;min-width:0}.reg-draft-error{font-size:11px;line-height:1.4;color:var(--ink-soft)}
+  @media(max-width:720px){.reg-draft-save{flex:1}.reg-draft-save .btn{width:100%}}
+  @media(max-width:720px){.reg-actions{flex-wrap:wrap}.reg-actions .btn{min-width:0;padding-left:12px;padding-right:12px}}
   .reg-privacy{margin-top:10px;padding:12px 14px;border-radius:11px;background:var(--green-50);border:1px solid var(--line);font-size:11.5px;line-height:1.65;color:var(--ink-soft)}.reg-privacy b{color:var(--green-900)}
   @media(max-width:720px){.reg-backdrop{padding:0;place-items:stretch}.reg-panel{height:100vh;max-height:none;border-radius:0}.reg-grid{grid-template-columns:1fr}.reg-field.full{grid-column:auto}.reg-head,.reg-body,.reg-foot,.reg-steps{padding-left:18px;padding-right:18px}.reg-step span{display:none}.reg-line{flex:1}.reg-package{grid-template-columns:22px 1fr}.reg-price{grid-column:2;text-align:left}.reg-foot{flex-wrap:wrap}.reg-actions{width:100%}.reg-actions .btn{flex:1}.reg-summary{flex-direction:column}.reg-head h3{font-size:20px}}
 
@@ -1366,7 +1370,8 @@
     </div>
     <div class="reg-foot" id="regFoot">
       <button class="reg-back" type="button" id="regBack" hidden data-zh="← 返回">← Back</button>
-      <div class="reg-actions"><button class="btn btn-primary" type="button" id="regNext" disabled>Continue</button></div>
+      <div><button class="reg-back" type="button" id="regClearDraft" hidden data-zh="清除草稿">Clear draft</button></div>
+      <div class="reg-actions"><div class="reg-draft-save"><button class="btn btn-outline" type="button" id="regSaveDraft" data-zh="暂存草稿" aria-live="polite" aria-describedby="regDraftError">Save draft</button><span class="reg-draft-error" id="regDraftError" role="status" hidden></span></div><button class="btn btn-primary" type="button" id="regNext" disabled>Continue</button></div>
     </div>
   </div>
 </div>
@@ -1458,6 +1463,9 @@
     'A confirmation email will be sent to your business email when outgoing mail is configured on the server.':'邮件服务配置完成后，确认邮件将发送至您的企业邮箱。'
   };
   translations['Please complete this required field.']='请填写此必填项。';
+  translations['Save draft']='暂存草稿';
+  translations['✓ Saved']='✓ 已暂存';
+  translations['Could not save. Please retry.']='暂存失败，请重试';
   translations['Please select this required confirmation.']='请勾选此必选确认项。';
   translations['Please enter a valid value.']='请输入有效的内容。';
   translations['Please enter a valid email address.']='请输入有效的邮箱地址。';
@@ -1521,6 +1529,9 @@
   var regBack = document.getElementById('regBack');
   var regFoot = document.getElementById('regFoot');
   var regForm = document.getElementById('regForm');
+  var regSaveDraft = document.getElementById('regSaveDraft'), regClearDraft = document.getElementById('regClearDraft');
+  var regDraftError = document.getElementById('regDraftError');
+  var regSubmitting = false;
   var regAlert = document.getElementById('regAlert');
   var regPackagesEl = document.getElementById('regPackages');
   var regIdentitiesEl = document.getElementById('regIdentities');
@@ -1609,7 +1620,7 @@
     var identities=packageList.filter(function(p){return p.optionId==='ticket'});
     regIdentitiesEl.innerHTML=identities.map(function(p){return '<button type="button" class="reg-identity'+(p.identityId===selectedIdentity?' selected':'')+'" data-identity="'+escHtml(p.identityId)+'" aria-pressed="'+String(p.identityId===selectedIdentity)+'"><b>'+escHtml(t(p.identityName))+'</b><small>'+escHtml(t(p.note||''))+'</small></button>'}).join('');
     regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(btn){btn.addEventListener('click',function(){
-      selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;
+      registrationOpenId++;selectedIdentity=btn.getAttribute('data-identity');selectedPackage=null;
       regIdentitiesEl.querySelectorAll('.reg-identity').forEach(function(x){x.classList.toggle('selected',x===btn);x.setAttribute('aria-pressed',String(x===btn))});
       renderPackages();regParticipationWrap.hidden=false;regNext.disabled=true;showAlert('');
     })});
@@ -1618,28 +1629,81 @@
     var list=packageList.filter(function(p){return p.identityId===selectedIdentity});
     regPackagesEl.innerHTML=list.map(function(p){var checked=selectedPackage&&selectedPackage.id===p.id;return '<label class="reg-package'+(checked?' selected':'')+'" data-package="'+escHtml(p.id)+'"><input type="radio" name="regPackage" value="'+escHtml(p.id)+'" '+(checked?'checked':'')+'><span class="reg-radio"></span><span><b>'+escHtml(t(p.ticketName))+'</b><small>'+escHtml(t(p.note||''))+'</small></span><span class="reg-price">'+escHtml(money(effectivePackage(p)))+'</span></label>'}).join('');
     regPackagesEl.querySelectorAll('input').forEach(function(input){input.addEventListener('change',function(){
-      selectedPackage=list.find(function(p){return p.id===input.value})||null;renderPackages();
+      registrationOpenId++;selectedPackage=list.find(function(p){return p.id===input.value})||null;renderPackages();
       regPackagesEl.querySelectorAll('.reg-package').forEach(function(row){row.classList.toggle('selected',row.getAttribute('data-package')===input.value)});
       regNext.disabled=!selectedPackage;showAlert('');
     })});
   }
-  async function loadPackages(){
-    var previousIdentity=selectedIdentity, previousPackage=selectedPackage&&selectedPackage.id;
+  async function loadPackages(draft){
+    var previousIdentity=draft?draft.identityId:selectedIdentity, previousPackage=draft?draft.packageId:selectedPackage&&selectedPackage.id;
+    var openId=registrationOpenId;
     try{
       var response=await fetch(apiUrl('/api/packages'));
       if(!response.ok)throw new Error('Package request failed');
       var data=await response.json();
       if(!validPackages(data))throw new Error('Invalid package catalogue');
-      packageList=data.packages;packageLoadError='';selectedIdentity=packageList.some(function(p){return p.identityId===previousIdentity&&p.optionId==='ticket'})?previousIdentity:null;selectedPackage=packageList.find(function(p){return p.id===previousPackage})||null;renderIdentities();renderPackages();regParticipationWrap.hidden=!selectedIdentity;regNext.disabled=!selectedPackage;
+      if(openId!==registrationOpenId){previousIdentity=selectedIdentity;previousPackage=selectedPackage&&selectedPackage.id}
+      packageList=data.packages;packageLoadError='';selectedIdentity=packageList.some(function(p){return p.identityId===previousIdentity&&p.optionId==='ticket'})?previousIdentity:null;selectedPackage=packageList.find(function(p){return p.id===previousPackage&&p.identityId===selectedIdentity})||null;renderIdentities();renderPackages();regParticipationWrap.hidden=!selectedIdentity;regNext.disabled=!selectedPackage;
     }catch(err){
       packageList=[];selectedIdentity=null;selectedPackage=null;regIdentitiesEl.innerHTML='';regPackagesEl.innerHTML='';regParticipationWrap.hidden=true;regNext.disabled=true;
       packageLoadError='Registration pricing could not be loaded. Please refresh or contact LP CLUB.';showAlert(packageLoadError);
     }
   }
+  var REGISTRATION_DRAFT_KEY='lpclub-conference-2026-registration-draft';
+  var draftRestored=false, registrationOpenId=0, draftButtonTimer;
+  var DRAFT_FIELDS=['salutation','fullName','company','department','jobTitle','country','city','email','dial','phone','whatsappSame','whatsappNumber','focus','purposeOther','visaLetter','arrivalDate','guests'];
+  function resetDraftFeedback(){
+    clearTimeout(draftButtonTimer);setMessage(regSaveDraft,'Save draft');regDraftError.hidden=true;setMessage(regDraftError,'');
+  }
+  function saveRegistrationDraft(){
+    if(regSubmitting)return;
+    resetDraftFeedback();
+    var fields={};
+    DRAFT_FIELDS.forEach(function(name){var input=regForm.elements[name];if(input)fields[name]=input.value});
+    try{
+      localStorage.setItem(REGISTRATION_DRAFT_KEY,JSON.stringify({version:1,savedAt:Date.now(),fields:fields,purpose:getMulti('purpose'),identityId:selectedIdentity,packageId:selectedPackage?selectedPackage.id:null,step:regStep===2?2:1,vipCode:vipCode.value}));
+      regClearDraft.hidden=false;
+      setMessage(regSaveDraft,'✓ Saved');
+      draftButtonTimer=setTimeout(function(){setMessage(regSaveDraft,'Save draft')},1500);
+    }catch(_){regDraftError.hidden=false;setMessage(regDraftError,'Could not save. Please retry.');return false}
+  }
+  function removeRegistrationDraft(){
+    try{localStorage.removeItem(REGISTRATION_DRAFT_KEY);regClearDraft.hidden=true;return true}
+    catch(_){return false}
+  }
+  function restoreRegistrationDraft(){
+    var raw;
+    try{raw=localStorage.getItem(REGISTRATION_DRAFT_KEY)}catch(_){return null}
+    if(!raw)return null;
+    regClearDraft.hidden=false;
+    var draft;
+    try{draft=JSON.parse(raw)}catch(_){}
+    if(!draft||draft.version!==1||!Number.isFinite(draft.savedAt)||draft.savedAt>Date.now()||Date.now()-draft.savedAt>=7*86400000||!draft.fields||typeof draft.fields!=='object'||Array.isArray(draft.fields)){
+      removeRegistrationDraft();
+      return null;
+    }
+    DRAFT_FIELDS.forEach(function(name){var input=regForm.elements[name],value=draft.fields[name];if(input&&typeof value==='string')input.value=value});
+    document.querySelectorAll('[data-multi="purpose"] input').forEach(function(input){input.checked=Array.isArray(draft.purpose)&&MULTI.purpose.indexOf(input.value)!==-1&&draft.purpose.indexOf(input.value)!==-1});
+    updatePurposeOther();
+    regForm.elements.consent.checked=false;
+    ['portraitConsent','logoConsent'].forEach(function(id){var input=document.getElementById(id);if(input)input.checked=false});
+    vipCode.value=typeof draft.vipCode==='string'?draft.vipCode.slice(0,128):'';resetVip();
+    return {identityId:typeof draft.identityId==='string'?draft.identityId:null,packageId:typeof draft.packageId==='string'?draft.packageId:null,step:draft.step===2?2:1};
+  }
+  function resetRegistration(){
+    resetDraftFeedback();
+    vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();updatePurposeOther();validationAttempted=false;regForm.querySelectorAll('[aria-invalid="true"]').forEach(clearFieldError);if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities();
+  }
+  function clearRegistrationDraft(){
+    if(regSubmitting||!removeRegistrationDraft())return;
+    registrationOpenId++;resetRegistration();showStep(1);
+  }
   function openReg(){
-    if(regStep===3){vipSubmissionKey='';vipSubmissionPayload='';registrationResult=null;regForm.reset();updatePurposeOther();validationAttempted=false;regForm.querySelectorAll('[aria-invalid="true"]').forEach(clearFieldError);if(window.LPClubMaterials)window.LPClubMaterials.reset();selectedIdentity=null;selectedPackage=null;regParticipationWrap.hidden=true;regPackagesEl.innerHTML='';vipCode.value='';resetVip();renderIdentities()}
-    loadPackages();
+    if(regSubmitting)return;
+    if(regStep===3){resetRegistration()}
+    var draft=draftRestored?null:restoreRegistrationDraft(),openId=++registrationOpenId;draftRestored=true;
     regModal.classList.add('open');regModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';showStep(1);setTimeout(function(){regClose.focus()},20);
+    loadPackages(draft).then(function(){if(openId===registrationOpenId&&regModal.classList.contains('open')&&draft&&draft.step===2&&selectedPackage&&!vipCode.value.trim())showStep(2)});
   }
   function closeReg(){regModal.classList.remove('open');regModal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
   function showStep(n){
@@ -1684,8 +1748,10 @@
     if(firstInvalid){firstInvalid.scrollIntoView({block:'center',behavior:'smooth'});firstInvalid.focus({preventScroll:true});return false}
     return true;
   }
-  async function submitRegistration(){if(!validateDetails())return;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();{var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;er.currentPrice=data.currentPrice;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};if(window.LPClubMaterials){try{await window.LPClubMaterials.uploadRegistered(data)}catch(_){document.getElementById('materialSubmissionStatus').hidden=false;setMessage(document.getElementById('materialSubmissionStatus'),'Your registration is saved. Please use the email link to submit materials later.')}}renderSuccess();showStep(3)}catch(err){if(err.code==='PRICE_CHANGED'){await loadPackages();showStep(1);showAlert('The registration price has changed to USD {price}. Please review the updated price and submit again.',{price:Number(err.currentPrice||0).toLocaleString('en-US')})}else if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
+  async function submitRegistration(){if(regSubmitting||!validateDetails())return;regSubmitting=true;regSaveDraft.disabled=true;regClearDraft.disabled=true;regNext.disabled=true;setMessage(regNext,'Submitting…');showAlert('');try{var payload=formPayload();{var signature=JSON.stringify(payload);if(signature!==vipSubmissionPayload||!vipSubmissionKey){vipSubmissionKey=crypto.randomUUID?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');vipSubmissionPayload=signature}payload.idempotencyKey=vipSubmissionKey}var response=await fetch(apiUrl('/api/order'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});var data=await response.json();if(!response.ok||!data.ok){var er=new Error(data.error||'Registration could not be submitted.');er.code=data.code;er.ref=data.ref;er.retryable=data.retryable;er.currentPrice=data.currentPrice;throw er}registrationResult={data:data,name:regForm.elements.fullName.value,email:regForm.elements.email.value};removeRegistrationDraft();if(window.LPClubMaterials){try{await window.LPClubMaterials.uploadRegistered(data)}catch(_){document.getElementById('materialSubmissionStatus').hidden=false;setMessage(document.getElementById('materialSubmissionStatus'),'Your registration is saved. Please use the email link to submit materials later.')}}renderSuccess();showStep(3)}catch(err){if(err.code==='PRICE_CHANGED'){await loadPackages();showStep(1);showAlert('The registration price has changed to USD {price}. Please review the updated price and submit again.',{price:Number(err.currentPrice||0).toLocaleString('en-US')})}else if(['VIP_USED','VIP_REVOKED','VIP_EXPIRED','INVALID_VIP_CODE'].includes(err.code)){resetVip();renderPackages();showStep(1);vipMessage.classList.add('error');setMessage(vipMessage,errorMessage(err));showAlert('The VIP Code cannot be redeemed. Please choose a new code or review the standard ticket price.')}else if(['VIP_REVIEW_REQUIRED','VIP_PROCESSING','VIP_EMAIL_PROCESSING'].includes(err.code)){showAlert(err.ref?'{message} Registration reference: {ref}':errorMessage(err),{message:function(){return t(errorMessage(err))},ref:err.ref})}else if(err.code==='DUPLICATE_REGISTRATION'&&err.ref){showAlert('A registration already exists for this business email ({ref}). Please contact LP CLUB if you need to update the existing registration.',{ref:err.ref})}else if(err.code==='RATE_LIMITED'){showAlert('Too many attempts were submitted from this connection. Please try again later.')}else{showAlert(errorMessage(err))}}finally{regSubmitting=false;regSaveDraft.disabled=false;regClearDraft.disabled=false;if(regStep!==3){regNext.disabled=regStep===1&&!selectedPackage;setMessage(regNext,regStep===1?'Continue to Your Details':'Submit Registration')}}}
 
+  regSaveDraft.addEventListener('click',saveRegistrationDraft);
+  regClearDraft.addEventListener('click',clearRegistrationDraft);
   vipApply.addEventListener('click',applyVipCode);
   vipCode.addEventListener('input',function(){resetVip();renderPackages();regNext.disabled=regStep===1?!selectedPackage:false});
   vipCode.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();applyVipCode()}});
